@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ManagerConfig</class>
+ <widget class="QWidget" name="ManagerConfig">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1023</width>
+    <height>498</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,9">
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QListWidget" name="listWidget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <item>
+      <property name="text">
+       <string>页面指纹</string>
+      </property>
+      <property name="icon">
+       <iconset resource="pic.qrc">
+        <normaloff>:/01/icon/01.ico</normaloff>:/01/icon/01.ico</iconset>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>页面对应流程</string>
+      </property>
+      <property name="icon">
+       <iconset resource="pic.qrc">
+        <normaloff>:/02/icon/02.ico</normaloff>:/02/icon/02.ico</iconset>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>流程配置提醒</string>
+      </property>
+      <property name="font">
+       <font>
+        <underline>true</underline>
+       </font>
+      </property>
+      <property name="icon">
+       <iconset resource="pic.qrc">
+        <normaloff>:/07/icon/07.ico</normaloff>:/07/icon/07.ico</iconset>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>流程清单</string>
+      </property>
+      <property name="icon">
+       <iconset resource="pic.qrc">
+        <normaloff>:/06/icon/06.ico</normaloff>:/06/icon/06.ico</iconset>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>提醒分类</string>
+      </property>
+      <property name="icon">
+       <iconset resource="pic.qrc">
+        <normaloff>:/07/icon/07.ico</normaloff>:/07/icon/07.ico</iconset>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item>
+    <widget class="QStackedWidget" name="stackedWidget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="lineWidth">
+      <number>0</number>
+     </property>
+     <property name="currentIndex">
+      <number>2</number>
+     </property>
+     <widget class="PageFingerprint" name="PF"/>
+     <widget class="PageToFlow" name="PFL"/>
+     <widget class="FlowRemindType" name="FR"/>
+     <widget class="WorkFlow" name="WF"/>
+     <widget class="RemindType" name="RT"/>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PageToFlow</class>
+   <extends>QWidget</extends>
+   <header>biz.monitor_work_flow.ui.pagetoflow.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PageFingerprint</class>
+   <extends>QWidget</extends>
+   <header>biz.monitor_work_flow.ui.pagefingerprint_event.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>WorkFlow</class>
+   <extends>QWidget</extends>
+   <header>biz.monitor_work_flow.ui.workflow.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>RemindType</class>
+   <extends>QWidget</extends>
+   <header>biz.monitor_work_flow.ui.remindtype.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>FlowRemindType</class>
+   <extends>QWidget</extends>
+   <header>biz.monitor_work_flow.ui.flowremindtype.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="pic.qrc"/>
+ </resources>
+ <connections/>
+</ui>

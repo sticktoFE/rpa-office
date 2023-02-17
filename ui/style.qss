@@ -1,0 +1,406 @@
+QWidget {
+    border-radius: 16px;
+}
+
+/*所有按钮*/
+QPushButton {
+    max-width: 80px;
+    max-height: 24px;
+    min-height: 24px;
+    border-radius: 6px;
+    background-color: rgb(244, 244, 244);
+    border: 1px solid rgb(167, 167, 167);
+}
+
+QPushButton:hover {
+    background-color: rgb(190, 231, 253);
+}
+
+QPushButton:pressed {
+    background-color: rgb(244, 244, 244);
+}
+
+QComboBox {
+    font: 13px;
+    /* max-width: 80px; */
+    max-height: 20px;
+    min-height: 20px;
+    border: 1px solid rgb(167, 167, 167);
+    border-radius: 3px;
+    margin: 3px
+}
+
+QComboBox QAbstractItemView::item {
+    min-height: 12px;
+    min-width: 80px;
+}
+
+QMenu {
+    /* 半透明效果 */
+    background-color: rgba(0, 101, 105, 230);
+    border: none;
+    border-radius: 5px;
+}
+
+QMenu::item {
+    border-radius: 5px;
+    /* 这个距离很麻烦需要根据菜单的长度和图标等因素微调 */
+    padding: 8px 48px 8px 36px;
+    /* 36px是文字距离左侧距离*/
+    background-color: transparent;
+    color: aliceblue
+        /*字体颜色*/
+}
+
+/* 鼠标悬停和按下效果 */
+QMenu::item:selected {
+    border-radius: 0px;
+    /* 半透明效果 */
+    background-color: cornflowerblue;
+}
+
+/* 禁用效果 */
+QMenu::item:disabled {
+    background-color: transparent;
+}
+
+/* 图标距离左侧距离 */
+QMenu::icon {
+    left: 15px;
+}
+
+/* 分割线效果 */
+QMenu::separator {
+    height: 1px;
+    background-color: rgb(0, 101, 105);
+}
+
+/*鼠标悬停颜色*/
+HistoryPanel::item:hover {
+    background: rgb(52, 52, 52);
+}
+
+/* QScrollArea ------------------------------------------------------------
+
+--------------------------------------------------------------------------- */
+/* 滚动条区域 */
+QAbstractScrollArea {
+    background-color: transparent;
+    border: 0px solid #455364;
+    border-radius: 10px;
+    /* fix #159 */
+    padding: 2px;
+    /* remove min-height to fix #244 */
+    color: #E0E1E3;
+}
+
+QAbstractScrollArea:disabled {
+    color: #9DA9B5;
+}
+
+QScrollArea QWidget QWidget:disabled {
+    background-color: #19232D;
+    border-radius: 12px;
+}
+
+/* //首先是设置主体 */
+QScrollBar:vertical {
+    background-color: rgb(255， 255， 255， 100);
+    /* 左分割线   */
+    border: 0px solid #572c2c;
+    width: 12px;
+    margin: 13 0 13 0px;
+}
+
+/* //为滚动条上面的箭头区域 */
+QScrollBar::sub-line:vertical {
+    subcontrol-origin: margin;
+    border: 0px solid red;
+    height: 13px
+}
+
+QScrollBar::up-arrow:vertical {
+    border-image: url(:/icon/up.png) center no-repeat;
+    subcontrol-origin: margin;
+    background-color: blue;
+    height: 13px
+}
+
+/* 表示已滑过的槽部分 */
+QScrollBar::sub-page:vertical {
+    background-color: rgb(112, 115, 119);
+}
+
+/* //滑块 */
+QScrollBar::handle:vertical {
+    /* 滑块颜色  */
+    min-height: 20px;
+    background-color: rgb(134, 79, 134);
+    width: 12px;
+}
+
+/* 鼠标触及滑块样式   */
+QScrollBar::handle:vertical:hover {
+    background: #370f81;
+}
+
+/* 表示未滑过的槽部分 */
+QScrollBar::add-page:vertical {
+    background-color: rgb(0, 101, 105);
+}
+
+/* //为滚动条下面的箭头区域 */
+QScrollBar::down-arrow:vertical {
+    background-color: yellow;
+    border-image: url(:/icon/down.png) center no-repeat;
+}
+
+QScrollBar::add-line:vertical {
+    subcontrol-origin: margin;
+    border: 0px solid rgb(230, 144, 15);
+    height: 13px;
+}
+
+QGroupBox {
+    border: 0px solid rgb(17, 0, 255);
+    border-radius: 1px;
+}
+
+/* #frame{
+    background-color: transparent;
+    border-width: 0px;
+    border-color: rgb(10, 10, 10);
+    border:0px groove rgb(160, 19, 19);
+    border-radius:15px; 
+    min-height:150px; 
+} */
+
+QLabel {
+    color: white;
+    font-family: "思源字体";
+    font-size: 13px;
+    /* min-width:     16px;    
+    min-height:    16px;     
+    max-width:     16px;      
+    max-height:    16px;  这些放开将变成圆形 */
+    border-radius: 12px;
+    /* //边框是圆角，半径8px*/
+    /* background-color: rgb(0, 0, 0); */
+    /*//边框1px，边框黑色*/
+    border: 0px solid rgba(11, 139, 154, 0.17);
+    /* margin: 2px 2px 2px 2px; */
+    background-color: transparent;
+}
+
+#label_3 {
+    background-color: rgba(230, 214, 204, 0.3);
+    border: 0px solid rgb(10, 43, 162);
+    border-radius: 10px;
+    font-size: 12px;
+    color: white;
+    font-family: "思源字体";
+    /* font-weight: bold; */
+    /* margin: 3px 3px 3px 3px;  */
+}
+
+#label_3:hover {
+    color: white;
+    font-family: "思源字体";
+    font-size: 14px;
+    border-radius: 10px;
+    /* //边框是圆角，半径8px*/
+    /* margin: 2px 2px 2px 2px; */
+    background-color: rgb(51, 36, 36);
+}
+
+#label {
+    background-color: transparent;
+    border: 0px solid black;
+    border-radius: 10px;
+    font-size: 12px;
+    color: white;
+    font-family: "思源字体";
+}
+
+/*设置左侧选项的最小最大宽度,文字颜色和背景颜色*/
+QListWidget,
+QListView,
+QTreeWidget {
+    outline: 0px;
+    /* 不知为啥，这个影响表格中下拉列表内容自适应，即过长不要有省略号，自动伸展 */
+    /* min-width: 30px; */
+    max-width: 165px;
+    min-height: 120px;
+    /* max-height: 320px; */
+    border-radius: 10px;
+    border: 0px solid rgb(0, 101, 105);
+    background-color: rgb(28, 141, 145);
+    background: rgb(45, 65, 75);
+    /* 设置字体 */
+    font-family: "思源字体";
+    color: white;
+}
+
+QListWidget::item {
+    min-height: 45px;
+}
+
+QListWidget::item:hover {
+    background-color: rgb(70, 73, 73);
+}
+
+/*被选中时的背景颜色和左边框颜色*/
+QListWidget::item:selected {
+    background: rgb(0, 101, 105);
+    border-left: 2px solid rgb(185, 235, 184);
+    color: rgb(19, 148, 152);
+    background-color: rgb(255, 255, 255);
+}
+
+QStackedWidget {
+    /* min-width: 500; */
+    /* max-width: 865px; */
+    color: white;
+    font-family: "思源字体";
+    font-size: 20px;
+    background: rgb(0, 101, 105);
+}
+
+QTreeWidget::item {
+    min-height: 30px;
+    max-width: 10px;
+    color: #285cc6;
+    background: white;
+    margin: 6px;
+    /*标题项之间的空隙宽度*/
+}
+
+QTreeWidget::item:hover {
+    background: rgb(166, 177, 177);
+}
+
+QTreeWidget::item:selected {
+    border: 1px solid transparent;
+    font: 15px "ubuntu";
+    color: #51637e;
+}
+
+QTreeWidget::item:selected:active {
+    background: rgb(166, 177, 177);
+}
+
+QTreeWidget::branch:open:has-children {
+    background: rgb(116, 196, 24);
+}
+
+QTreeWidget::branch:has-children:has-siblings:closed {
+    background: rgb(62, 64, 64);
+}
+
+QTreeWidget::branch:open:has-children:has-siblings {
+    background: rgb(119, 133, 133);
+    /*border-image: url(:/icon/1.png);*/
+    border: none;
+    border-radius: 4px;
+}
+
+QTreeWidget::branch:closed:has-children:has-siblings {
+    background: rgb(3, 47, 47);
+    border: none;
+    border-radius: 1px;
+}
+
+QTreeWidget:branch:hover {
+    background: rgb(0, 101, 105);
+}
+
+/*设置右侧选项的最小最大宽度,文字颜色和背景颜色*/
+QPlainTextEdit,
+QTableWidget {
+    /* min-width: 120px;
+    max-width: 120px; */
+    color: white;
+    font-family: "思源字体";
+    font-size: 18px;
+    /* 墨绿色 */
+    background: rgb(0, 101, 105);
+    /* // 整个表格控件 边框 */
+    border: none;
+}
+
+QTextEdit {
+    /* min-height: 80px; */
+    /* max-width: 120px; */
+    color: rgb(250, 255, 240);
+    font-family: "思源字体";
+    font-size: 20px;
+    background: rgb(0, 101, 105);
+    /* // 整个表格控件 边框 */
+    border: none;
+}
+
+/* // QTableWidget 标题头整个区域 */
+QHeaderView {
+    /* // 整个标题头区域背景色 */
+    background: transparent;
+}
+
+/* // 标题头 每个单独的标题区域 */
+QHeaderView::section {
+    /* // 每个标题区域的背景色 */
+    background: rgb(7, 76, 108);
+    /* // 每个标题的字体大小 */
+    font-size: 14px;
+    /* // 每个标题的字体类型 */
+    font-family: "思源字体";
+    /* // 每个标题的字体颜色 */
+    color: #FFFFFF;
+    /* // 每个标题区域的边框 */
+    border: none;
+    /* // 每个标题的对齐方式（貌似不能用）。建议使用tableWidget->horizontalHeader()->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter)text-align:left;                */
+    text-align: left;
+    /* // 标题区域的高度 */
+    min-height: 49px;
+    max-height: 49px;
+    /* // 每个标题区域的margin */
+    margin-left: 0px;
+    /* // 每个标题区域的padding */
+    padding-left: 0px;
+}
+
+/* // 每个单元格 */
+QTableWidget::item {
+    /* // 只显示每个单元格下边框 */
+    border-bottom: 1px solid #EEF1F7;
+}
+
+/* // 每个单元格被选中状态 */
+QTableWidget::item::selected {
+    /* // 每个单元格被选中时 字体颜色 */
+    color: rgb(190, 147, 147);
+    /* // 每个单元格被选中时 背景颜色 */
+    background: #2d2f33;
+}
+
+QToolTip {
+    border: 0px solid;
+    background: red;
+    color: #ffffff;
+}
+
+QProgressBar {
+    border: none;
+    height: 6px;
+    text-align: center;
+    font-size: 3px;
+    color: white;
+    border-radius: 3px;
+    background: #1D5573;
+}
+
+QProgressBar::chunk {
+    border: none;
+    background: rgb(0, 160, 230);
+    border-radius: 3px;
+    background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 #99ffff, stop:1 #9900ff);
+}

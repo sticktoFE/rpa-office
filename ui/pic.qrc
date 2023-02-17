@@ -1,0 +1,20 @@
+<!DOCTYPE RCC>
+<RCC  version="1.0">
+    <qresource>
+        <file>icon/001.png</file>
+        <file>icon/006.png</file>
+        <file>icon/01.ico</file>
+        <file>icon/02.ico</file>
+        <file>icon/03.ico</file>
+        <file>icon/04.ico</file>
+        <file>icon/05.ico</file>
+        <file>icon/06.ico</file>
+        <file>icon/07.ico</file>
+        <file>icon/08.ico</file>
+        <file>icon/down.png</file>
+        <file>icon/up.png</file>
+        <file>icon/shutdown.png</file>
+        <file>icon/blank.png</file>
+        <file>icon/info.gif</file>
+    </qresource>
+</RCC>
