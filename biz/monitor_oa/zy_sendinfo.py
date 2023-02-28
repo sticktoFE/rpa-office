@@ -61,11 +61,24 @@ class MainWindow(QMainWindow):
     def ocrResult(self, result):
         self.aemg = TotalMessage("".join(result))
         self.aemg.show()
-
     # 点击任务终止
+
     @ Slot()
     def on_taskStopPushButton_clicked(self):
         self.ae.terminate()
+
+
+def send_webchat():
+    for_pics = [
+        "biz/monitor_oa/image/search.png",
+        "biz/monitor_oa/image/selectfile.png",
+        "biz/monitor_oa/image/send.png",
+    ]
+    ae = AppExec(class_name="WeChatMainWndForPC",
+                 window_name="微信", for_pics=for_pics)
+    # self.ae.setFileNames(name_list)
+    # self.ae.signal.connect(self.ocrResult)
+    ae.start()
 
 
 if __name__ == "__main__":

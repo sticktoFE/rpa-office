@@ -15,7 +15,7 @@ BOT_NAME = "general_spider"
 SPIDER_MODULES = ["mytools.general_spider.general_spider.spiders"]
 NEWSPIDER_MODULE = "mytools.general_spider.general_spider.spiders"
 
-FEED_EXPORT_ENCODING = 'utf-8'
+FEED_EXPORT_ENCODING = "utf-8"
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 # USER_AGENT = 'ter (+http://www.yourdomain.com)'
 # USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.5481.100 Safari/537.36 Edg/91.0.864.48"
@@ -29,6 +29,8 @@ CONCURRENT_REQUESTS = 2
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs#设置下裁之后的自动延迟
 DOWNLOAD_DELAY = random.randint(5, 9)
+# 启用后，当从相同的网站获取数据时，Scrapy将会等待一个随机的值，延迟时间为0.5到1.5之间的一个随机值乘以DOWNLOAD_DELAY
+RANDOMIZE_DOWNLOAD_DELAY = True
 # The download delay setting will honor only one of:
 # CONCURRENT_REQUESTS_PER_DOMAIN = 16
 # CONCURRENT_REQUESTS_PER_IP = 16
@@ -58,7 +60,7 @@ DOWNLOADER_MIDDLEWARES = {
     # 'general_spider.middlewares.RandomUserAgentMiddlware': 400,
     "scrapy_fake_useragent.middleware.RandomUserAgentMiddleware": 400,
     "scrapy_fake_useragent.middleware.RetryUserAgentMiddleware": 401,
-    "mytools.general_spider.general_spider.middlewares.RandomProxyMiddleware": 543,
+    "mytools.general_spider.general_spider.middlewares.RandomProxyMiddleware": 350,
     # 'scrapy.contrib.downloadermiddleware.cookies.CookiesMiddleware': 700,
     "mytools.general_spider.general_spider.middlewares.SeleniumDownloaderMiddleware": 550,
     # "scrapy.downloadermiddlewares.retry.RetryMiddleware": None,
@@ -89,7 +91,8 @@ FAKEUSERAGENT_PROVIDERS = [
 # 开启item pipelines
 ITEM_PIPELINES = {
     # 'general_spider.pipelines.JianshuTwistedPipeline': 300,
-    "mytools.general_spider.general_spider.pipelines.ProjectPipeline": 300,
+    "mytools.general_spider.general_spider.pipelines.OAProAdmitToDoPipeline": 300,
+    "mytools.general_spider.general_spider.pipelines.OAProAdmitHaveDonePipeline": 301,
     # 'general_spider.pipelines.JianshuSpiderPipeline': 300,
     # "general_spider.pipelines.FuZhouEcoIndexPipeline": 300,
 }
@@ -124,6 +127,6 @@ LOG_LEVEL = 'DEBUG' """
 # 经常因为页面报404导致spider停止，此处
 HTTPERROR_ALLOWED_CODES = [404]
 
-KEYWORDS = ['iPhone']
-MAX_PAGE = 3
+KEYWORDS = ["iPhone"]
+MAX_PAGE = 50
 SELENIUM_TIMEOUT = 20

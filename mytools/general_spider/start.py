@@ -1,7 +1,6 @@
 from scrapy.utils.log import configure_logging
 from scrapy.crawler import CrawlerRunner
 from twisted.internet import reactor
-from general_spider.spiders.Covid19 import Covid19Spider
 from scrapy.utils.project import get_project_settings
 from scrapy.crawler import CrawlerProcess
 import scrapy
@@ -9,10 +8,10 @@ import re
 import sys
 import os
 from scrapy import cmdline
-from mytools.general_spider.general_spider.spiders.PingDingGov import SeleniumExampleSpider
+from mytools.general_spider.general_spider.spiders.CSRCPenalty import CsrcSpider
 from myutils.GeneralThread import Worker
 from PySide6.QtCore import QThreadPool
-from proxy_pool.proxyPool import startProxy
+from mytools.proxy_pool.proxyPool import startProxy
 import subprocess
 
 # 添加环境变量
@@ -79,6 +78,6 @@ settings = get_project_settings()
 print('-------------')
 print(settings.get('MAX_PAGE'))
 runner = CrawlerRunner(settings)
-d = runner.crawl(SeleniumExampleSpider)
+d = runner.crawl(CsrcSpider)
 d.addBoth(lambda _: reactor.stop())
 reactor.run()  # the script will block here until the crawling is finished

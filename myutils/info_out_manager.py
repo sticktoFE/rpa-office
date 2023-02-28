@@ -5,7 +5,8 @@ import shutil
 import sys
 from pathlib import Path
 import time
-from PySide6.QtCore import QStandardPaths, QSettings
+from PySide6.QtCore import QSettings
+import json
 
 """
     目前还没找到用处
@@ -71,6 +72,7 @@ def print_var(content):
 #         self.nulObj = open(os.devnull, 'w')
 #         sys.stdout = self.nulObj
 
+
 #     def restore(self):
 #         self.content = ''
 #         if self.memObj.closed != True:
@@ -81,24 +83,26 @@ def print_var(content):
 #             self.nulObj.close()
 #         sys.stdout = self.savedStdout #sys.__stdout__
 # 获取输出临时文件夹
-def get_temp_folder(execute_file_path=None, des_folder_name=None, is_clear_folder=False):
+def get_temp_folder(
+    execute_file_path=None, des_folder_name=None, is_clear_folder=False
+):
     # 使用配置文件中的默认设置
     settings = QSettings("./config.ini", QSettings.Format.IniFormat)
     des_folder = settings.value("tmp_path")
     if execute_file_path is not None:
         path_list = re.split(r"[/\\]", execute_file_path)
-        last_two = (f"{path_list[-2]}_{path_list[-1]}")
-        des_folder = f"{des_folder}/{last_two}"
+        last_two = f"{path_list[-2]}_{path_list[-1]}"
+        des_folder = f"{des_folder}\\{last_two}"
     # files_path = f'{QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)}/rpa-office/{Path(current_file_path).parent.stem}--{Path(current_file_path).stem}'
     # 临时文件统一放到系统文档文件夹里
     if not os.path.exists(des_folder):
         os.makedirs(des_folder)
     if des_folder_name is not None:
-        des_folder = f"{des_folder}/{des_folder_name}"
+        des_folder = f"{des_folder}\\{des_folder_name}"
         if not os.path.exists(des_folder):
             os.makedirs(des_folder)
     if is_clear_folder:  # 清理文件夹内容
-        filelist = glob.glob(f"{des_folder}/*")
+        filelist = glob.glob(f"{des_folder}\\*")
         for f in filelist:
             if Path(f).is_dir():
                 # os.removedirs(f) 只能删除空目录
@@ -107,12 +111,59 @@ def get_temp_folder(execute_file_path=None, des_folder_name=None, is_clear_folde
                 os.remove(f)
     return des_folder
 
+
 # 获取临时文件，名字按时间取，用于一些日志信息
 
 
 def get_temp_file(des_folder=None, save_file_name=None, save_file_type="xlsx"):
     save_file_name = str(time.strftime("%Y-%m-%d_%H.%M.%S", time.localtime()))
     return f"{des_folder}/{save_file_name}.{save_file_type}"
+
+
+# 多次输出到文件，以列表中多个字典的形式，类似数据库表数据
+def dump_json_table(source_dict, purpose_file):
+    now_json = None
+    with open(purpose_file, "a+", encoding="utf-8") as write_file:
+        write_file.seek(0)  # 挪动文件中的指针位置，读取都是从指针后面开始，要注意
+        if len(write_file.readlines()) != 0:
+            write_file.seek(0)
+            now_json = json.load(write_file)
+            now_json.append(source_dict)
+        else:
+            now_json = []
+            now_json.append(source_dict)
+    with open(purpose_file, "w", encoding="utf-8") as write_file:
+        json.dump(
+            now_json, write_file, indent=4, separators=(",", ": "), sort_keys=True
+        )
+        # write_file.write('\n')
+
+
+# 读取json文件并返回一条记录
+def load_json_table(purpose_file):
+    with open(purpose_file, "r", encoding="utf-8") as write_file:
+        now_json = json.load(write_file)
+        for onedict in now_json:
+            yield onedict
+
+
+# 将txt文件读入列表去除行中的回车---暂时没用
+def strip_txt(file_path):
+    # 打开要去掉空行的文件
+    line = None
+    with open(file_path, "r", encoding="utf-8") as file1:
+        for line in file1.readlines():  # 去除空行
+            if line == "\n":
+                line = line.strip("\n")
+    with open(file_path, "w", encoding="utf-8") as file2:  # 生成没有空行的文件
+        file2.write(line)  # 输出到新文件中
+
+
+def txt_to_list(file_path):
+    with open(file_path, "r", encoding="utf-8") as file:  # 这里的文件对应txt_os中生产的文件
+        list = file.readlines()
+        list = [x.strip() for x in list if x.strip() != ""]  # 去除行中的回车
+        return list  # 返回列表
 
 
 if __name__ == "__main__":

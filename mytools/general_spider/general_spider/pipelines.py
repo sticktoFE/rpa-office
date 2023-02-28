@@ -7,13 +7,14 @@
 # useful for handling different item types with a single interface
 import os
 from itemadapter import ItemAdapter
+
 # import pymysql
 # from pymysql import cursors
 from sqlite3 import connect
 from twisted.enterprise import adbapi
 import json
 
-from myutils.info_out_manager import get_temp_folder
+from myutils.info_out_manager import dump_json_table, get_temp_folder
 
 # 进行数据处理
 
@@ -24,17 +25,17 @@ class JianShuPipeline(object):
     """
 
     def __init__(self):
-        db_parames = {
-            "host": "wslip",
-            "port": 3306,
-            "user": "root",
-            "password": "root",
-            "database": "ter",
-            "charset": "utf8",
-        }
+        # db_parames = {
+        #     "host": "wslip",
+        #     "port": 3306,
+        #     "user": "root",
+        #     "password": "root",
+        #     "database": "ter",
+        #     "charset": "utf8",
+        # }
         # 连接数据库(原来是mysql,此处用sqlite3代替)
-        self.conn = pymysql.connect(**db_parames)
-        self.cursor = self.conn.cursor()
+        # self.conn = pymysql.connect(**db_parames)
+        # self.cursor = self.conn.cursor()
 
         self.conn = connect("dw/risk.db")
         # 获取游标、数据
@@ -42,7 +43,7 @@ class JianShuPipeline(object):
         self._sql = None
 
     def process_item(self, item, spider):
-        print('this is CSRCPipeline')
+        print("this is CSRCPipeline")
         self.cursor.execute(
             self.sql,
             (
@@ -101,7 +102,7 @@ class JianShuTwistedPipeline(object):
         return self._sql
 
     def process_item(self, item, spider):
-        print('this is CSRCPipeline')
+        print("this is CSRCPipeline")
         defer = self.dbpool.runInteraction(self.insert_item, item)
         defer.addErrback(self.handle_error, item, spider)
         print(item)
@@ -128,22 +129,12 @@ class JianShuTwistedPipeline(object):
         print("=" * 15 + "error" + "=" * 15)
 
 
-class CSRCPipeline(object):
-    def process_item(self, item, spider):
-        print('this is CSRCPipeline')
-        cufolder = os.path.dirname(__file__)
-        with open(f"{cufolder}/spiders/CSRC.txt", "a", encoding="utf-8") as fp:
-            json.dump(dict(item), fp, ensure_ascii=False)
-        return item
-
-
 class FuZhouEcoIndexPipeline(object):
     def process_item(self, item, spider):
-        print('this is CSRCPipeline')
+        print("this is CSRCPipeline")
         if item["name"] == "" or len(item["name"].replace("【】", "").strip()) == 0:
             return item
-        cufolder = os.path.join(os.path.dirname(
-            __file__), "FuZhou", "fuzhou.txt")
+        cufolder = os.path.join(os.path.dirname(__file__), "FuZhou", "fuzhou.txt")
         # # 判断文件是否存在
         # if os.path.exists(cufolder):
         #     # 存在，则删除文件
@@ -160,19 +151,15 @@ class FuZhouEcoIndexPipeline(object):
             # 输出完换行
             fp.write("\n")
         return item
+
 
 # 参考代码
 
 
 class TaobaoPipeline(object):
     def process_item(self, item, spider):
-        print('this is MongoPipeline')
-        cufolder = os.path.join(os.path.dirname(
-            __file__), "spiders", "ipad.txt")
-        # # 判断文件是否存在
-        # if os.path.exists(cufolder):
-        #     # 存在，则删除文件
-        #     os.remove(cufolder)
+        print("this is MongoPipeline")
+        cufolder = os.path.join(os.path.dirname(__file__), "spiders", "ipad.txt")
         with open(cufolder, "a", encoding="utf-8") as fp:
             json.dump(
                 dict(item),
@@ -187,17 +174,26 @@ class TaobaoPipeline(object):
         return item
 
 
-class ProjectPipeline(object):
+class CSRCPenaltyPipeline(object):
     def process_item(self, item, spider):
         with open(spider.out_file, "a", encoding="utf-8") as fp:
-            json.dump(
-                dict(item),
-                fp,
-                ensure_ascii=False,
-                # sort_keys=True,
-                indent=2,
-                separators=(",", ": "),
-            )
+            json.dump(dict(item), fp, ensure_ascii=False)
             # 输出完换行
             fp.write("\n")
+        return item
+
+
+class CSRCMarketWeeklyPipeline(object):
+    def process_item(self, item, spider):
+        dump_json_table(dict(item), spider.out_file)
+        return item
+# 任务待办内容处理 
+class OAProAdmitToDoPipeline(object):
+    def process_item(self, item, spider):
+        dump_json_table(dict(item), spider.out_file)
+        return item
+# 任务已办内容处理 
+class OAProAdmitHaveDonePipeline(object):
+    def process_item(self, item, spider):
+        dump_json_table(dict(item), spider.out_file)
         return item

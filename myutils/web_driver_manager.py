@@ -1,3 +1,4 @@
+import os
 import re
 import shutil
 from pathlib import Path
@@ -36,9 +37,7 @@ def get_driver_Chromeexe():
         # 具体原因参见: https://www.codenong.com/6827310/
         options.add_experimental_option("debuggerAddress", "localhost:19222")
         # 启动chrome的地址，需要下载chromedriver文件，下载地址https://registry.npmmirror.com/binary.html?path=chromedriver
-        return webdriver.Chrome(
-            executable_path="chromedriver110.exe", options=options
-        )
+        return webdriver.Chrome(executable_path="chromedriver110.exe", options=options)
         # return webdriver.Chrome(
         #     service=Service(ChromeDriverManager().install()), options=options
         # )
@@ -48,7 +47,7 @@ def get_driver_Chromeexe():
 
 
 # 2、获取driver，通过驱动程序
-def get_driver_ChromeDriver():
+def get_driver_ChromeDriver(SetHeadless=True, down_file_save_path="D:\\转型\\downloads"):
     options = webdriver.ChromeOptions()
     # 此步骤很重要，设置为开发者模式，防止被各大网站识别出来使用了Selenium#禁止打印日志
     # 访问https的网站，Selenium可能会报错，使用ignore-certificate-errors可以忽略报错
@@ -66,8 +65,14 @@ def get_driver_ChromeDriver():
     options.add_argument("--window-size=1920,1080")  # 使用无头模式，需设置初始窗口大小
     options.add_argument("--no-first-run")  # 不打开首页
     options.add_argument("--no-default-browser-check")  # 不检查默认浏览器
-    options.add_argument("--start-maximized")  # 最大化
-    # options.add_argument("--headless")  # 无头模式--静默运行 不提供可视化页面
+    # options.add_argument("--start-maximized")  # 最大化
+    # 默认是无头模式，意思是浏览器将会在后台运行，也是为了加速scrapy
+    # 我们可不想跑着爬虫时，旁边还显示着浏览器访问的页面
+    # 调试的时候可以把SetHeadless设为False，看一下跑着爬虫时候，浏览器在干什么
+    if SetHeadless:
+        # 无头模式，无UI
+        options.add_argument("--headless")
+        # options.add_argument("--headless")  # 无头模式--静默运行 不提供可视化页面
     options.add_argument("--disable-gpu")  # 谷歌文档提到需要加上这个属性来规避bug
     # 针对UA请求头的操作，防止因为没有添加请求头导致的访问被栏截了
     options.add_argument(
@@ -79,16 +84,20 @@ def get_driver_ChromeDriver():
     # options.add_argument("--no-sandbox")
     # 浏览器地址栏访问chrome://version/查看个人资料路径,去掉最后的/Default
     # cookie等浏览器默认参数保存路径
-    options.add_argument(
-        "user-data-dir=d:\\temp\\selenum_zy\\AutomationProfile")
+    options.add_argument("user-data-dir=d:\\temp\\selenum_zy\\AutomationProfile")
     # 不加载图片, 提升速度 不知为什么，打开后导致checkbox显示不出来
     # options.add_argument("blink-settings=imagesEnabled=false")
     # 配置下载文件的保存目录
-    prefs = {"download.default_directory": "D:\\转型\\downloads"}
+    prefs = {
+        "download.default_directory": down_file_save_path.replace(
+            "/", "\\"
+        ),  # 必须采取 \\xx\\格式，/xx/格式会报错误，下载失败
+        "download.prompt_for_download": False,
+    }  # 为True则弹框，选择保存文件路径，False则用down_file_save_path为保存目录
     options.add_experimental_option("prefs", prefs)
     # 初始化web驱动
     driver = webdriver.Chrome(
-        executable_path="chromedriver110.exe", chrome_options=options
+        executable_path=f"{Path(__file__).parent}\\chromedriver103.exe", chrome_options=options
     )
     # driver = webdriver.Chrome(
     #     service=Service(ChromeDriverManager().install()), options=options
@@ -101,5 +110,45 @@ def get_driver_ChromeDriver():
         },
     )
     # 隐私等待，整体等待元素出现最长时间暂时设置为10s,selenium.dev上说 显示等待和隐式等待不要同时使用
-    driver.implicitly_wait(15)
+    # driver.implicitly_wait(15)
     return driver
+
+
+# 2、获取driver，通过驱动程序
+
+# 浏览器是否设置无头模式，仅测试时可以为False
+# SetHeadless = True
+# 是否允许浏览器使用cookies
+# EnableBrowserCookies = True
+
+
+def get_driver_FireFoxDriver(SetHeadless=True, EnableBrowserCookies=True):
+    """
+    使用selenium操作火狐浏览器
+    """
+    profile = webdriver.FirefoxProfile()
+    options = webdriver.FirefoxOptions()
+    # 下面一系列禁用操作是为了减少selenium的资源耗用，加速scrapy
+    # 禁用图片
+    profile.set_preference("permissions.default.image", 2)
+    profile.set_preference("browser.migration.version", 9001)
+    # 禁用css
+    profile.set_preference("permissions.default.stylesheet", 2)
+    # 禁用flash
+    profile.set_preference("dom.ipc.plugins.enabled.libflashplayer.so", "false")
+    # 如果EnableBrowserCookies的值设为False，那么禁用cookies
+    if EnableBrowserCookies:
+        # •值1 - 阻止所有第三方cookie。
+        # •值2 - 阻止所有cookie。
+        # •值3 - 阻止来自未访问网站的cookie。
+        # •值4 - 新的Cookie Jar策略（阻止对跟踪器的存储访问）
+        profile.set_preference("network.cookie.cookieBehavior", 2)
+    # 默认是无头模式，意思是浏览器将会在后台运行，也是为了加速scrapy
+    # 我们可不想跑着爬虫时，旁边还显示着浏览器访问的页面
+    # 调试的时候可以把SetHeadless设为False，看一下跑着爬虫时候，浏览器在干什么
+    if SetHeadless:
+        # 无头模式，无UI
+        options.add_argument("-headless")
+    # 禁用gpu加速
+    options.add_argument("--disable-gpu")
+    return webdriver.Firefox(firefox_profile=profile, options=options)

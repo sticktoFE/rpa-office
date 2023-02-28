@@ -5,10 +5,7 @@ import sys
 import time
 from urllib import request
 
-import execjs
-
 from scrapy import Request, Spider
-from mytools.general_spider.general_spider.items import CSRCItem
 from parsel import Selector
 from scrapy.utils.response import get_base_url
 from scrapy.utils.url import urlparse

@@ -1,216 +1,182 @@
-/********************************************************************************
-** Form generated from reading UI file 'Form.ui'
-**
-** Created by: Qt User Interface Compiler version 6.4.2
-**
-** WARNING! All changes made in this file will be lost when recompiling UI file!
-********************************************************************************/
+# -*- coding: utf-8 -*-
 
-#ifndef FORM_H
-#define FORM_H
+################################################################################
+## Form generated from reading UI file 'Form.ui'
+##
+## Created by: Qt User Interface Compiler version 6.4.2
+##
+## WARNING! All changes made in this file will be lost when recompiling UI file!
+################################################################################
 
-#include <ImageLabel>
-#include <QtCore/QVariant>
-#include <QtWidgets/QApplication>
-#include <QtWidgets/QGridLayout>
-#include <QtWidgets/QHBoxLayout>
-#include <QtWidgets/QHeaderView>
-#include <QtWidgets/QMainWindow>
-#include <QtWidgets/QPushButton>
-#include <QtWidgets/QTreeWidget>
-#include <QtWidgets/QVBoxLayout>
-#include <QtWidgets/QWidget>
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
+    QFont, QFontDatabase, QGradient, QIcon,
+    QImage, QKeySequence, QLinearGradient, QPainter,
+    QPalette, QPixmap, QRadialGradient, QTransform)
+from PySide6.QtWidgets import (QApplication, QGridLayout, QHBoxLayout, QHeaderView,
+    QMainWindow, QPushButton, QSizePolicy, QTreeWidget,
+    QTreeWidgetItem, QVBoxLayout, QWidget)
 
-QT_BEGIN_NAMESPACE
+from ImageLabel import ImageLabel
 
-class Ui_Form
-{
-public:
-    QWidget *centralwidget;
-    QHBoxLayout *horizontalLayout_2;
-    QVBoxLayout *verticalLayout_2;
-    QGridLayout *gridLayout;
-    QPushButton *getScreenShotPushButton;
-    QPushButton *autoClickScreenShot;
-    QPushButton *returnHomePushButton;
-    QPushButton *returnPushButton;
-    QPushButton *recordActionPushButton;
-    QPushButton *actionStartPushButton;
-    QPushButton *taskStopPushButton;
-    QWidget *actionLoadWidget;
-    QVBoxLayout *verticalLayout;
-    QHBoxLayout *horizontalLayout;
-    QPushButton *fileAddPushButton;
-    QPushButton *fileRemovePushButton;
-    QTreeWidget *taskTreeWidget;
-    ImageLabel *screenLabel;
+class Ui_Form(object):
+    def setupUi(self, Form):
+        if not Form.objectName():
+            Form.setObjectName(u"Form")
+        Form.resize(418, 412)
+        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(Form.sizePolicy().hasHeightForWidth())
+        Form.setSizePolicy(sizePolicy)
+        self.centralwidget = QWidget(Form)
+        self.centralwidget.setObjectName(u"centralwidget")
+        self.horizontalLayout_2 = QHBoxLayout(self.centralwidget)
+        self.horizontalLayout_2.setSpacing(3)
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_2 = QVBoxLayout()
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.gridLayout = QGridLayout()
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.getScreenShotPushButton = QPushButton(self.centralwidget)
+        self.getScreenShotPushButton.setObjectName(u"getScreenShotPushButton")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.getScreenShotPushButton.sizePolicy().hasHeightForWidth())
+        self.getScreenShotPushButton.setSizePolicy(sizePolicy1)
 
-    void setupUi(QMainWindow *Form)
-    {
-        if (Form->objectName().isEmpty())
-            Form->setObjectName("Form");
-        Form->resize(418, 412);
-        QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-        sizePolicy.setHorizontalStretch(0);
-        sizePolicy.setVerticalStretch(0);
-        sizePolicy.setHeightForWidth(Form->sizePolicy().hasHeightForWidth());
-        Form->setSizePolicy(sizePolicy);
-        centralwidget = new QWidget(Form);
-        centralwidget->setObjectName("centralwidget");
-        horizontalLayout_2 = new QHBoxLayout(centralwidget);
-        horizontalLayout_2->setSpacing(3);
-        horizontalLayout_2->setObjectName("horizontalLayout_2");
-        horizontalLayout_2->setContentsMargins(0, 0, 0, 0);
-        verticalLayout_2 = new QVBoxLayout();
-        verticalLayout_2->setObjectName("verticalLayout_2");
-        gridLayout = new QGridLayout();
-        gridLayout->setObjectName("gridLayout");
-        getScreenShotPushButton = new QPushButton(centralwidget);
-        getScreenShotPushButton->setObjectName("getScreenShotPushButton");
-        QSizePolicy sizePolicy1(QSizePolicy::Preferred, QSizePolicy::Fixed);
-        sizePolicy1.setHorizontalStretch(0);
-        sizePolicy1.setVerticalStretch(0);
-        sizePolicy1.setHeightForWidth(getScreenShotPushButton->sizePolicy().hasHeightForWidth());
-        getScreenShotPushButton->setSizePolicy(sizePolicy1);
+        self.gridLayout.addWidget(self.getScreenShotPushButton, 0, 0, 1, 1)
 
-        gridLayout->addWidget(getScreenShotPushButton, 0, 0, 1, 1);
+        self.autoClickScreenShot = QPushButton(self.centralwidget)
+        self.autoClickScreenShot.setObjectName(u"autoClickScreenShot")
+        sizePolicy1.setHeightForWidth(self.autoClickScreenShot.sizePolicy().hasHeightForWidth())
+        self.autoClickScreenShot.setSizePolicy(sizePolicy1)
 
-        autoClickScreenShot = new QPushButton(centralwidget);
-        autoClickScreenShot->setObjectName("autoClickScreenShot");
-        sizePolicy1.setHeightForWidth(autoClickScreenShot->sizePolicy().hasHeightForWidth());
-        autoClickScreenShot->setSizePolicy(sizePolicy1);
+        self.gridLayout.addWidget(self.autoClickScreenShot, 0, 1, 1, 1)
 
-        gridLayout->addWidget(autoClickScreenShot, 0, 1, 1, 1);
+        self.returnHomePushButton = QPushButton(self.centralwidget)
+        self.returnHomePushButton.setObjectName(u"returnHomePushButton")
+        sizePolicy1.setHeightForWidth(self.returnHomePushButton.sizePolicy().hasHeightForWidth())
+        self.returnHomePushButton.setSizePolicy(sizePolicy1)
 
-        returnHomePushButton = new QPushButton(centralwidget);
-        returnHomePushButton->setObjectName("returnHomePushButton");
-        sizePolicy1.setHeightForWidth(returnHomePushButton->sizePolicy().hasHeightForWidth());
-        returnHomePushButton->setSizePolicy(sizePolicy1);
+        self.gridLayout.addWidget(self.returnHomePushButton, 1, 0, 1, 1)
 
-        gridLayout->addWidget(returnHomePushButton, 1, 0, 1, 1);
+        self.returnPushButton = QPushButton(self.centralwidget)
+        self.returnPushButton.setObjectName(u"returnPushButton")
+        sizePolicy1.setHeightForWidth(self.returnPushButton.sizePolicy().hasHeightForWidth())
+        self.returnPushButton.setSizePolicy(sizePolicy1)
 
-        returnPushButton = new QPushButton(centralwidget);
-        returnPushButton->setObjectName("returnPushButton");
-        sizePolicy1.setHeightForWidth(returnPushButton->sizePolicy().hasHeightForWidth());
-        returnPushButton->setSizePolicy(sizePolicy1);
+        self.gridLayout.addWidget(self.returnPushButton, 1, 1, 1, 1)
 
-        gridLayout->addWidget(returnPushButton, 1, 1, 1, 1);
+        self.recordActionPushButton = QPushButton(self.centralwidget)
+        self.recordActionPushButton.setObjectName(u"recordActionPushButton")
+        sizePolicy1.setHeightForWidth(self.recordActionPushButton.sizePolicy().hasHeightForWidth())
+        self.recordActionPushButton.setSizePolicy(sizePolicy1)
+        self.recordActionPushButton.setCheckable(True)
+        self.recordActionPushButton.setChecked(True)
 
-        recordActionPushButton = new QPushButton(centralwidget);
-        recordActionPushButton->setObjectName("recordActionPushButton");
-        sizePolicy1.setHeightForWidth(recordActionPushButton->sizePolicy().hasHeightForWidth());
-        recordActionPushButton->setSizePolicy(sizePolicy1);
-        recordActionPushButton->setCheckable(true);
-        recordActionPushButton->setChecked(true);
+        self.gridLayout.addWidget(self.recordActionPushButton, 2, 0, 1, 1)
 
-        gridLayout->addWidget(recordActionPushButton, 2, 0, 1, 1);
+        self.actionStartPushButton = QPushButton(self.centralwidget)
+        self.actionStartPushButton.setObjectName(u"actionStartPushButton")
+        sizePolicy1.setHeightForWidth(self.actionStartPushButton.sizePolicy().hasHeightForWidth())
+        self.actionStartPushButton.setSizePolicy(sizePolicy1)
 
-        actionStartPushButton = new QPushButton(centralwidget);
-        actionStartPushButton->setObjectName("actionStartPushButton");
-        sizePolicy1.setHeightForWidth(actionStartPushButton->sizePolicy().hasHeightForWidth());
-        actionStartPushButton->setSizePolicy(sizePolicy1);
+        self.gridLayout.addWidget(self.actionStartPushButton, 3, 0, 1, 1)
 
-        gridLayout->addWidget(actionStartPushButton, 3, 0, 1, 1);
+        self.taskStopPushButton = QPushButton(self.centralwidget)
+        self.taskStopPushButton.setObjectName(u"taskStopPushButton")
+        sizePolicy1.setHeightForWidth(self.taskStopPushButton.sizePolicy().hasHeightForWidth())
+        self.taskStopPushButton.setSizePolicy(sizePolicy1)
 
-        taskStopPushButton = new QPushButton(centralwidget);
-        taskStopPushButton->setObjectName("taskStopPushButton");
-        sizePolicy1.setHeightForWidth(taskStopPushButton->sizePolicy().hasHeightForWidth());
-        taskStopPushButton->setSizePolicy(sizePolicy1);
-
-        gridLayout->addWidget(taskStopPushButton, 3, 1, 1, 1);
+        self.gridLayout.addWidget(self.taskStopPushButton, 3, 1, 1, 1)
 
 
-        verticalLayout_2->addLayout(gridLayout);
+        self.verticalLayout_2.addLayout(self.gridLayout)
 
-        actionLoadWidget = new QWidget(centralwidget);
-        actionLoadWidget->setObjectName("actionLoadWidget");
-        verticalLayout = new QVBoxLayout(actionLoadWidget);
-        verticalLayout->setObjectName("verticalLayout");
-        horizontalLayout = new QHBoxLayout();
-        horizontalLayout->setObjectName("horizontalLayout");
-        fileAddPushButton = new QPushButton(actionLoadWidget);
-        fileAddPushButton->setObjectName("fileAddPushButton");
-        sizePolicy1.setHeightForWidth(fileAddPushButton->sizePolicy().hasHeightForWidth());
-        fileAddPushButton->setSizePolicy(sizePolicy1);
+        self.actionLoadWidget = QWidget(self.centralwidget)
+        self.actionLoadWidget.setObjectName(u"actionLoadWidget")
+        self.verticalLayout = QVBoxLayout(self.actionLoadWidget)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.fileAddPushButton = QPushButton(self.actionLoadWidget)
+        self.fileAddPushButton.setObjectName(u"fileAddPushButton")
+        sizePolicy1.setHeightForWidth(self.fileAddPushButton.sizePolicy().hasHeightForWidth())
+        self.fileAddPushButton.setSizePolicy(sizePolicy1)
 
-        horizontalLayout->addWidget(fileAddPushButton);
+        self.horizontalLayout.addWidget(self.fileAddPushButton)
 
-        fileRemovePushButton = new QPushButton(actionLoadWidget);
-        fileRemovePushButton->setObjectName("fileRemovePushButton");
-        sizePolicy1.setHeightForWidth(fileRemovePushButton->sizePolicy().hasHeightForWidth());
-        fileRemovePushButton->setSizePolicy(sizePolicy1);
+        self.fileRemovePushButton = QPushButton(self.actionLoadWidget)
+        self.fileRemovePushButton.setObjectName(u"fileRemovePushButton")
+        sizePolicy1.setHeightForWidth(self.fileRemovePushButton.sizePolicy().hasHeightForWidth())
+        self.fileRemovePushButton.setSizePolicy(sizePolicy1)
 
-        horizontalLayout->addWidget(fileRemovePushButton);
-
-
-        verticalLayout->addLayout(horizontalLayout);
-
-        taskTreeWidget = new QTreeWidget(actionLoadWidget);
-        taskTreeWidget->headerItem()->setText(1, QString());
-        taskTreeWidget->setObjectName("taskTreeWidget");
-        sizePolicy.setHeightForWidth(taskTreeWidget->sizePolicy().hasHeightForWidth());
-        taskTreeWidget->setSizePolicy(sizePolicy);
-
-        verticalLayout->addWidget(taskTreeWidget);
+        self.horizontalLayout.addWidget(self.fileRemovePushButton)
 
 
-        verticalLayout_2->addWidget(actionLoadWidget);
+        self.verticalLayout.addLayout(self.horizontalLayout)
 
-        verticalLayout_2->setStretch(0, 3);
-        verticalLayout_2->setStretch(1, 7);
+        self.taskTreeWidget = QTreeWidget(self.actionLoadWidget)
+        self.taskTreeWidget.headerItem().setText(1, "")
+        self.taskTreeWidget.setObjectName(u"taskTreeWidget")
+        sizePolicy.setHeightForWidth(self.taskTreeWidget.sizePolicy().hasHeightForWidth())
+        self.taskTreeWidget.setSizePolicy(sizePolicy)
 
-        horizontalLayout_2->addLayout(verticalLayout_2);
+        self.verticalLayout.addWidget(self.taskTreeWidget)
 
-        screenLabel = new ImageLabel(centralwidget);
-        screenLabel->setObjectName("screenLabel");
-        QSizePolicy sizePolicy2(QSizePolicy::Preferred, QSizePolicy::Preferred);
-        sizePolicy2.setHorizontalStretch(204);
-        sizePolicy2.setVerticalStretch(115);
-        sizePolicy2.setHeightForWidth(screenLabel->sizePolicy().hasHeightForWidth());
-        screenLabel->setSizePolicy(sizePolicy2);
-        screenLabel->setMouseTracking(true);
-        screenLabel->setTabletTracking(true);
-        screenLabel->setAcceptDrops(false);
-        screenLabel->setAutoFillBackground(false);
-        screenLabel->setStyleSheet(QString::fromUtf8(""));
-        screenLabel->setScaledContents(true);
-        screenLabel->setAlignment(Qt::AlignCenter);
-        screenLabel->setWordWrap(false);
 
-        horizontalLayout_2->addWidget(screenLabel);
+        self.verticalLayout_2.addWidget(self.actionLoadWidget)
 
-        horizontalLayout_2->setStretch(0, 2);
-        horizontalLayout_2->setStretch(1, 8);
-        Form->setCentralWidget(centralwidget);
+        self.verticalLayout_2.setStretch(0, 3)
+        self.verticalLayout_2.setStretch(1, 7)
 
-        retranslateUi(Form);
+        self.horizontalLayout_2.addLayout(self.verticalLayout_2)
 
-        QMetaObject::connectSlotsByName(Form);
-    } // setupUi
+        self.screenLabel = ImageLabel(self.centralwidget)
+        self.screenLabel.setObjectName(u"screenLabel")
+        sizePolicy2 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        sizePolicy2.setHorizontalStretch(204)
+        sizePolicy2.setVerticalStretch(115)
+        sizePolicy2.setHeightForWidth(self.screenLabel.sizePolicy().hasHeightForWidth())
+        self.screenLabel.setSizePolicy(sizePolicy2)
+        self.screenLabel.setMouseTracking(True)
+        self.screenLabel.setTabletTracking(True)
+        self.screenLabel.setAcceptDrops(False)
+        self.screenLabel.setAutoFillBackground(False)
+        self.screenLabel.setStyleSheet(u"")
+        self.screenLabel.setScaledContents(True)
+        self.screenLabel.setAlignment(Qt.AlignCenter)
+        self.screenLabel.setWordWrap(False)
 
-    void retranslateUi(QMainWindow *Form)
-    {
-        Form->setWindowTitle(QCoreApplication::translate("Form", "auto_mobile", nullptr));
-        getScreenShotPushButton->setText(QCoreApplication::translate("Form", "\350\216\267\345\217\226\345\261\217\345\271\225", nullptr));
-        autoClickScreenShot->setText(QCoreApplication::translate("Form", "\345\220\257\345\212\250\344\273\273\345\212\241", nullptr));
-        returnHomePushButton->setText(QCoreApplication::translate("Form", "\350\277\224\345\233\236\346\241\214\351\235\242", nullptr));
-        returnPushButton->setText(QCoreApplication::translate("Form", "\350\277\224\345\233\236\344\270\212\344\270\200\347\272\247", nullptr));
-        recordActionPushButton->setText(QCoreApplication::translate("Form", "\345\274\200\345\247\213\345\275\225\345\210\266\345\212\250\344\275\234", nullptr));
-        actionStartPushButton->setText(QCoreApplication::translate("Form", "\345\274\200\345\247\213\346\211\247\350\241\214", nullptr));
-        taskStopPushButton->setText(QCoreApplication::translate("Form", "\344\273\273\345\212\241\347\273\210\346\255\242", nullptr));
-        fileAddPushButton->setText(QCoreApplication::translate("Form", "\346\267\273\345\212\240", nullptr));
-        fileRemovePushButton->setText(QCoreApplication::translate("Form", "\347\247\273\351\231\244", nullptr));
-        QTreeWidgetItem *___qtreewidgetitem = taskTreeWidget->headerItem();
-        ___qtreewidgetitem->setText(0, QCoreApplication::translate("Form", "\344\273\273\345\212\241\345\210\227\350\241\250", nullptr));
-        screenLabel->setText(QCoreApplication::translate("Form", "\345\233\276\347\211\207\346\230\276\347\244\272\345\214\272\345\237\237", nullptr));
-    } // retranslateUi
+        self.horizontalLayout_2.addWidget(self.screenLabel)
 
-};
+        self.horizontalLayout_2.setStretch(0, 2)
+        self.horizontalLayout_2.setStretch(1, 8)
+        Form.setCentralWidget(self.centralwidget)
 
-namespace Ui {
-    class Form: public Ui_Form {};
-} // namespace Ui
+        self.retranslateUi(Form)
 
-QT_END_NAMESPACE
+        QMetaObject.connectSlotsByName(Form)
+    # setupUi
 
-#endif // FORM_H
+    def retranslateUi(self, Form):
+        Form.setWindowTitle(QCoreApplication.translate("Form", u"auto_mobile", None))
+        self.getScreenShotPushButton.setText(QCoreApplication.translate("Form", u"\u83b7\u53d6\u5c4f\u5e55", None))
+        self.autoClickScreenShot.setText(QCoreApplication.translate("Form", u"\u542f\u52a8\u4efb\u52a1", None))
+        self.returnHomePushButton.setText(QCoreApplication.translate("Form", u"\u8fd4\u56de\u684c\u9762", None))
+        self.returnPushButton.setText(QCoreApplication.translate("Form", u"\u8fd4\u56de\u4e0a\u4e00\u7ea7", None))
+        self.recordActionPushButton.setText(QCoreApplication.translate("Form", u"\u5f00\u59cb\u5f55\u5236\u52a8\u4f5c", None))
+        self.actionStartPushButton.setText(QCoreApplication.translate("Form", u"\u5f00\u59cb\u6267\u884c", None))
+        self.taskStopPushButton.setText(QCoreApplication.translate("Form", u"\u4efb\u52a1\u7ec8\u6b62", None))
+        self.fileAddPushButton.setText(QCoreApplication.translate("Form", u"\u6dfb\u52a0", None))
+        self.fileRemovePushButton.setText(QCoreApplication.translate("Form", u"\u79fb\u9664", None))
+        ___qtreewidgetitem = self.taskTreeWidget.headerItem()
+        ___qtreewidgetitem.setText(0, QCoreApplication.translate("Form", u"\u4efb\u52a1\u5217\u8868", None));
+        self.screenLabel.setText(QCoreApplication.translate("Form", u"\u56fe\u7247\u663e\u793a\u533a\u57df", None))
+    # retranslateUi
+

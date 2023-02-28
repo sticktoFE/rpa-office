@@ -1,64 +1,110 @@
 # Define here the models for your scraped items
 #
 # See documentation in:
-# https://docs.scrapy.org/en/latest/topics/items.html
+# https://docs.org/en/latest/topics/items.html
 
 from scrapy import Item, Field
-import scrapy
 
 
-class JianshuItem(scrapy.Item):
+class JianshuItem(Item):
     """
     定义所需字段
     """
 
-    title = scrapy.Field()
-    content = scrapy.Field()
-    article_id = scrapy.Field()
-    origin_url = scrapy.Field()
-    author = scrapy.Field()
-    avatar = scrapy.Field()
-    pub_time = scrapy.Field()
-    read_count = scrapy.Field()
-    like_count = scrapy.Field()
-    word_count = scrapy.Field()
-    subjects = scrapy.Field()
-    comment_count = scrapy.Field()
+    title = Field()
+    content = Field()
+    article_id = Field()
+    origin_url = Field()
+    author = Field()
+    avatar = Field()
+    pub_time = Field()
+    read_count = Field()
+    like_count = Field()
+    word_count = Field()
+    subjects = Field()
+    comment_count = Field()
 
 
-class CSRCItem(scrapy.Item):
+class CSRCPenaltyItem(Item):
     """
     定义所需字段
     """
 
-    index = scrapy.Field()
-    con_type = scrapy.Field()
-    pub_org = scrapy.Field()
-    pub_date = scrapy.Field()
-    title = scrapy.Field()
-    text_num = scrapy.Field()
-    content = scrapy.Field()
-    detail_url = scrapy.Field()
+    index = Field()
+    con_type = Field()
+    pub_org = Field()
+    pub_date = Field()
+    title = Field()
+    text_num = Field()
+    content = Field()
+    detail_url = Field()
 
 
-class FuZhouEcoIndexItem(scrapy.Item):
+class CSRCMarketWeeklyItem(Item):
+    """
+    定义所需字段
+    """
+    title = Field()
+    detail_url = Field()
+    pub_date = Field()
+    index = Field()
+    con_type = Field()
+    pub_org = Field()
+    text_num = Field()
+    content = Field()
+    attach_name = Field()
+    attach_link = Field()
+    attach_save_path = Field()
+    
+class OAProAdmitToDoItem(Item):
+    """
+    定义所需字段
+    """
+    demand_no = Field()
+    title = Field()
+    submitter = Field()
+    submit_depart = Field()
+    submit_date = Field()
+    background = Field()
+    summary = Field()
+    admit_result = Field()
+    pro_type = Field()
+    attach_save_path = Field()
+    relate_attach_save_path = Field()
+class OAProAdmitHaveDoneItem(Item):
+    """
+    定义所需字段
+    """
+    demand_no = Field()
+    title = Field()
+    submitter = Field()
+    submit_depart = Field()
+    submit_date = Field()
+    background = Field()
+    summary = Field()
+    admit_result = Field()
+    pro_type = Field()
+    attach_save_path = Field()
+    relate_attach_save_path = Field()
+
+class FuZhouEcoIndexItem(Item):
     """
     定义所需字段
     """
 
-    title = scrapy.Field()
-    pub_date = scrapy.Field()
-    detail_url = scrapy.Field()
-    y_m = scrapy.Field()
-    name = scrapy.Field()
-    current_page = scrapy.Field()
+    title = Field()
+    pub_date = Field()
+    detail_url = Field()
+    y_m = Field()
+    name = Field()
+    current_page = Field()
 
 
-class ProjectItem(scrapy.Item):
+class ProjectItem(Item):
     """
     定义所需字段
     """
-    title = scrapy.Field()
-    org = scrapy.Field()
-    time = scrapy.Field()
-    content = scrapy.Field()
+    title = Field()
+    org = Field()
+    time = Field()
+    content = Field()
