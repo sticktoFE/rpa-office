@@ -1,14 +1,45 @@
 import os
 import re
-from PySide6.QtWidgets import QApplication, QPushButton, QTextEdit,QLabel, QPushButton, QTextEdit
-from PySide6.QtCore import Qt, Signal, QStandardPaths, QUrl,Qt, Signal, QStandardPaths, QUrl
-from PySide6.QtGui import QBrush, QTextCursor, QDesktopServices,QPainter, QIcon, QFont,QGuiApplication,QIcon, QFont,QGuiApplication,QTextCursor, QDesktopServices
+from PySide6.QtWidgets import (
+    QApplication,
+    QPushButton,
+    QTextEdit,
+    QLabel,
+    QPushButton,
+    QTextEdit,
+)
+from PySide6.QtCore import (
+    Qt,
+    Signal,
+    QStandardPaths,
+    QUrl,
+    Qt,
+    Signal,
+    QStandardPaths,
+    QUrl,
+)
+from PySide6.QtGui import (
+    QBrush,
+    QTextCursor,
+    QDesktopServices,
+    QPainter,
+    QIcon,
+    QFont,
+    QGuiApplication,
+    QIcon,
+    QFont,
+    QGuiApplication,
+    QTextCursor,
+    QDesktopServices,
+)
+
 # 使用文字转语音功能，发出问候音：xx,你好！
 from win32com.client import Dispatch
 
-from mytools.AIScreenshot.OCRScrollOut import TrThread
+from mytools.screen_shot.OCRScrollOut import TrThread
 
-#截图时识别文字结果的信息弹出框，后面可以做成通用信息显示框，增加互动性
+
+# 截图时识别文字结果的信息弹出框，后面可以做成通用信息显示框，增加互动性
 class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
     clear_signal = Signal()
     showm_signal = Signal(str)
@@ -20,10 +51,12 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         self.action = self.show
         self.moving = False
         self.autoreset = autoresetid
-        self.hsp = os.path.join(QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation),
-                                "JamtoolsSimpleModehistory.txt")
+        self.hsp = os.path.join(
+            QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation),
+            "JamtoolsSimpleModehistory.txt",
+        )
         if os.path.exists(self.hsp):
-            with open(self.hsp, "r", encoding="utf-8")as f:
+            with open(self.hsp, "r", encoding="utf-8") as f:
                 self.history = f.read().split("<\n\n<<>>\n\n>")
         else:
             self.history = []
@@ -32,18 +65,19 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         self.document.contentsChanged.connect(self.textAreaChanged)
         self.setMouseTracking(True)
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool | Qt.WindowStaysOnTopHint)
-        self.setFont(QFont('微软雅黑', 8))
-        self.setPlaceholderText('...')
-        self.setStyleSheet("QPushButton{color:black}"
-                            "QPushButton:hover{color:green}"
-                            "QPushButton:hover{background-color:rgb(200,200,100)}"
-                            "QPushButton{background-color:rgb(239,239,239)}"
-                            "QScrollBar{width:3px;border:none; background-color:rgb(200,200,200);"
-                            "border-radius: 8px;}"
-                            )
+        self.setFont(QFont("微软雅黑", 8))
+        self.setPlaceholderText("...")
+        self.setStyleSheet(
+            "QPushButton{color:black}"
+            "QPushButton:hover{color:green}"
+            "QPushButton:hover{background-color:rgb(200,200,100)}"
+            "QPushButton{background-color:rgb(239,239,239)}"
+            "QScrollBar{width:3px;border:none; background-color:rgb(200,200,200);"
+            "border-radius: 8px;}"
+        )
         self.label = linelabel(self)
-        self.colse_botton = QPushButton('X', self)
-        self.colse_botton.setToolTip('关闭')
+        self.colse_botton = QPushButton("X", self)
+        self.colse_botton.setToolTip("关闭")
         self.colse_botton.resize(25, 25)
         self.colse_botton.clicked.connect(self.hide)
         self.colse_botton.show()
@@ -52,42 +86,43 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
             "QPushButton{background-color:rgb(239,0,0)}"
             "QPushButton:hover{color:green}"
             "QPushButton:hover{background-color:rgb(150,50,0)}"
-            "QPushButton{border-radius:0};")
-        self.tra_botton = QPushButton('译', self)
+            "QPushButton{border-radius:0};"
+        )
+        self.tra_botton = QPushButton("译", self)
         self.tra_botton.resize(25, 25)
         self.tra_botton.clicked.connect(self.tra)
-        self.tra_botton.setToolTip('翻译/快捷键Ctrl+回车')
+        self.tra_botton.setToolTip("翻译/快捷键Ctrl+回车")
         self.tra_botton.show()
 
-        self.detail_botton = QPushButton('详', self)
+        self.detail_botton = QPushButton("详", self)
         self.detail_botton.resize(25, 25)
         self.detail_botton.clicked.connect(self.detail)
-        self.detail_botton.setToolTip('跳转百度翻译网页版查看详细解析')
+        self.detail_botton.setToolTip("跳转百度翻译网页版查看详细解析")
         self.detail_botton.show()
 
-        self.speak_botton = QPushButton('听', self)
+        self.speak_botton = QPushButton("听", self)
         self.speak_botton.resize(25, 25)
         self.speak_botton.clicked.connect(self.speak)
-        self.speak_botton.setToolTip('播放音频/快捷键F4')
+        self.speak_botton.setToolTip("播放音频/快捷键F4")
         self.speak_botton.show()
 
         self.clear_botton = QPushButton(QIcon(":./clear.png"), "", self)
         self.clear_botton.resize(25, 25)
         self.clear_botton.clicked.connect(self.clear)
-        self.clear_botton.setToolTip('清空')
+        self.clear_botton.setToolTip("清空")
         self.clear_botton.show()
-        self.last_botton = QPushButton('<', self)
+        self.last_botton = QPushButton("<", self)
         self.last_botton.resize(13, 13)
         self.last_botton.clicked.connect(self.last_history)
-        self.last_botton.setToolTip('上一个历史记录Ctrl+←')
+        self.last_botton.setToolTip("上一个历史记录Ctrl+←")
         self.last_botton.show()
-        self.next_botton = QPushButton('>', self)
+        self.next_botton = QPushButton(">", self)
         self.next_botton.resize(13, 13)
         self.next_botton.clicked.connect(self.next_history)
-        self.next_botton.setToolTip('下一个历史记录Ctrl+→')
+        self.next_botton.setToolTip("下一个历史记录Ctrl+→")
         self.next_botton.show()
 
-        self.setToolTip('Ctrl+回车可快速翻译,拖动边框可改变位置')
+        self.setToolTip("Ctrl+回车可快速翻译,拖动边框可改变位置")
         self.clear_signal.connect(self.clear)
         self.textAreaChanged()
 
@@ -96,7 +131,7 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
 
     def detail(self):
         text = self.toPlainText().split("翻译结果")[0].lstrip("\n").rstrip("\n")
-        url = 'https://fanyi.baidu.com/#auto/zh/' + text
+        url = "https://fanyi.baidu.com/#auto/zh/" + text
         QDesktopServices.openUrl(QUrl(url))
 
     def tra(self):
@@ -105,7 +140,7 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         if len(text) == 0:
             print("无文本")
             return
-        text = re.sub(r'[^\w]', '', text).replace('_', '')
+        text = re.sub(r"[^\w]", "", text).replace("_", "")
         print(text)
         n = 0
         for i in text:
@@ -124,22 +159,25 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
 
     def is_alphabet(self, uchar):
         """判断一个unicode是否是英文字母"""
-        if (u'\u0041' <= uchar <= u'\u005a') or (u'\u0061' <= uchar <= u'\u007a'):
+        if ("\u0041" <= uchar <= "\u005a") or ("\u0061" <= uchar <= "\u007a"):
             return True
         else:
             return False
 
     def speak(self):
         text = self.toPlainText().split("翻译结果")[0].lstrip("\n").rstrip("\n")
-        if text != "":           
-            speaker = Dispatch('SAPI.SpVoice')
+        if text != "":
+            speaker = Dispatch("SAPI.SpVoice")
             speaker.Speak(text)
 
     def textAreaChanged(self, minsize=180, recheck=True):
         self.document.adjustSize()
         newWidth = self.document.size().width() + 28
         newHeight = self.document.size().height() + 15
-        winwidth, winheight = QGuiApplication.primaryScreen().availableGeometry().width(), QGuiApplication.primaryScreen().availableGeometry().height()
+        winwidth, winheight = (
+            QGuiApplication.primaryScreen().availableGeometry().width(),
+            QGuiApplication.primaryScreen().availableGeometry().height(),
+        )
         if newWidth != self.width():
             if newWidth < minsize:
                 self.setFixedWidth(minsize)
@@ -166,12 +204,24 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         self.label.setGeometry(self.width() - 28, 0, 28, self.height())
         self.colse_botton.move(self.width() - 26, 1)
         self.tra_botton.move(self.width() - 26, self.height() - 26)
-        self.speak_botton.move(self.tra_botton.x(), self.tra_botton.y() - self.speak_botton.height())
-        self.detail_botton.move(self.speak_botton.x(), self.speak_botton.y() - self.detail_botton.height())
-        self.clear_botton.move(self.detail_botton.x(), self.detail_botton.y() - self.clear_botton.height())
-        self.last_botton.move(self.clear_botton.x(), self.clear_botton.y() - self.last_botton.height())
-        self.next_botton.move(self.clear_botton.x() + self.clear_botton.width() - self.next_botton.width(),
-                                self.clear_botton.y() - self.next_botton.height())
+        self.speak_botton.move(
+            self.tra_botton.x(), self.tra_botton.y() - self.speak_botton.height()
+        )
+        self.detail_botton.move(
+            self.speak_botton.x(), self.speak_botton.y() - self.detail_botton.height()
+        )
+        self.clear_botton.move(
+            self.detail_botton.x(), self.detail_botton.y() - self.clear_botton.height()
+        )
+        self.last_botton.move(
+            self.clear_botton.x(), self.clear_botton.y() - self.last_botton.height()
+        )
+        self.next_botton.move(
+            self.clear_botton.x()
+            + self.clear_botton.width()
+            - self.next_botton.width(),
+            self.clear_botton.y() - self.next_botton.height(),
+        )
 
     def get_tra_resultsignal(self, text):
         self.moveCursor(QTextCursor.End)
@@ -225,25 +275,41 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         # print(e.key())
         if e.key() == Qt.Key_Return:
             try:
-                if QApplication.keyboardModifiers() in (Qt.ShiftModifier, Qt.ControlModifier, Qt.AltModifier):
+                if QApplication.keyboardModifiers() in (
+                    Qt.ShiftModifier,
+                    Qt.ControlModifier,
+                    Qt.AltModifier,
+                ):
                     self.action()
                 else:
                     pass
             except:
-                print('回车失败')
+                print("回车失败")
             return
-        elif e.key() ==16777267:
+        elif e.key() == 16777267:
             self.speak()
-        elif e.key() == Qt.Key_S and QApplication.keyboardModifiers() == Qt.ControlModifier:
+        elif (
+            e.key() == Qt.Key_S
+            and QApplication.keyboardModifiers() == Qt.ControlModifier
+        ):
             print("save")
             self.addhistory()
-        elif QApplication.keyboardModifiers() not in (Qt.ShiftModifier, Qt.ControlModifier, Qt.AltModifier):
+        elif QApplication.keyboardModifiers() not in (
+            Qt.ShiftModifier,
+            Qt.ControlModifier,
+            Qt.AltModifier,
+        ):
             self.history_pos = len(self.history)
-        elif QApplication.keyboardModifiers() == Qt.ControlModifier and e.key() == Qt.Key_Left:
+        elif (
+            QApplication.keyboardModifiers() == Qt.ControlModifier
+            and e.key() == Qt.Key_Left
+        ):
             self.last_history()
-        elif QApplication.keyboardModifiers() == Qt.ControlModifier and e.key() == Qt.Key_Right:
+        elif (
+            QApplication.keyboardModifiers() == Qt.ControlModifier
+            and e.key() == Qt.Key_Right
+        ):
             self.next_history()
-
 
     def addhistory(self):
         text = self.toPlainText()
@@ -252,7 +318,7 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
             mode = "r+"
             if not os.path.exists(self.hsp):
                 mode = "w+"
-            with open(self.hsp, mode, encoding="utf-8")as f:
+            with open(self.hsp, mode, encoding="utf-8") as f:
                 hislist = f.read().split("<\n\n<<>>\n\n>")
                 hislist.append(text)
                 if len(hislist) > 20:
@@ -290,7 +356,7 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         self.addhistory()
         super(FramelessEnterSendQTextEdit, self).hide()
         if self.autoreset:
-            print('删除', self.autoreset - 1)
+            print("删除", self.autoreset - 1)
             self.del_myself_signal.emit(self.autoreset - 1)
             self.close()
 
@@ -303,7 +369,8 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
             self.addhistory()
         self.history_pos = len(self.history)
         super(FramelessEnterSendQTextEdit, self).clear()
-        
+
+
 class linelabel(QLabel):
     def __init__(self, parent):
         super(linelabel, self).__init__(parent=parent)

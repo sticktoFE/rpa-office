@@ -73,7 +73,7 @@ class MainWindow(QMainWindow, Ui_Form):
         row = self.taskTableWidget.rowCount()
         # 在末尾插入一空行
         self.taskTableWidget.insertRow(row)
-        item_path = QTableWidgetItem("biz.monitor_oa.zy_manager")
+        item_path = QTableWidgetItem("biz.monitor_oa.manager")
         item_path.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
         self.taskTableWidget.setItem(row, 0, item_path)
 

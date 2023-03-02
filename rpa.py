@@ -56,7 +56,7 @@ class Main(MainWindow):
         # self.context_menu.moveToThread(self.menuthread)
         # self.menuthread.start()
         # 综合截屏界面
-        from mytools.AIScreenshot.SMainLayer import SMainLayer
+        from mytools.screen_shot.SMainLayer import SMainLayer
 
         self.screenshot = SMainLayer()
         self.screenshot.screen_shot_pic_signal.connect(self.ocrResult)
@@ -124,7 +124,7 @@ class Main(MainWindow):
         if not self.isMinimized():
             self.show()  # 截图完成显示窗口
         if box[0] != "esc":
-            self.OCR = lazy_import("mytools.AIScreenshot.OCRScrollOut").OCRGeneral(
+            self.OCR = lazy_import("mytools.screen_shot.OCRScrollOut").OCRGeneral(
                 box=box
             )
             self.OCR.signal.connect(self.ocrResult)
@@ -136,9 +136,7 @@ class Main(MainWindow):
         del self.label  # del前必须先close
         # 截完图做啥操作
         originalPixmap = (
-            lazy_import("myutils.ScreenShot")
-            .ScreenShot()
-            .shot_screen(box=box)
+            lazy_import("myutils.ScreenShot").ScreenShot().shot_screen(box=box)
         )
         dialog = lazy_import("ui.screendrawdialog_event").ShotDialog(originalPixmap)
         dialog.exec_()

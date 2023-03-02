@@ -11,9 +11,9 @@ from mytools.general_spider.general_spider.spiders.OAProAdmitHaveDone import (
     OAProAdmitHaveDoneSpider,
 )
 from myutils.info_out_manager import get_temp_folder
-from biz.monitor_oa.zy_mail import SeleMail
-from biz.monitor_oa.zy_txdoc import TXDocument
-from biz.monitor_oa.zy_sendinfo import send_webchat
+from biz.monitor_oa.mail import SeleMail
+from biz.monitor_oa.txdoc import TXDocument
+from biz.monitor_oa.sendinfo import send_webchat
 
 
 # 获取数据形成文件

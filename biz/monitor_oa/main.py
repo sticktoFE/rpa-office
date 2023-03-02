@@ -18,7 +18,7 @@ parser.add_argument(
 # 解析命令行参数
 args = parser.parse_args()
 
-path_ = "biz.monitor_oa.zy_manager"
+path_ = "biz.monitor_oa.manager"
 package_ = args.package
 method_ = args.method
 # 默认保存登录信息，快捷开始

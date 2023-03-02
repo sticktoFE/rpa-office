@@ -1,6 +1,6 @@
 import sys
 import time
-from biz.monitor_oa.AppActionExecThread import AppExec
+from mytools.auto_app.AppActionExecThread import AppExec
 from myutils.ScreenShot import ScreenShot
 from pynput.mouse import Controller
 from PySide6.QtCore import Slot

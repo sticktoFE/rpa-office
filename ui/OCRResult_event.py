@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QHeaderView,
 )
 from PySide6.QtGui import QImage
-from mytools.AIVideo.model.inference.OCRVideo import OCRVideo
+from mytools.video.model.inference.OCRVideo import OCRVideo
 from myutils.image_convert import cv2pixmap
 from myutils.info_out_manager import get_temp_file, get_temp_folder
 from ui.component.TipsShower import TipsShower
@@ -36,8 +36,7 @@ class TotalMessage(QDialog, Ui_OCRResult):
         self.select_btn_pdf.clicked.connect(self.ocr_pdf)
         self.start_btn_scan.clicked.connect(self.ocr_pdf)
         self.start_btn_video.clicked.connect(self.start_ocr_video)
-        self.start_btn_video_screenshot.clicked.connect(
-            self.ocr_video_screenshot)
+        self.start_btn_video_screenshot.clicked.connect(self.ocr_video_screenshot)
         self.start_btn_video_monitor.clicked.connect(self.ocr_video_monitor)
         self.start_btn_video_stop.clicked.connect(self.ocr_video_close)
         self.table_btn.clicked.connect(self.display_data_table)
@@ -50,8 +49,7 @@ class TotalMessage(QDialog, Ui_OCRResult):
         self.graphicsView.setMouseTracking(True)  # 2
         self.last_time_move = 0
 
-        self.Tipsshower = TipsShower(
-            "  ", targetarea=(100, 70, 0, 0), parent=self)
+        self.Tipsshower = TipsShower("  ", targetarea=(100, 70, 0, 0), parent=self)
         # tipsfont = QFont("Microsoft YaHei")
         # tipsfont.setBold(True)
         # tipsfont.setPointSize(60)
@@ -235,7 +233,7 @@ class TotalMessage(QDialog, Ui_OCRResult):
             and event.button() == Qt.RightButton
         ):
             QApplication.clipboard().setPixmap(self.src_long_pic)
-            # QApplication.clipboard().setImage(QImage(f"{Path(__file__).parent.parent}/dw/DataFactory/AIScreenshot/tmp/long_screenshot.png"))
+            # QApplication.clipboard().setImage(QImage(f"{Path(__file__).parent.parent}/dw/DataFactory/screen_shot/tmp/long_screenshot.png"))
         elif event.type() == QEvent.Enter:
             """
             鼠标悬停，提示信息
