@@ -12,10 +12,23 @@ from mytools.general_spider.general_spider.extendsion.tools import waitForXpath
 from pathlib import Path
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import NoSuchElementException,ElementNotInteractableException,TimeoutException
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    ElementNotInteractableException,
+    TimeoutException,
+)
+
+
 class OAProAdmitHaveDoneSpider(SeleniumSpider):
     name = "OAProAdmitHaveDone"
     url_format = "http://oa.zybank.com.cn/#/sd-frame/sd-mytodolist"
+    # 制定专属pipeline
+    custom_settings = {
+        "ITEM_PIPELINES": {
+            "mytools.general_spider.general_spider.pipelines.OAProAdmitHaveDonePipeline": 300
+        }
+    }
+
     def start_requests(self):
         # self.out_file = self.settings.get('out_file')
         """
@@ -30,21 +43,26 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
             "page_num": 1,
         }
         # 列表页是动态的，所以需要启用selenium
-        yield scrapy.Request(start_url, meta=meta, callback=self.parse,dont_filter=True)
+        yield scrapy.Request(
+            start_url, meta=meta, callback=self.parse, dont_filter=True
+        )
 
+    # 解析列表数据
     def parse(self, response):
         meta = response.meta
-        if meta["page_num"] != -1: # -1表示没有下一页了
+        if meta["page_num"] != -1:  # -1表示没有下一页了
             self.current_url = response.url
             # 获取当前页面中的文章列表
-            articles = response.xpath('//div[@role="tabpanel" and @aria-hidden="false" and @class="ant-tabs-tabpane ant-tabs-tabpane-active"]//tbody[@class="ant-table-tbody"]/tr[@class="ant-table-row ant-table-row-level-0"]')
+            articles = response.xpath(
+                '//div[@role="tabpanel" and @aria-hidden="false" and @class="ant-tabs-tabpane ant-tabs-tabpane-active"]//tbody[@class="ant-table-tbody"]/tr[@class="ant-table-row ant-table-row-level-0"]'
+            )
             # articles = response.xpath('//*[@id="sd-body"]/section/section/main/section/main/div/div/div/div/div/div/div[3]/div[2]/div/div[2]/div/div/div/div/div/table/tbody')
             for article in articles:
                 time.sleep(random.randint(3, 6))
                 # 获取文章的标题和链接
                 title = article.xpath("./td[1]/@title").get()
                 # 仅针对科技需求任务进行获取
-                if '信息科技项目建设需求申请' not in title:
+                if "信息科技项目建设需求申请" not in title:
                     continue
                 # 2.实例化：
                 item = OAProAdmitHaveDoneItem()
@@ -52,9 +70,16 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
                 item["title"] = title
                 # 打开详情
                 current_window = self.browser.current_window_handle
-                title_ele = waitForXpath(self.browser,f'//div[@role="tabpanel" and @aria-hidden="false" and @class="ant-tabs-tabpane ant-tabs-tabpane-active"]//tbody[@class="ant-table-tbody"]/tr[@class="ant-table-row ant-table-row-level-0"]/td[@title="{title}"]',timeout=self.timeout)
-                title_ele.click()
-                time.sleep(random.randint(2, 8))
+                try:
+                    title_ele = waitForXpath(
+                        self.browser,
+                        f'//div[@role="tabpanel" and @aria-hidden="false" and @class="ant-tabs-tabpane ant-tabs-tabpane-active"]//tbody[@class="ant-table-tbody"]/tr[@class="ant-table-row ant-table-row-level-0"]/td[@title="{title}"]',
+                        timeout=self.timeout,
+                    )
+                    title_ele.click()
+                except TimeoutException as e:
+                    print(e)
+                time.sleep(random.randint(3, 6))
                 # 也未涉及到跳转窗口，所以需要切换窗口
                 all_windows = self.browser.window_handles
                 for window in all_windows:
@@ -73,18 +98,21 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
                     encoding="utf-8",
                     status=200,
                 )
-                self.parse_article(item,response)
-                # 根据日期判断停止继续,目前只获取当天提取的需求进行获取
-                current_date = str(time.strftime("%Y-%m-%d", time.localtime()))
-                if item["submit_date"] != current_date:
-                    break
+                self.parse_article(item, response)
                 time.sleep(random.randint(3, 6))
                 self.browser.close()
                 self.browser.switch_to.window(current_window)
+                # 根据日期判断停止继续,大于等于设定日期的才获取  存在作废的需求 demand_no为空，不为空的才获取
+                # 注意item不设置值的情况下报keyerror错误
+                if item["demand_no"] == "None" or not (
+                    item["submit_date"] < self.settings.get("DATA_END_DATE")
+                    and item["submit_date"] >= self.settings.get("DATA_START_DATE")
+                ):
+                    continue
                 yield item
-            #翻页
+            # 翻页
             meta["page_num"] += 1
-            if meta["page_num"] < self.settings.get('MAX_PAGE'):  # 不超过3页
+            if meta["page_num"] <= self.settings.get("MAX_PAGE"):  # 不超过3页
                 meta.update(
                     {
                         "useSelenium": True,
@@ -93,26 +121,48 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
                         "purpose": "next",
                     }
                 )
-                yield scrapy.Request(url=self.current_url, meta=meta, callback=self.parse, dont_filter=True)
+                yield scrapy.Request(
+                    url=self.current_url,
+                    meta=meta,
+                    callback=self.parse,
+                    dont_filter=True,
+                )
 
-    def parse_article(self, item,response):
+    def parse_article(self, item, response):
         # item = response.meta["data"]
         # 获取文章的正文内容
         content = response.xpath('//table[@class="sd-form-theme sd-default"]')
-        item["demand_no"]  = content.xpath("./tr[2]/td[2]/span/text()").get().strip()
-        item["submit_date"]  = content.xpath("./tr[2]/td[4]/span/text()").get().strip()
-        item["submitter"]  = content.xpath("./tr[3]/td[2]/span/text()").get().strip()
-        item["submit_depart"]  = content.xpath("./tr[4]/td[2]/span/text()").get().strip()
-        # 需求背景
-        item["background"] = '\r\n'.join(content.xpath("./tr[8]/td[2]//text()").getall()).strip()
-        # 需求概述
-        item["summary"] = '\r\n'.join(content.xpath("./tr[9]/td[2]//text()").getall()).strip()
-        # 产品登记预审结果 准入 备案 不涉及
-        item["admit_result"] = '\r\n'.join(content.xpath("./tr[39]/td[2]//text()").getall()).strip()
-        # 产品分类
-        item["pro_type"] = '\r\n'.join(content.xpath("./tr[39]/td[4]//text()").getall()).strip()
-        # yield item
+        demand_no = content.xpath("./tr[2]/td[2]/span/text()").get()
+        if demand_no is None:
+            item["demand_no"] = "None"
+        else:
+            item["demand_no"] = content.xpath("./tr[2]/td[2]/span/text()").get().strip()
+            item["submit_date"] = (
+                content.xpath("./tr[2]/td[4]/span/text()").get().strip()
+            )
+            item["submitter"] = content.xpath("./tr[3]/td[2]/span/text()").get().strip()
+            item["submit_depart"] = (
+                content.xpath("./tr[4]/td[2]/span/text()").get().strip()
+            )
+            # 需求背景
+            item["background"] = []
+            backgrounds = content.xpath("./tr[8]/td[2]//text()").getall()
+            for background in backgrounds:
+                item["background"].append(background.strip())
+            # 需求概述
+            item["summary"] = []
+            summarys = content.xpath("./tr[9]/td[2]//text()").getall()
+            for summary in summarys:
+                item["summary"].append(summary.strip())
+            # 产品登记预审结果 准入 备案 不涉及
+            item["admit_result"] = content.xpath("./tr[39]/td[2]//text()").get()
+            # 产品分类
+            item["pro_type"] = content.xpath("./tr[39]/td[4]//text()").get()
+
     # 使用selenium请求时，请求后的动作
+    # 这个方法会在我们的下载器中间件返回Response之前被调用
+    # 等待content内容加载成功后，再继续
+    # 这样的话，我们就能在parse_content方法里应用选择器扣出#content了
     def selenium_func(self, request):
         meta = request.meta
         if meta["purpose"] == "login":
@@ -127,9 +177,9 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
                 timeout=self.timeout,
             )
             userid_input.clear()
-            userid_input.send_keys('loubenlei')
+            userid_input.send_keys(self.settings.get("userID"))
             password_input.clear()
-            password_input.send_keys('abcd@1234')
+            password_input.send_keys(self.settings.get("passwd"))
             submit = waitForXpath(
                 self.browser,
                 "//form[@class='ant-form ant-form-horizontal form_sd-login_login']//span[text()='登 录']",
@@ -138,66 +188,72 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
             # submit.click()
             login = self.browser.switch_to.active_element
             login.send_keys(Keys.ENTER)
-            
+
             waitForXpath(
-                self.browser,"//div[@class='ant-tabs-tab-active ant-tabs-tab' and @role='tab' and contains(text(),'待处理')]",
+                self.browser,
+                "//div[@class='ant-tabs-tab-active ant-tabs-tab' and @role='tab' and contains(text(),'待处理')]",
                 timeout=self.timeout,
             )
             # 切换到已处理
             submit = waitForXpath(
                 self.browser,
-                "//div[@class='ant-tabs ant-tabs-top ant-tabs-line ant-tabs-no-animation sd-has-table']//div[@role='tab'][2]",#2是已办理tab页
+                "//div[@class='ant-tabs ant-tabs-top ant-tabs-line ant-tabs-no-animation sd-has-table']//div[@role='tab'][2]",  # 2是已办理tab页
                 timeout=self.timeout,
             )
             submit.click()
             # self.browser.switch_to.frame('frame_name')
             # login = self.browser.switch_to.active_element
             waitForXpath(
-                    self.browser,
-                    f"//ul[@class='ant-pagination ant-table-pagination']",
-                    timeout=self.timeout,
-                )
+                self.browser,
+                f"//ul[@class='ant-pagination ant-table-pagination']",
+                timeout=self.timeout,
+            )
             # 等待数据完全展示出来
             time.sleep(3)
         elif meta["purpose"] == "next":
             page = meta["page_num"]
-            # 这个方法会在我们的下载器中间件返回Response之前被调用
-            # 等待content内容加载成功后，再继续
-            # 这样的话，我们就能在parse_content方法里应用选择器扣出#content了
-            # 通过“下一页”按钮翻页
-            # a = waitForXpath(
-            #     self.browser, "//a[@class='nextbtn' and text()='下一页']")
-            # a.click()
-            # 通过输入页数点击并点击确定翻页
-            try:
-                input = waitForXpath(
-                    self.browser,
-                    "//div[@class='ant-pagination-options-quick-jumper' and contains(text(),'跳至')]/input[@type='text']",
-                    timeout=5,
-                )
-            except (TimeoutException,NoSuchElementException):
-                request.meta.update({'page_num':-1})
-            else:#没异常正常处理
-                input.clear()
-                input.send_keys(page)
-                self.browser.switch_to.active_element.send_keys(Keys.ENTER)
-                # 切换到已处理
-                submit = waitForXpath(
-                    self.browser,
-                    "//div[@class='ant-tabs ant-tabs-top ant-tabs-line ant-tabs-no-animation sd-has-table']//div[@role='tab'][2]",
-                    timeout=self.timeout,
-                )
-                submit.click()
-                waitForXpath(
-                    self.browser,
-                    f"//ul[@class='ant-pagination ant-table-pagination']",
-                    timeout=self.timeout,
-                )
-        elif meta["purpose"] == "download":
-            a = waitForXpath(
-                self.browser, '//div[@id="files"]/a[1]', timeout=self.timeout
+            # 1、通过点击下一页按钮执行翻页
+            next_page = waitForXpath(
+                self.browser,
+                "//div[@role='tabpanel' and @aria-hidden='false' and @class='ant-tabs-tabpane ant-tabs-tabpane-active']//li[@title='下一页']",
+                timeout=5,
             )
-            a.click()
+            np = next_page.get_attribute("class")
+            if np == "ant-pagination-disabled ant-pagination-next":
+                request.meta.update({"page_num": -1})
+            else:
+                next_page.click()
+            # 2、 通过输入页数点击并点击确定翻页
+            # try:
+            #     input = waitForXpath(
+            #         self.browser,
+            #         "//div[@role='tabpanel' and @aria-hidden='false' and @class='ant-tabs-tabpane ant-tabs-tabpane-active']//div[@class='ant-pagination-options-quick-jumper' and contains(text(),'跳至')]/input[@type='text']",
+            #         timeout=5,
+            #     )
+            # except (TimeoutException,NoSuchElementException):
+            #     request.meta.update({'page_num':-1})
+            # else:#没异常正常处理
+            #     input.clear()
+            #     input.send_keys(page)
+            #     self.browser.switch_to.active_element.send_keys(Keys.ENTER)
+            # 切换到已处理
+            submit = waitForXpath(
+                self.browser,
+                "//div[@class='ant-tabs ant-tabs-top ant-tabs-line ant-tabs-no-animation sd-has-table']//div[@role='tab'][2]",
+                timeout=self.timeout,
+            )
+            submit.click()
+            # 等待页面加载完标识出现
+            waitForXpath(
+                self.browser,
+                f"//ul[@class='ant-pagination ant-table-pagination']",
+                timeout=self.timeout,
+            )
+        # elif meta["purpose"] == "download":
+        #     a = waitForXpath(
+        #         self.browser, '//div[@id="files"]/a[1]', timeout=self.timeout
+        #     )
+        #     a.click()
 
     def closed(self, reason):
         # # 判断文件是否存在

@@ -59,6 +59,9 @@ def get_driver_ChromeDriver(SetHeadless=True, down_file_save_path="D:\\转型\\d
     options.add_argument("--disable-blink-features")
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("--disable-infobars")  # 禁用“chrome正受到自动测试软件的控制”提示
+    # options.add_argument("--disable-extensions")
+    # options.add_argument("--disable-application-cache")
+
     options.add_argument(
         "log-level=3"
     )  # INFO = 0 WARNING = 1 LOG_ERROR = 2 LOG_FATAL = 3 default is 0
@@ -85,19 +88,30 @@ def get_driver_ChromeDriver(SetHeadless=True, down_file_save_path="D:\\转型\\d
     # 浏览器地址栏访问chrome://version/查看个人资料路径,去掉最后的/Default
     # cookie等浏览器默认参数保存路径
     options.add_argument("user-data-dir=d:\\temp\\selenum_zy\\AutomationProfile")
+    # options.add_argument("--no-startup-window")
     # 不加载图片, 提升速度 不知为什么，打开后导致checkbox显示不出来
     # options.add_argument("blink-settings=imagesEnabled=false")
     # 配置下载文件的保存目录
+
+    # prefs = {
+    #     "download.default_directory": down_file_save_path.replace(
+    #         "/", "\\"
+    #     ),  # 必须采取 \\xx\\格式，/xx/格式会报错误，下载失败
+    #     "download.prompt_for_download": False,  # 为True则弹框，选择保存文件路径，False则用down_file_save_path为保存目录
+    # }
+    # options.add_experimental_option("prefs", prefs)
     prefs = {
+        "exit_type": "Normal",  # 避免有头打开浏览器时出现恢复页面的弹窗提醒
         "download.default_directory": down_file_save_path.replace(
             "/", "\\"
         ),  # 必须采取 \\xx\\格式，/xx/格式会报错误，下载失败
-        "download.prompt_for_download": False,
-    }  # 为True则弹框，选择保存文件路径，False则用down_file_save_path为保存目录
-    options.add_experimental_option("prefs", prefs)
+        "download.prompt_for_download": False,  # 为True则弹框，选择保存文件路径，False则用down_file_save_path为保存目录
+    }
+    options.add_experimental_option("prefs", {"profile": prefs})
     # 初始化web驱动
     driver = webdriver.Chrome(
-        executable_path=f"{Path(__file__).parent}\\chromedriver103.exe", chrome_options=options
+        executable_path=f"{Path(__file__).parent}\\chromedriver110.exe",
+        chrome_options=options,
     )
     # driver = webdriver.Chrome(
     #     service=Service(ChromeDriverManager().install()), options=options

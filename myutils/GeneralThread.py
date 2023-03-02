@@ -1,15 +1,14 @@
+from inspect import isclass, isfunction, ismethod
 import sys
 import time
 import traceback
-from PySide6.QtCore import (QObject, QRunnable, QThreadPool, QTimer,
-                            Signal, Slot)
-from PySide6.QtWidgets import (QLabel, QMainWindow, QPushButton, QVBoxLayout,
-                               QWidget)
+from PySide6.QtCore import QObject, QRunnable, QThreadPool, QTimer, Signal, Slot
+from PySide6.QtWidgets import QLabel, QMainWindow, QPushButton, QVBoxLayout, QWidget
 from myutils.LazyImport import lazy_import
 
 
 class WorkerSignals(QObject):
-    '''
+    """
     Defines the signals available from a running worker thread.
     Supported signals are:
     finished
@@ -20,7 +19,8 @@ class WorkerSignals(QObject):
         object data returned from processing, anything
     progress
         int indicating % progress
-    '''
+    """
+
     finished = Signal(int)
     error = Signal(tuple)
     fn_result = Signal(tuple)
@@ -28,7 +28,7 @@ class WorkerSignals(QObject):
     result = Signal(object)
     progress = Signal(int)
     thread_stop = Signal()
-    '''
+    """
     Worker thread
     Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
     :param callback: The function callback to run on this worker thread. Supplied args and
@@ -37,15 +37,24 @@ class WorkerSignals(QObject):
     :param args: Arguments to pass to the callback function
     :param kwargs: Keywords to pass to the callback function
     重要事说三遍，只有run中代码是运行在子线程中的，不要在init中有耗时的代码，要放到run中
-    '''
+    """
 
 
 class Worker(QRunnable):
-    def __init__(self, fn, *args, need_progress_signal=False, module=None, **kwargs):
+    def __init__(
+        self,
+        fnOrClass,
+        *args,
+        classMethod=None,
+        need_progress_signal=False,
+        module=None,
+        **kwargs,
+    ):
         super().__init__()
         # Store constructor arguments (re-used for processing)
         # print(f'init {fn} thread name: {QThread.currentThread()}')
-        self.fn = fn
+        self.fn = fnOrClass
+        self.class_method = classMethod
         self.module = module
         self.args = args
         self.kwargs = kwargs
@@ -53,24 +62,31 @@ class Worker(QRunnable):
         # Add the callback to our kwargs
         # The old way (hard-code the callback to kwargs)
         if need_progress_signal:
-            self.kwargs['progress_signal'] = self.communication.progress
+            self.kwargs["progress_signal"] = self.communication.progress
 
     @Slot()
     def run(self):
-        '''
+        """
         Initialise the runner function with passed args, kwargs.
-        '''
+        """
         # print(f'run {self.fn} thread name: {QThread.currentThread()}')
         if isinstance(self.fn, str):
             self.fn = lazy_import.getRes(self.module, self.fn)
-        # Retrieve args/kwargs here; and fire processing using them
+        fn_result = None
         try:
-            fn_result = self.fn(*self.args, **self.kwargs)
+            if isfunction(self.fn) or ismethod(self.fn):
+                fn_result = self.fn(*self.args, **self.kwargs)
+                # print("-----------------")
+            elif isclass(self.fn):
+                # print(f"+++++++++{self.fn}")
+                fn_result = self.fn(*self.args, **self.kwargs)
+                if self.class_method is not None:
+                    cm = getattr(fn_result, self.class_method)
+                    fn_result = cm()  # 暂不支持有参数的类的方法调用，需要的话，后面再升级
         except Exception:
             traceback.print_exc()
             exctype, value = sys.exc_info()[:2]
-            self.communication.error.emit(
-                (exctype, value, traceback.format_exc()))
+            self.communication.error.emit((exctype, value, traceback.format_exc()))
         else:
             self.communication.result.emit(fn_result)
         finally:
@@ -92,8 +108,9 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(w)
         self.show()
         self.threadpool = QThreadPool()
-        print("Multithreading with maximum %d threads" %
-              self.threadpool.maxThreadCount())
+        print(
+            "Multithreading with maximum %d threads" % self.threadpool.maxThreadCount()
+        )
         self.timer = QTimer()
         self.timer.setInterval(1000)
         self.timer.timeout.connect(self.recurring_timer)
@@ -105,7 +122,7 @@ class MainWindow(QMainWindow):
     def execute_this_fn(self, progress_callback):
         for n in range(5):
             time.sleep(1)
-            progress_callback.emit(n*100/4)
+            progress_callback.emit(n * 100 / 4)
         return "Done."
 
     def print_output(self, s):

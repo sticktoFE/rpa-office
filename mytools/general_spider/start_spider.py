@@ -11,12 +11,14 @@ from scrapy.utils.log import configure_logging
 
 
 class Scraper:
-    def __init__(self, spider, out_file=None, down_path=None):
+    def __init__(self, spider, userID, passwd, out_file=None, down_path=None):
         configure_logging()
         # The path seen from root, ie. from main.py
         settings_file_path = "mytools.general_spider.general_spider.settings"
         os.environ.setdefault("SCRAPY_SETTINGS_MODULE", settings_file_path)
         settings = get_project_settings()
+        settings.set("userID", userID)
+        settings.set("passwd", passwd)
         settings.set("out_file", out_file)
         settings.set("down_path", down_path)
         self.process = CrawlerProcess(settings)
@@ -46,5 +48,6 @@ class Scraper:
 
 if __name__ == "__main__":
     from mytools.general_spider.general_spider.spiders.CSRCPenalty import CSRCSpider
+
     scraper = Scraper(CSRCSpider)
     scraper.run_spiders(start_proxy=False)

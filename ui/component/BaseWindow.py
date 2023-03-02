@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QEvent, QSize, QTimer
 
 # from biz.shotscreen.DrawShot import ScreenLabel
-from utils.window_handle.ScreenShot import ScreenShot
+from utils.ScreenShot import ScreenShot
 
 # from util.TimeShot import TimeShot
 from functools import partial

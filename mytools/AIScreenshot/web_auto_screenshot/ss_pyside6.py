@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow
 from ...myutils.image_convert import pixmap2cv_1
 from myutils.image_merge import ImageMerge, merge
 from WebShotScreen import ShotScreenManager
-from myutils.window_handle.ScreenShot import ScreenShot
+from myutils.ScreenShot import ScreenShot
 import cv2
 
 

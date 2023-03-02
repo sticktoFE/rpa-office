@@ -44,6 +44,7 @@ class CSRCMarketWeeklyItem(Item):
     """
     定义所需字段
     """
+
     title = Field()
     detail_url = Field()
     pub_date = Field()
@@ -55,11 +56,13 @@ class CSRCMarketWeeklyItem(Item):
     attach_name = Field()
     attach_link = Field()
     attach_save_path = Field()
-    
+
+
 class OAProAdmitToDoItem(Item):
     """
     定义所需字段
     """
+
     demand_no = Field()
     title = Field()
     submitter = Field()
@@ -71,10 +74,13 @@ class OAProAdmitToDoItem(Item):
     pro_type = Field()
     attach_save_path = Field()
     relate_attach_save_path = Field()
+
+
 class OAProAdmitHaveDoneItem(Item):
     """
     定义所需字段
     """
+
     demand_no = Field()
     title = Field()
     submitter = Field()
@@ -86,6 +92,8 @@ class OAProAdmitHaveDoneItem(Item):
     pro_type = Field()
     attach_save_path = Field()
     relate_attach_save_path = Field()
+    handling_date = Field()
+
 
 class FuZhouEcoIndexItem(Item):
     """
@@ -104,6 +112,7 @@ class ProjectItem(Item):
     """
     定义所需字段
     """
+
     title = Field()
     org = Field()
     time = Field()

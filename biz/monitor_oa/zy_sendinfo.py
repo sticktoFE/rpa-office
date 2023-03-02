@@ -1,7 +1,7 @@
 import sys
 import time
 from biz.monitor_oa.AppActionExecThread import AppExec
-from myutils.window_handle.ScreenShot import ScreenShot
+from myutils.ScreenShot import ScreenShot
 from pynput.mouse import Controller
 from PySide6.QtCore import Slot
 from PySide6.QtGui import QPixmap
@@ -22,8 +22,7 @@ class MainWindow(QMainWindow):
         self.ui = Ui_Form()
         self.ui.setupUi(self)
         # 对imageLabel读图片的路径进行初始化
-        self.ui.screenLabel.setImagePath(
-            "biz/infoTracing/image/resized_screen.png")
+        self.ui.screenLabel.setImagePath("biz/infoTracing/image/resized_screen.png")
         # self.ui.screenLabel.resize(self.src_width/3,self.src_heigth/3)
         self.ui.screenLabel.setPixmap(QPixmap("biz/infoTracing/image/1.jpg"))
         # self.ui.screenLabel.mousePressSignal.connect(self.imageLabelPressSlot)
@@ -36,8 +35,12 @@ class MainWindow(QMainWindow):
     @Slot()
     def on_getScreenShotPushButton_clicked(self):
         time.sleep(0.5)
-        self.top_hwnd, pixmap_img, self.target_window_x, self.target_window_y = self.ss.shot_screen_locate_window(
-            'WeChatMainWndForPC', "微信")
+        (
+            self.top_hwnd,
+            pixmap_img,
+            self.target_window_x,
+            self.target_window_y,
+        ) = self.ss.shot_screen_locate_window("WeChatMainWndForPC", "微信")
         self.ui.screenLabel.clear()
         self.ui.screenLabel.setPixmap(pixmap_img)
 
@@ -52,8 +55,9 @@ class MainWindow(QMainWindow):
             "biz/monitor_oa/image/selectfile.png",
             "biz/monitor_oa/image/send.png",
         ]
-        self.ae = AppExec(class_name="WeChatMainWndForPC",
-                          window_name="微信", for_pics=for_pics)
+        self.ae = AppExec(
+            class_name="WeChatMainWndForPC", window_name="微信", for_pics=for_pics
+        )
         # self.ae.setFileNames(name_list)
         self.ae.signal.connect(self.ocrResult)
         self.ae.start()
@@ -61,9 +65,10 @@ class MainWindow(QMainWindow):
     def ocrResult(self, result):
         self.aemg = TotalMessage("".join(result))
         self.aemg.show()
+
     # 点击任务终止
 
-    @ Slot()
+    @Slot()
     def on_taskStopPushButton_clicked(self):
         self.ae.terminate()
 
@@ -74,8 +79,7 @@ def send_webchat():
         "biz/monitor_oa/image/selectfile.png",
         "biz/monitor_oa/image/send.png",
     ]
-    ae = AppExec(class_name="WeChatMainWndForPC",
-                 window_name="微信", for_pics=for_pics)
+    ae = AppExec(class_name="WeChatMainWndForPC", window_name="微信", for_pics=for_pics)
     # self.ae.setFileNames(name_list)
     # self.ae.signal.connect(self.ocrResult)
     ae.start()

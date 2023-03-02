@@ -6,7 +6,7 @@ import cv2
 
 import pyautogui
 from mytools.auto_app.OCRSearchClick import OCRSearchClick
-from myutils.window_handle.ScreenShot import ScreenShot
+from myutils.ScreenShot import ScreenShot
 from pynput.mouse import Button, Controller
 from PySide6.QtCore import Slot
 from PySide6.QtGui import QPixmap, Qt
@@ -35,8 +35,7 @@ class MainWindow(QMainWindow):
         self.ui = Ui_Form()
         self.ui.setupUi(self)
         # 对imageLabel读图片的路径进行初始化
-        self.ui.screenLabel.setImagePath(
-            "biz/infoTracing/image/resized_screen.png")
+        self.ui.screenLabel.setImagePath("biz/infoTracing/image/resized_screen.png")
         # self.ui.screenLabel.resize(self.src_width/3,self.src_heigth/3)
         self.ui.screenLabel.setPixmap(QPixmap("biz/infoTracing/image/1.jpg"))
         self.ui.screenLabel.mousePressSignal.connect(self.imageLabelPressSlot)
@@ -116,8 +115,7 @@ class MainWindow(QMainWindow):
         self.mouse.position = (s_CenterX, s_tagCenterY)
         # pynput模拟不出拖拽，所以用pyautogui
         pyautogui.dragTo(e_CenterX, e_tagCenterY, 0.2)
-        self.mouse.position = (
-            self.old_pos[0] + x2 - x1, self.old_pos[1] + y2 - y1)
+        self.mouse.position = (self.old_pos[0] + x2 - x1, self.old_pos[1] + y2 - y1)
         self.on_getScreenShotPushButton_clicked()
 
     # 发送返回键
@@ -195,8 +193,7 @@ class MainWindow(QMainWindow):
         try:
             with open("../mobile_action/" + name + ".json") as f:
                 action_data = json.load(f)
-                print("action set name:{}".format(
-                    action_data["action set name"]))
+                print("action set name:{}".format(action_data["action set name"]))
                 for action in action_data["action set"]:
                     if action["action name"] == "delay":
                         time.sleep(float(action["param"]) / 1000)

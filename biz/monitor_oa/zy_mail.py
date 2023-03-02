@@ -21,8 +21,10 @@ from myutils.info_out_manager import get_temp_folder
 
 
 class SeleMail:
-    def __init__(self, down_path):
+    def __init__(self, userID, passwd, down_path):
         self.cookies_path = Path("D:/tmp/db_cookie_1")
+        self.userID = userID
+        self.passwd = passwd
         # 下面两个都行 # driver = WebDriverManager().get_driver_Chromeexe()
         self.driver = web_driver_manager.get_driver_ChromeDriver(
             SetHeadless=False, down_file_save_path=down_path
@@ -63,7 +65,7 @@ class SeleMail:
         user_name = self.driver.find_element(by=By.XPATH, value='//input[@name="uid"]')
         if not user_name.get_attribute("value"):
             user_name.clear()
-            user_name.send_keys("loubenlei@zybank.com.cn")
+            user_name.send_keys(self.userID)
         # 密码
         pass_word = self.driver.find_element(
             by=By.XPATH,
@@ -71,7 +73,7 @@ class SeleMail:
         )
         if not pass_word.get_attribute("value"):
             pass_word.clear()
-            pass_word.send_keys("****")
+            pass_word.send_keys(self.passwd)
         # 登录
         login_button = self.driver.find_element(
             by=By.XPATH, value='//*[@class="u-btn u-btn-primary submit j-submit"]'

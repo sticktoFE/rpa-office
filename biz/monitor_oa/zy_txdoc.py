@@ -10,7 +10,9 @@ from myutils.info_out_manager import load_json_table
 
 
 class TXDocument:
-    def __init__(self, infile):
+    def __init__(self, userID, passwd, infile):
+        self.userID = userID
+        self.passwd = passwd
         self.driver = web_driver_manager.get_driver_Chromeexe()
         self.driver.implicitly_wait(15)
         # 最大化窗口
@@ -85,7 +87,7 @@ class TXDocument:
 
     # 搜索关键列关键值是否存在
     def exists_key(self, key_title, key_value):
-        self.back_first_rowcol(self.driver, "left_up")
+        self.back_first_rowcol("left_up")
         # 找到并移动到第一行标题栏中的关键字
         while True:
             elmet = self.driver.find_element(by=By.ID, value="alloy-simple-text-editor")
@@ -103,6 +105,7 @@ class TXDocument:
         while True:
             elmet = self.driver.find_element(by=By.ID, value="alloy-simple-text-editor")
             txt = elmet.text.strip()
+            # 这一行遇到主键列为空视为寻找的主键值
             if len(txt) == 0:
                 print("要保存的值不存在")
                 return False
@@ -113,44 +116,19 @@ class TXDocument:
                 ActionChains(self.driver).send_keys(Keys.DOWN).perform()
                 time.sleep(random.uniform(0.1, 0.5))
 
-    def write_content(self, content):
+    def write_content(self, contents):
         edit_text = self.driver.find_element(by=By.ID, value="alloy-simple-text-editor")
         time.sleep(random.uniform(0.1, 3))
-        edit_text.send_keys(content)
+        edit_text.clear()
+        if isinstance(contents, list):
+            for content in contents:
+                edit_text.send_keys("" if content is None else content)
+                edit_text.send_keys(Keys.ALT + Keys.ENTER)
+                # ActionChains(self.driver).send_keys(Keys.ALT + Keys.ENTER).perform()
+        else:
+            edit_text.send_keys("" if contents is None else contents)
         # edit_text.click()  # 模拟鼠标点击
         edit_text.send_keys(Keys.TAB)  # 进入下一个单元格
-
-    # 新增内容到腾讯文档
-    def add(self):
-        self.login()
-        # self.switch_tab(self.driver, "cache")
-        list_generator = load_json_table(self.infile)
-        # 使用列表的元素数来定义循环次数，7个为一组
-        for line_record in list_generator:
-            # 默认分隔符是空格，并且多个空格视为一个
-            # line_elements = line_record.split()
-            index = line_record.get("index")
-            title = line_record.get("title")
-            pub_org = line_record.get("pub_org")
-            if not self.exists_key(self.driver, "序列号", index):
-                # 先跳到第一列
-                edit_text = self.driver.find_element(
-                    by=By.ID, value="alloy-simple-text-editor"
-                )
-                edit_text.send_keys(Keys.HOME)
-                # 编号--如果不需要，则注释掉
-                # s = self.driver.find_element(
-                #     by=By.XPATH,
-                #     value="/html/body/div[3]/div/div[4]/div[2]/div/div/div[1]/div/div/div[1]/div[1]",
-                # ).text  # 获取此行的行数
-                # a = int(s[1:])  # 将A**去除A，留下数字
-                # a = str(a - 2)  # 如果你的排序为行的相差则减去几即可
-                # edit_text.send_keys(a)  # 输出a以形成序号
-                self.write_content(index)
-                self.write_content(title)
-                self.write_content(pub_org)
-        time.sleep(1)
-        self.driver.close()
 
     # 更新内容到腾讯文档
     def modify(self):
@@ -158,12 +136,20 @@ class TXDocument:
         list_generator = load_json_table(self.infile)
         # 使用列表的元素数来定义循环次数，7个为一组
         for line_record in list_generator:
-            # 默认分隔符是空格，并且多个空格视为一个
-            # line_elements = line_record.split()
-            index = line_record.get("index")
+            demand_no = line_record.get("demand_no")
+            submitter = line_record.get("submitter")
+            submit_depart = line_record.get("submit_depart")
+            submit_date = line_record.get("submit_date")
             title = line_record.get("title")
-            pub_org = line_record.get("pub_org")
-            if not self.exists_key(self.driver, "序列号", index):
+            # 以下两个考虑到长文本，获取信息时是list
+            background = line_record.get("background")
+            summary = line_record.get("summary")
+            # 把summary合并到background中
+            background.extend(summary)
+            pro_type = line_record.get("pro_type")
+            admit_result = line_record.get("admit_result")
+            # 不存在新增，存在避开主键去覆盖
+            if not self.exists_key("需求编号", demand_no):
                 # 先跳到第一列
                 edit_text = self.driver.find_element(
                     by=By.ID, value="alloy-simple-text-editor"
@@ -177,13 +163,37 @@ class TXDocument:
                 # a = int(s[1:])  # 将A**去除A，留下数字
                 # a = str(a - 2)  # 如果你的排序为行的相差则减去几即可
                 # edit_text.send_keys(a)  # 输出a以形成序号
-                self.write_content(index)
+                # 按照标题顺序写入
+                self.write_content(demand_no)
+                self.write_content(submitter)
+                self.write_content(submit_depart)
+                self.write_content(submit_date)
                 self.write_content(title)
-                self.write_content(pub_org)
+                ActionChains(self.driver).send_keys(Keys.TAB).perform()
+                self.write_content(background)
+                ActionChains(self.driver).send_keys(Keys.TAB).perform()
+                ActionChains(self.driver).send_keys(Keys.TAB).perform()
+                ActionChains(self.driver).send_keys(Keys.TAB).perform()
+                self.write_content(admit_result)
+                self.write_content(pro_type)
+            else:
+                # 先跳到第一列
+                edit_text = self.driver.find_element(
+                    by=By.ID, value="alloy-simple-text-editor"
+                )
+                edit_text.send_keys(Keys.HOME)
+                time.sleep(random.uniform(0.1, 0.5))
+                ActionChains(self.driver).send_keys(Keys.TAB).perform()
+                self.write_content(submitter)
+                self.write_content(submit_depart)
+                self.write_content(submit_date)
+                self.write_content(title)
+                ActionChains(self.driver).send_keys(Keys.TAB).perform()
+                self.write_content(background)
+                ActionChains(self.driver).send_keys(Keys.TAB).perform()
+                ActionChains(self.driver).send_keys(Keys.TAB).perform()
+                ActionChains(self.driver).send_keys(Keys.TAB).perform()
+                self.write_content(admit_result)
+                self.write_content(pro_type)
         time.sleep(1)
         self.driver.close()
-
-
-# %%
-if __name__ == "__main__":
-    write_qqdoc()

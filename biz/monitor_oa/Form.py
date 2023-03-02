@@ -15,17 +15,16 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QGridLayout, QHBoxLayout, QHeaderView,
-    QMainWindow, QPushButton, QSizePolicy, QTreeWidget,
-    QTreeWidgetItem, QVBoxLayout, QWidget)
-
-from ImageLabel import ImageLabel
+from PySide6.QtWidgets import (QApplication, QHBoxLayout, QHeaderView, QLabel,
+    QLineEdit, QMainWindow, QPushButton, QSizePolicy,
+    QTableWidget, QTableWidgetItem, QTextEdit, QVBoxLayout,
+    QWidget)
 
 class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(418, 412)
+        Form.resize(587, 574)
         sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -33,116 +32,130 @@ class Ui_Form(object):
         Form.setSizePolicy(sizePolicy)
         self.centralwidget = QWidget(Form)
         self.centralwidget.setObjectName(u"centralwidget")
-        self.horizontalLayout_2 = QHBoxLayout(self.centralwidget)
-        self.horizontalLayout_2.setSpacing(3)
-        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout_7 = QHBoxLayout(self.centralwidget)
+        self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
+        self.horizontalLayout_6 = QHBoxLayout()
+        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
+        self.verticalLayout_3 = QVBoxLayout()
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.horizontalLayout_4 = QHBoxLayout()
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.label_3 = QLabel(self.centralwidget)
+        self.label_3.setObjectName(u"label_3")
+
+        self.horizontalLayout_4.addWidget(self.label_3)
+
         self.verticalLayout_2 = QVBoxLayout()
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.gridLayout = QGridLayout()
-        self.gridLayout.setObjectName(u"gridLayout")
-        self.actionStartPushButton = QPushButton(self.centralwidget)
-        self.actionStartPushButton.setObjectName(u"actionStartPushButton")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(self.actionStartPushButton.sizePolicy().hasHeightForWidth())
-        self.actionStartPushButton.setSizePolicy(sizePolicy1)
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.label = QLabel(self.centralwidget)
+        self.label.setObjectName(u"label")
 
-        self.gridLayout.addWidget(self.actionStartPushButton, 2, 0, 1, 1)
+        self.horizontalLayout_2.addWidget(self.label)
 
-        self.getScreenShotPushButton = QPushButton(self.centralwidget)
-        self.getScreenShotPushButton.setObjectName(u"getScreenShotPushButton")
-        sizePolicy1.setHeightForWidth(self.getScreenShotPushButton.sizePolicy().hasHeightForWidth())
-        self.getScreenShotPushButton.setSizePolicy(sizePolicy1)
+        self.userID = QLineEdit(self.centralwidget)
+        self.userID.setObjectName(u"userID")
 
-        self.gridLayout.addWidget(self.getScreenShotPushButton, 0, 0, 1, 1)
-
-        self.taskStopPushButton = QPushButton(self.centralwidget)
-        self.taskStopPushButton.setObjectName(u"taskStopPushButton")
-        sizePolicy1.setHeightForWidth(self.taskStopPushButton.sizePolicy().hasHeightForWidth())
-        self.taskStopPushButton.setSizePolicy(sizePolicy1)
-
-        self.gridLayout.addWidget(self.taskStopPushButton, 2, 1, 1, 1)
-
-        self.autoClickScreenShot = QPushButton(self.centralwidget)
-        self.autoClickScreenShot.setObjectName(u"autoClickScreenShot")
-        sizePolicy1.setHeightForWidth(self.autoClickScreenShot.sizePolicy().hasHeightForWidth())
-        self.autoClickScreenShot.setSizePolicy(sizePolicy1)
-
-        self.gridLayout.addWidget(self.autoClickScreenShot, 0, 1, 1, 1)
-
-        self.recordActionPushButton = QPushButton(self.centralwidget)
-        self.recordActionPushButton.setObjectName(u"recordActionPushButton")
-        sizePolicy1.setHeightForWidth(self.recordActionPushButton.sizePolicy().hasHeightForWidth())
-        self.recordActionPushButton.setSizePolicy(sizePolicy1)
-        self.recordActionPushButton.setCheckable(True)
-        self.recordActionPushButton.setChecked(True)
-
-        self.gridLayout.addWidget(self.recordActionPushButton, 1, 0, 1, 1)
+        self.horizontalLayout_2.addWidget(self.userID)
 
 
-        self.verticalLayout_2.addLayout(self.gridLayout)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
 
-        self.actionLoadWidget = QWidget(self.centralwidget)
-        self.actionLoadWidget.setObjectName(u"actionLoadWidget")
-        self.verticalLayout = QVBoxLayout(self.actionLoadWidget)
+        self.horizontalLayout_3 = QHBoxLayout()
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.label_2 = QLabel(self.centralwidget)
+        self.label_2.setObjectName(u"label_2")
+
+        self.horizontalLayout_3.addWidget(self.label_2)
+
+        self.password = QLineEdit(self.centralwidget)
+        self.password.setObjectName(u"password")
+        self.password.setEchoMode(QLineEdit.Password)
+
+        self.horizontalLayout_3.addWidget(self.password)
+
+
+        self.verticalLayout_2.addLayout(self.horizontalLayout_3)
+
+
+        self.horizontalLayout_4.addLayout(self.verticalLayout_2)
+
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout_4)
+
+        self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.fileAddPushButton = QPushButton(self.actionLoadWidget)
-        self.fileAddPushButton.setObjectName(u"fileAddPushButton")
-        sizePolicy1.setHeightForWidth(self.fileAddPushButton.sizePolicy().hasHeightForWidth())
-        self.fileAddPushButton.setSizePolicy(sizePolicy1)
+        self.taskStart = QPushButton(self.centralwidget)
+        self.taskStart.setObjectName(u"taskStart")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.taskStart.sizePolicy().hasHeightForWidth())
+        self.taskStart.setSizePolicy(sizePolicy1)
 
-        self.horizontalLayout.addWidget(self.fileAddPushButton)
+        self.horizontalLayout.addWidget(self.taskStart)
 
-        self.fileRemovePushButton = QPushButton(self.actionLoadWidget)
-        self.fileRemovePushButton.setObjectName(u"fileRemovePushButton")
-        sizePolicy1.setHeightForWidth(self.fileRemovePushButton.sizePolicy().hasHeightForWidth())
-        self.fileRemovePushButton.setSizePolicy(sizePolicy1)
+        self.taskStop = QPushButton(self.centralwidget)
+        self.taskStop.setObjectName(u"taskStop")
+        sizePolicy1.setHeightForWidth(self.taskStop.sizePolicy().hasHeightForWidth())
+        self.taskStop.setSizePolicy(sizePolicy1)
 
-        self.horizontalLayout.addWidget(self.fileRemovePushButton)
+        self.horizontalLayout.addWidget(self.taskStop)
 
 
         self.verticalLayout.addLayout(self.horizontalLayout)
 
-        self.taskTreeWidget = QTreeWidget(self.actionLoadWidget)
-        self.taskTreeWidget.headerItem().setText(1, "")
-        self.taskTreeWidget.setObjectName(u"taskTreeWidget")
-        sizePolicy.setHeightForWidth(self.taskTreeWidget.sizePolicy().hasHeightForWidth())
-        self.taskTreeWidget.setSizePolicy(sizePolicy)
+        self.horizontalLayout_5 = QHBoxLayout()
+        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
+        self.fileAdd = QPushButton(self.centralwidget)
+        self.fileAdd.setObjectName(u"fileAdd")
+        sizePolicy1.setHeightForWidth(self.fileAdd.sizePolicy().hasHeightForWidth())
+        self.fileAdd.setSizePolicy(sizePolicy1)
 
-        self.verticalLayout.addWidget(self.taskTreeWidget)
+        self.horizontalLayout_5.addWidget(self.fileAdd)
+
+        self.fileRemove = QPushButton(self.centralwidget)
+        self.fileRemove.setObjectName(u"fileRemove")
+        sizePolicy1.setHeightForWidth(self.fileRemove.sizePolicy().hasHeightForWidth())
+        self.fileRemove.setSizePolicy(sizePolicy1)
+
+        self.horizontalLayout_5.addWidget(self.fileRemove)
 
 
-        self.verticalLayout_2.addWidget(self.actionLoadWidget)
+        self.verticalLayout.addLayout(self.horizontalLayout_5)
 
-        self.verticalLayout_2.setStretch(0, 3)
-        self.verticalLayout_2.setStretch(1, 7)
+        self.taskTableWidget = QTableWidget(self.centralwidget)
+        if (self.taskTableWidget.columnCount() < 3):
+            self.taskTableWidget.setColumnCount(3)
+        __qtablewidgetitem = QTableWidgetItem()
+        self.taskTableWidget.setHorizontalHeaderItem(0, __qtablewidgetitem)
+        __qtablewidgetitem1 = QTableWidgetItem()
+        self.taskTableWidget.setHorizontalHeaderItem(1, __qtablewidgetitem1)
+        __qtablewidgetitem2 = QTableWidgetItem()
+        self.taskTableWidget.setHorizontalHeaderItem(2, __qtablewidgetitem2)
+        self.taskTableWidget.setObjectName(u"taskTableWidget")
+        sizePolicy.setHeightForWidth(self.taskTableWidget.sizePolicy().hasHeightForWidth())
+        self.taskTableWidget.setSizePolicy(sizePolicy)
 
-        self.horizontalLayout_2.addLayout(self.verticalLayout_2)
+        self.verticalLayout.addWidget(self.taskTableWidget)
 
-        self.screenLabel = ImageLabel(self.centralwidget)
-        self.screenLabel.setObjectName(u"screenLabel")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
-        sizePolicy2.setHorizontalStretch(204)
-        sizePolicy2.setVerticalStretch(115)
-        sizePolicy2.setHeightForWidth(self.screenLabel.sizePolicy().hasHeightForWidth())
-        self.screenLabel.setSizePolicy(sizePolicy2)
-        self.screenLabel.setMouseTracking(True)
-        self.screenLabel.setTabletTracking(True)
-        self.screenLabel.setAcceptDrops(False)
-        self.screenLabel.setAutoFillBackground(False)
-        self.screenLabel.setStyleSheet(u"")
-        self.screenLabel.setScaledContents(True)
-        self.screenLabel.setAlignment(Qt.AlignCenter)
-        self.screenLabel.setWordWrap(False)
 
-        self.horizontalLayout_2.addWidget(self.screenLabel)
+        self.verticalLayout_3.addLayout(self.verticalLayout)
 
-        self.horizontalLayout_2.setStretch(0, 2)
-        self.horizontalLayout_2.setStretch(1, 8)
+
+        self.horizontalLayout_6.addLayout(self.verticalLayout_3)
+
+        self.out_log = QTextEdit(self.centralwidget)
+        self.out_log.setObjectName(u"out_log")
+
+        self.horizontalLayout_6.addWidget(self.out_log)
+
+
+        self.horizontalLayout_7.addLayout(self.horizontalLayout_6)
+
         Form.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(Form)
@@ -152,15 +165,18 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"auto_mobile", None))
-        self.actionStartPushButton.setText(QCoreApplication.translate("Form", u"\u5f00\u59cb\u6267\u884c", None))
-        self.getScreenShotPushButton.setText(QCoreApplication.translate("Form", u"\u83b7\u53d6\u5c4f\u5e55", None))
-        self.taskStopPushButton.setText(QCoreApplication.translate("Form", u"\u4efb\u52a1\u7ec8\u6b62", None))
-        self.autoClickScreenShot.setText(QCoreApplication.translate("Form", u"\u542f\u52a8\u4efb\u52a1", None))
-        self.recordActionPushButton.setText(QCoreApplication.translate("Form", u"\u5f00\u59cb\u5f55\u5236\u52a8\u4f5c", None))
-        self.fileAddPushButton.setText(QCoreApplication.translate("Form", u"\u6dfb\u52a0", None))
-        self.fileRemovePushButton.setText(QCoreApplication.translate("Form", u"\u79fb\u9664", None))
-        ___qtreewidgetitem = self.taskTreeWidget.headerItem()
-        ___qtreewidgetitem.setText(0, QCoreApplication.translate("Form", u"\u4efb\u52a1\u5217\u8868", None));
-        self.screenLabel.setText(QCoreApplication.translate("Form", u"\u56fe\u7247\u663e\u793a\u533a\u57df", None))
+        self.label_3.setText(QCoreApplication.translate("Form", u"\u90ae\u7bb1", None))
+        self.label.setText(QCoreApplication.translate("Form", u"\u767b\u5f55\u7528\u6237", None))
+        self.label_2.setText(QCoreApplication.translate("Form", u"\u767b\u5f55\u5bc6\u7801", None))
+        self.taskStart.setText(QCoreApplication.translate("Form", u"\u542f\u52a8\u4efb\u52a1", None))
+        self.taskStop.setText(QCoreApplication.translate("Form", u"\u4efb\u52a1\u7ec8\u6b62", None))
+        self.fileAdd.setText(QCoreApplication.translate("Form", u"\u6dfb\u52a0", None))
+        self.fileRemove.setText(QCoreApplication.translate("Form", u"\u79fb\u9664", None))
+        ___qtablewidgetitem = self.taskTableWidget.horizontalHeaderItem(0)
+        ___qtablewidgetitem.setText(QCoreApplication.translate("Form", u"\u8def\u5f84", None));
+        ___qtablewidgetitem1 = self.taskTableWidget.horizontalHeaderItem(1)
+        ___qtablewidgetitem1.setText(QCoreApplication.translate("Form", u"\u5305", None));
+        ___qtablewidgetitem2 = self.taskTableWidget.horizontalHeaderItem(2)
+        ___qtablewidgetitem2.setText(QCoreApplication.translate("Form", u"\u65b9\u6cd5", None));
     # retranslateUi
 
