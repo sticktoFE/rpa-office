@@ -1,18 +1,10 @@
 # -*- coding: utf-8 -*-
-import ast
-import re
 import subprocess
 import time
 
 import mss
-import numpy
-import win32con
-import win32com.client
 import win32gui
-import win32process
-import win32api
-from myutils import image_compare, image_convert
-from PIL import Image, ImageQt
+from myutils import image_convert
 from PySide6.QtGui import QGuiApplication, QPixmap
 
 from myutils.window_run import get_hwnd

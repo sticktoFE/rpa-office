@@ -85,6 +85,15 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
                 for window in all_windows:
                     if window != current_window:
                         self.browser.switch_to.window(window)
+                # 寻找流程节点中产创办审核时间点
+                # 切换到“流程跟踪”
+                submit = waitForXpath(
+                    self.browser,
+                    "//div[@class='ant-tabs ant-tabs-top ant-tabs-line ant-tabs-no-animation sd-has-table']//div[@role='tab'][2]",  # 2是已办理tab页
+                    timeout=self.timeout,
+                )
+                submit.click()
+                # 寻找需求内容
                 waitForXpath(
                     self.browser,
                     '//div[@class="ant-tabs-content ant-tabs-content-no-animated ant-tabs-top-content"]/div[@class="ant-tabs-tabpane ant-tabs-tabpane-active"]',

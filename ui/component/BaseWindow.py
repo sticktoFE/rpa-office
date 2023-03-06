@@ -1,6 +1,5 @@
 from random import choice, randint
 import string
-from win32clipboard import *
 from PySide6.QtGui import QCursor, QFont, QIcon, QKeySequence, QMovie, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
@@ -14,16 +13,16 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QEvent, QSize, QTimer
 
 # from biz.shotscreen.DrawShot import ScreenLabel
-from utils.ScreenShot import ScreenShot
+from myutils.ScreenShot import ScreenShot
 
 # from util.TimeShot import TimeShot
 from functools import partial
-from ui.Ui_mainwindow import Ui_MainWindow
+from ui.mainwindow import Ui_MainWindow
 
-from ui.Ui_screendrawdialog_event import ShotDialog
+from ui.screendrawdialog_event import ShotDialog
 
 # from .ManagerConfig import ManagerConfig
-from ui.Ui_manage_config_event import ManagerConfig
+from ui.manage_config_event import ManagerConfig
 
 
 def get_icon():

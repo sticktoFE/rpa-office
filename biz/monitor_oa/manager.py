@@ -10,16 +10,23 @@ from mytools.general_spider.general_spider.spiders.OAProAdmitToDo import (
 from mytools.general_spider.general_spider.spiders.OAProAdmitHaveDone import (
     OAProAdmitHaveDoneSpider,
 )
+from mytools.general_spider.general_spider.spiders.CSRCMarketWeekly import (
+    CSRCMarketWeeklySpider,
+)
+from myutils.GeneralThread import Worker
 from myutils.info_out_manager import get_temp_folder
-from biz.monitor_oa.mail import SeleMail
-from biz.monitor_oa.txdoc import TXDocument
-from biz.monitor_oa.sendinfo import send_webchat
+from biz.monitor_oa.zy_email import SeleMail
+from biz.monitor_oa.tx_doc import TXDocument
+from biz.monitor_oa.wc_sendinfo import send_webchat
+from PySide6.QtCore import QThreadPool
 
 
 # 获取数据形成文件
 class RPAClient:
     # 1、启动信息获取，获取列表信息和详情信息
-    def __init__(self, mail_userID, mail_passwd):
+    def __init__(self, scrapy_userID, scrapy_passwd, mail_userID, mail_passwd):
+        self.scrapy_userID = scrapy_userID
+        self.scrapy_passwd = scrapy_passwd
         self.mail_userID = mail_userID
         self.mail_passwd = mail_passwd
         self.out_folder = get_temp_folder(
@@ -33,8 +40,8 @@ class RPAClient:
         # 1）生成结构化的json文件，并下载表单中附件到相应目录
         self.scraper = Scraper(
             OAProAdmitToDoSpider,
-            self.mail_userID,
-            self.mail_passwd,
+            self.scrapy_userID,
+            self.scrapy_passwd,
             out_file=self.out_file,
             down_path=self.out_folder,
         )
@@ -53,20 +60,30 @@ class RPAClient:
 
     # 二、已办任务处理
     def have_done(self):
-        # 1、启动信息获取，获取详情信息，生成台账更新文件
+        # 1、启动信息获取，获取详情信息，生成台账更新文件（已经是子线程模式了）
         self.scraper = Scraper(
-            OAProAdmitHaveDoneSpider,
-            self.mail_userID,
-            self.mail_passwd,
+            CSRCMarketWeeklySpider,
+            self.scrapy_userID,
+            self.scrapy_passwd,
             out_file=self.out_file,
             down_path=self.out_folder,
         )
         self.scraper.run_spiders(start_proxy=False)
+        # 等待文件约定的文件出现
         while not Path(self.out_finished).exists():
             time.sleep(1)
-        # 2、获取台账更新文件并上传到邮件
-        self.sm = SeleMail(self.mail_userID, self.mail_passwd, self.out_folder)
-        self.sm.upload_through_draft(get_file=self.out_finished)
+        # 2、获取台账更新文件并上传到邮件（开启子线程）
+        # self.sm = SeleMail(self.mail_userID, self.mail_passwd, self.out_folder)
+        # self.sm.upload_through_draft(get_file=self.out_finished)
+        worker_server = Worker(
+            SeleMail,
+            classMethod="upload_through_draft",
+            classMethodArgs={"get_file": self.out_finished},
+            userID=self.mail_userID,
+            passwd=self.mail_passwd,
+            down_path=self.out_folder,
+        )
+        QThreadPool.globalInstance().start(worker_server)
 
 
 # 服务端接收数据并进行相应处理，如更新文档，统计分析等
@@ -89,7 +106,7 @@ class RPAServer:
         self.sm = SeleMail(self.mail_userID, self.mail_passwd, self.out_folder)
         self.sm.download_through_draft()
         self.td = TXDocument(self.mail_userID, self.mail_passwd, self.out_finished)
-        self.td.write_content()
+        self.td.modify()
         # 2、发信息通知相关人登陆邮件查看需求说明书并更新腾讯文档
         send_webchat()
 

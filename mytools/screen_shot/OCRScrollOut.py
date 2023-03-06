@@ -296,7 +296,6 @@ class Tasks(QObject):
             # progress_signal.emit(100*img_list[0]/500) 试图搞一个进度条，但因为 总的处理数未知，同时在一个进程中循环开多个进程不知道怎么获取每个进程的参数，所以暂时未实现
 
         # 对多个线程处理的长图片再合并成最终的长图片
-
         def merge_result():
             print("对多个线程处理的长图片再合并成最终的长图片")
             finalimg = None

@@ -5,6 +5,9 @@ from PySide6.QtCore import (
 from myutils.GeneralThread import Worker
 import argparse
 
+# import sys
+
+# sys.path.append("path/to/module")
 # 创建参数解析器
 parser = argparse.ArgumentParser(description="命令行参数程序")
 
@@ -18,17 +21,17 @@ parser.add_argument(
 # 解析命令行参数
 args = parser.parse_args()
 
-path_ = "biz.monitor_oa.manager"
-package_ = args.package
-method_ = args.method
+module_ = "biz.monitor_oa.manager"
+object_ = args.package
+class_method_ = args.method
 # 默认保存登录信息，快捷开始
 settings = QSettings("./config.ini", QSettings.Format.IniFormat)
 userID = settings.value("userID")
 password = settings.value("password")
 worker_server = Worker(
-    package_,
-    classMethod=method_,
-    module=path_,
+    object_,
+    classMethod=class_method_,
+    module=module_,
     mail_userID=userID,
     mail_passwd=password,
 )

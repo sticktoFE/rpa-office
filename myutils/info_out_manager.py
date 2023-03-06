@@ -89,32 +89,33 @@ def get_temp_folder(
     # 使用配置文件中的默认设置
     settings = QSettings("./config.ini", QSettings.Format.IniFormat)
     des_folder = settings.value("tmp_path")
+    des_folder = Path(des_folder)
     if execute_file_path is not None:
-        path_list = re.split(r"[/\\]", execute_file_path)
-        last_two = f"{path_list[-2]}_{path_list[-1]}"
-        des_folder = f"{des_folder}/{last_two}"
+        # path_list = re.split(r"[/\\]", execute_file_path)
+        # last_two = f"{path_list[-2]}_{path_list[-1]}"
+        # des_folder = f"{des_folder}/{last_two}"
+        efp = Path(execute_file_path)
+        des_folder = des_folder / efp.parent.stem / efp.stem
     # files_path = f'{QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)}/rpa-office/{Path(current_file_path).parent.stem}--{Path(current_file_path).stem}'
     # 临时文件统一放到系统文档文件夹里
-    if not os.path.exists(des_folder):
+    if not des_folder.exists():
         os.makedirs(des_folder)
     if des_folder_name is not None:
-        des_folder = f"{des_folder}/{des_folder_name}"
-        if not os.path.exists(des_folder):
+        des_folder = des_folder.joinpath(des_folder_name)
+        if not des_folder.exists():
             os.makedirs(des_folder)
     if is_clear_folder:  # 清理文件夹内容
-        filelist = glob.glob(f"{des_folder}/*")
+        filelist = glob.glob(f"{des_folder.as_posix()}/*")
         for f in filelist:
             if Path(f).is_dir():
                 # os.removedirs(f) 只能删除空目录
                 shutil.rmtree(f)
             else:
                 os.remove(f)
-    return des_folder
+    return des_folder.as_posix()
 
 
 # 获取临时文件，名字按时间取，用于一些日志信息
-
-
 def get_temp_file(des_folder=None, save_file_name=None, save_file_type="xlsx"):
     save_file_name = str(time.strftime("%Y-%m-%d_%H.%M.%S", time.localtime()))
     return f"{des_folder}/{save_file_name}.{save_file_type}"

@@ -14,6 +14,12 @@ class CSRCMarketWeeklySpider(SeleniumSpider):
     name = "csrc_market_weekly"
     # start_urls = ["http://www.csrc.gov.cn/csrc/c101971/zfxxgk_zdgk.shtml"]
     url_format = "http://www.csrc.gov.cn/csrc/c100119/common_list.shtml"
+    # 制定专属pipeline
+    custom_settings = {
+        "ITEM_PIPELINES": {
+            "mytools.general_spider.general_spider.pipelines.CSRCMarketWeeklyPipeline": 300
+        }
+    }
 
     def start_requests(self):
         # self.out_file = self.settings.get('out_file')
@@ -22,7 +28,8 @@ class CSRCMarketWeeklySpider(SeleniumSpider):
         """
         start_url = f"{self.url_format}"
         meta = {
-            "usedSelenium": True,
+            "useSelenium": True,
+            "questCurrentLink": True,
             "dont_redirect": True,
             "purpose": "list",
             "page_num": 1,
@@ -49,8 +56,8 @@ class CSRCMarketWeeklySpider(SeleniumSpider):
             # 构造请求，访问文章详情页并传递title参数
             meta.update(
                 {
-                    "usedSelenium": True,
-                    "openLinkInSelenium": False,
+                    "useSelenium": True,
+                    "questCurrentLink": True,
                     "dont_redirect": True,
                     "purpose": "download",
                     "data": item,
@@ -65,8 +72,8 @@ class CSRCMarketWeeklySpider(SeleniumSpider):
         if meta["page_num"] < 2:  # 不超过3页
             meta.update(
                 {
-                    "usedSelenium": True,
-                    "openLinkInSelenium": False,
+                    "useSelenium": True,
+                    "questCurrentLink": True,
                     "dont_redirect": True,
                     "purpose": "next",
                 }
@@ -87,7 +94,7 @@ class CSRCMarketWeeklySpider(SeleniumSpider):
         attach_name = content_attach.xpath("./a[1]/text()").get()
         item["attach_name"] = re.sub(r"\s+", "", attach_name)
         item["attach_link"] = content_attach.xpath("./a[1]/@href").get()
-        item["attach_save_path"] = os.fspath(self.out_path / item["attach_name"])
+        item["attach_save_path"] = f'{self.down_path} / {item["attach_name"]}'
         yield item
 
     def selenium_func(self, request):

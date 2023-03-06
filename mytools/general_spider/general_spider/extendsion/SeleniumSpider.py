@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 import scrapy
 from selenium import webdriver
-from myutils import web_driver_manager
+from myutils.sele_driver import web_driver_manager
 
 
 class SeleniumSpider(scrapy.Spider):

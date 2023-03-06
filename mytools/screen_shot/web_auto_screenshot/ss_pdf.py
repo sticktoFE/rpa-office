@@ -5,7 +5,7 @@ import traceback
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from myutils.web_driver_manager import BaseDriver
+from myutils.sele_driver.web_driver_manager import BaseDriver
 from pathlib import Path
 
 """

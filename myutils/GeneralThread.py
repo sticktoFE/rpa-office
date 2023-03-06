@@ -46,6 +46,7 @@ class Worker(QRunnable):
         fnOrClass,
         *args,
         classMethod=None,
+        classMethodArgs: dict = None,
         need_progress_signal=False,
         module=None,
         **kwargs,
@@ -55,6 +56,7 @@ class Worker(QRunnable):
         # print(f'init {fn} thread name: {QThread.currentThread()}')
         self.fn = fnOrClass
         self.class_method = classMethod
+        self.classMethodArgs = classMethodArgs
         self.module = module
         self.args = args
         self.kwargs = kwargs
@@ -82,7 +84,7 @@ class Worker(QRunnable):
                 fn_result = self.fn(*self.args, **self.kwargs)
                 if self.class_method is not None:
                     cm = getattr(fn_result, self.class_method)
-                    fn_result = cm()  # 暂不支持有参数的类的方法调用，需要的话，后面再升级
+                    fn_result = cm(**self.classMethodArgs)  # 暂不支持有参数的类的方法调用，需要的话，后面再升级
         except Exception:
             traceback.print_exc()
             exctype, value = sys.exc_info()[:2]

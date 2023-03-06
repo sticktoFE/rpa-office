@@ -9,6 +9,7 @@ from PySide6.QtCore import (
     QSettings,
     Qt,
 )
+from biz.monitor_oa.manager import RPAClient, RPAServer
 from myutils.GeneralThread import Worker
 from myutils.info_secure import dectry, enctry
 from PySide6.QtCore import Slot
@@ -20,13 +21,12 @@ from PySide6.QtWidgets import (
     QTableWidgetItem,
     QComboBox,
 )
-from ui.OCRResult_event import TotalMessage
 from Form import Ui_Form
+
+"""Redirects console output to text widget."""
 
 
 class Stream(QObject):
-    """Redirects console output to text widget."""
-
     newText = Signal(str)
 
     def write(self, text):
@@ -51,12 +51,82 @@ class MainWindow(QMainWindow, Ui_Form):
             self.userID.setText(userID)
             password = self.settings.value("password")
             self.password.setText(dectry(password))
-        # 对imageLabel读图片的路径进行初始化
-        # self.ui.screenLabel.setImagePath("biz/infoTracing/image/resized_screen.png")
-        # # self.ui.screenLabel.resize(self.src_width/3,self.src_heigth/3)
-        # self.ui.screenLabel.setPixmap(QPixmap("biz/infoTracing/image/1.jpg"))
-        # self.ui.screenLabel.mousePressSignal.connect(self.imageLabelPressSlot)
-        # self.ui.screenLabel.mouseDragSignal.connect(self.imageLabelDragSlot)
+        userID_oa = self.settings.value("userID_oa")
+        if userID_oa is not None:
+            self.userID_oa.setText(userID_oa)
+            password_oa = self.settings.value("password_oa")
+            self.password_oa.setText(dectry(password_oa))
+        # 创建定时器
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.run_command)
+
+    @Slot()
+    def on_start_clicked(self):
+        interval = int(self.interval_edit.text())
+        self.timer.start(interval * 1000)
+        self.start.setEnabled(False)
+        self.stop.setEnabled(True)
+
+    @Slot()
+    def on_stop_clicked(self):
+        self.timer.stop()
+        self.start.setEnabled(True)
+        self.stop.setEnabled(False)
+
+    def run_command(self):
+        # 执行命令
+        userID = self.userID.text()
+        password = self.password.text()
+        userID_oa = self.userID_oa.text()
+        password_oa = self.password_oa.text()
+        if len(userID) == 0 or len(password) == 0:
+            QMessageBox.warning(self, "注意", "邮箱用户名或密码都不能为空")
+        else:
+            # 默认保存登录信息，快捷开始
+            self.settings.setValue("userID", userID)
+            self.settings.setValue("password", enctry(password))
+            self.settings.setValue("userID_oa", userID_oa)
+            self.settings.setValue("password_oa", enctry(password_oa))
+            if self.RPAClient.isChecked():
+                RPAClient(userID_oa, password_oa, userID, password).have_done()
+            elif self.RPAServer.isChecked():
+                RPAServer(userID, password).have_done()
+            # 循环刷新界面，以显示最新日志内容
+            loop = QEventLoop()
+            QTimer.singleShot(2000, loop.quit)
+            loop.exec()
+
+    # 后期可以在界面添加编排任务，然后在此处解析循环执行
+    def task_execute(self, userID, password, userID_oa, password_oa):
+        # 默认保存登录信息，快捷开始
+        self.settings.setValue("userID", userID)
+        self.settings.setValue("password", enctry(password))
+        self.settings.setValue("userID_oa", userID_oa)
+        self.settings.setValue("password_oa", enctry(password_oa))
+        # 暂时支持一行，后面可以实现编排并增加优先级，按优先级顺序执行
+        # 获取第一行第一列单元格对象
+        item = self.taskTableWidget.item(0, 0)
+        # 检查单元格是否为空
+        if item is not None:
+            # 获取单元格文本
+            module_ = item.text()
+            object_ = self.taskTableWidget.cellWidget(0, 1).currentText()
+            class_method_ = self.taskTableWidget.cellWidget(0, 2).currentText()
+            worker_server = Worker(
+                object_,
+                classMethod=class_method_,
+                module=module_,
+                mail_userID=userID,
+                mail_passwd=password,
+            )
+            QThreadPool.globalInstance().start(worker_server)
+            # 循环刷新界面，以显示最新日志内容
+            loop = QEventLoop()
+            QTimer.singleShot(2000, loop.quit)
+            loop.exec()
+        else:
+            QMessageBox.warning(self, "注意", "请新增任务")
+            return
 
     # 展示任务进程
     def onUpdateText(self, text):
@@ -73,17 +143,17 @@ class MainWindow(QMainWindow, Ui_Form):
         row = self.taskTableWidget.rowCount()
         # 在末尾插入一空行
         self.taskTableWidget.insertRow(row)
-        item_path = QTableWidgetItem("biz.monitor_oa.manager")
-        item_path.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
-        self.taskTableWidget.setItem(row, 0, item_path)
+        item_module = QTableWidgetItem("biz.monitor_oa.manager")
+        item_module.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+        self.taskTableWidget.setItem(row, 0, item_module)
 
-        comBox_package = QComboBox()
-        comBox_package.addItems(["RPAServer", "RPAClient"])
-        self.taskTableWidget.setCellWidget(row, 1, comBox_package)
+        comBox_object = QComboBox()
+        comBox_object.addItems(["RPAServer", "RPAClient"])
+        self.taskTableWidget.setCellWidget(row, 1, comBox_object)
 
-        comBox_method = QComboBox()
-        comBox_method.addItems(["to_do", "have_done"])
-        self.taskTableWidget.setCellWidget(row, 2, comBox_method)
+        comBox_class_method = QComboBox()
+        comBox_class_method.addItems(["to_do", "have_done"])
+        self.taskTableWidget.setCellWidget(row, 2, comBox_class_method)
 
     # 点击移除
     @Slot()
@@ -97,52 +167,10 @@ class MainWindow(QMainWindow, Ui_Form):
         row_2 = self.taskTableWidget.currentRow()
         self.taskTableWidget.removeRow(row_2)
 
-    # 点击任务终止
-    @Slot()
-    def on_taskStop_clicked(self):
-        self.mt.terminate()
-
     # 点击任务开始
     @Slot()
-    def on_taskStart_clicked(self):
-        userID = self.userID.text()
-        password = self.password.text()
-        if len(userID) == 0 or len(password) == 0:
-            QMessageBox.warning(self, "注意", "邮箱用户名或密码都不能为空")
-        else:
-            # 默认保存登录信息，快捷开始
-            self.settings.setValue("userID", userID)
-            self.settings.setValue("password", enctry(password))
-            # 暂时支持一行，后面可以实现编排并增加优先级，按优先级顺序执行
-            # row = self.taskTableWidget.currentRow()
-            # if row == -1:
-            # 获取第一行第一列单元格对象
-            item = self.taskTableWidget.item(0, 0)
-            # 检查单元格是否为空
-            if item is not None:
-                # 获取单元格文本
-                path_ = item.text()
-                package_ = self.taskTableWidget.cellWidget(0, 1).currentText()
-                method_ = self.taskTableWidget.cellWidget(0, 2).currentText()
-                worker_server = Worker(
-                    package_,
-                    classMethod=method_,
-                    module=path_,
-                    mail_userID=userID,
-                    mail_passwd=password,
-                )
-                QThreadPool.globalInstance().start(worker_server)
-                # 循环刷新界面，以显示最新日志内容
-                loop = QEventLoop()
-                QTimer.singleShot(2000, loop.quit)
-                loop.exec()
-            else:
-                QMessageBox.warning(self, "注意", "请新增任务")
-                return
-
-    def ocrResult(self, result):
-        self.ocrmg = TotalMessage("".join(result))
-        self.ocrmg.show()
+    def on_start_now_clicked(self):
+        self.run_command()
 
     def closeEvent(self, event):
         """Shuts down application on close."""

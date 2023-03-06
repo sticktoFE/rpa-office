@@ -5,7 +5,7 @@ import traceback
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-import myutils.web_driver_manager as web_driver_manager
+import myutils.sele_driver.web_driver_manager as web_driver_manager
 from WebShotScreen import ShotScreenManager
 
 

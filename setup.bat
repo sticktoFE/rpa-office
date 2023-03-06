@@ -1,0 +1,2 @@
+
+D:\leichui\Miniconda3\envs\rpa\python -m nuitka --standalone --mingw64 --show-memory --show-progress --plugin-enable=pyside6 --nofollow-import-to=tkinter,pil,numpy,scipy,matplotlib,pandas,xlwings,openpyxl --follow-import-to=biz,mytools,myutils,scrapy --include-module=biz.monitor_oa.manager,mytools.general_spider.general_spider.settings --output-dir=output --windows-icon-from-ico=rpa.ico --jobs=10 biz/monitor_oa/mainw.py
