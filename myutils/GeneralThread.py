@@ -47,6 +47,7 @@ class Worker(QRunnable):
         *args,
         classMethod=None,
         classMethodArgs: dict = None,
+        classSignal=None,
         need_progress_signal=False,
         module=None,
         **kwargs,
@@ -57,6 +58,7 @@ class Worker(QRunnable):
         self.fn = fnOrClass
         self.class_method = classMethod
         self.classMethodArgs = classMethodArgs
+        self.classSignal = classSignal
         self.module = module
         self.args = args
         self.kwargs = kwargs
@@ -76,21 +78,35 @@ class Worker(QRunnable):
             self.fn = lazy_import.getRes(self.module, self.fn)
         fn_result = None
         try:
+            # 直接传进 函数或类方法对象
             if isfunction(self.fn) or ismethod(self.fn):
                 fn_result = self.fn(*self.args, **self.kwargs)
-                # print("-----------------")
+            # 传进class，如果有方法传进字符串形式的方法名，适用于引进类，然后直接调用类方法
+            # 实例化类
             elif isclass(self.fn):
-                # print(f"+++++++++{self.fn}")
                 fn_result = self.fn(*self.args, **self.kwargs)
                 if self.class_method is not None:
                     cm = getattr(fn_result, self.class_method)
-                    fn_result = cm(**self.classMethodArgs)  # 暂不支持有参数的类的方法调用，需要的话，后面再升级
+                    if self.classSignal is not None:
+
+                        def sigal_r(result):
+                            self.communication.result.emit(result)
+
+                        _signal = getattr(fn_result, self.classSignal)
+                        print("++++++++++++++++++++++++++")
+                        print(_signal)
+                        _signal.connect(sigal_r)
+                        cm(**self.classMethodArgs)
+                    else:
+                        fn_result = cm(**self.classMethodArgs)
+
         except Exception:
             traceback.print_exc()
             exctype, value = sys.exc_info()[:2]
             self.communication.error.emit((exctype, value, traceback.format_exc()))
         else:
-            self.communication.result.emit(fn_result)
+            if self.classSignal is None:
+                self.communication.result.emit(fn_result)
         finally:
             self.communication.finished.emit(1)  # Done
 

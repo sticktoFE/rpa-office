@@ -12,7 +12,6 @@ class ShotScreenManager:
         callback=None,
         shot_driver=None,
     ):
-        print("BaseDriver->__init__")
         self.win_url = url
         self.shot_driver = shot_driver
         self.win_x = x
@@ -21,13 +20,10 @@ class ShotScreenManager:
         self.win_height = height
         self.shot_callback = callback
         self.image_path = get_temp_folder(
-            execute_file_path=__file__,
-            is_clear_folder=True,
+            execute_file_path=__file__, is_clear_folder=True
         )
         self.temp_path = get_temp_folder(
-            execute_file_path=__file__,
-            get_temp_folder="tmp_pic"
-            is_clear_folder=True,
+            execute_file_path=__file__, des_folder_name="tmp_pic", is_clear_folder=True
         )
         # 截完图的回调函数
 

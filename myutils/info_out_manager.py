@@ -1,12 +1,11 @@
 import glob
 import os
-import re
 import shutil
 import sys
 from pathlib import Path
 import time
-from PySide6.QtCore import QSettings
 import json
+import configparser
 
 """
     目前还没找到用处
@@ -87,8 +86,7 @@ def get_temp_folder(
     execute_file_path=None, des_folder_name=None, is_clear_folder=False
 ):
     # 使用配置文件中的默认设置
-    settings = QSettings("./config.ini", QSettings.Format.IniFormat)
-    des_folder = settings.value("tmp_path")
+    des_folder = ReadWriteConfFile.getSectionValue("General", "tmp_path")
     des_folder = Path(des_folder)
     if execute_file_path is not None:
         # path_list = re.split(r"[/\\]", execute_file_path)
@@ -167,9 +165,51 @@ def txt_to_list(file_path):
         return list  # 返回列表
 
 
+# 读写配置文件 xxx.ini
+class ReadWriteConfFile:
+    configDir = Path(__file__).parent.parent
+    filepath = configDir / "config.ini"
+
+    @staticmethod
+    def getConfigParser():
+        cf = configparser.ConfigParser()
+        cf.read(ReadWriteConfFile.filepath)
+        return cf
+
+    @staticmethod
+    def writeConfigParser(cf):
+        with open(ReadWriteConfFile.filepath, "w") as f:
+            cf.write(f)
+
+    @staticmethod
+    def getSectionValue(section, key):
+        cf = ReadWriteConfFile.getConfigParser()
+        return cf.get(section, key)
+
+    @staticmethod
+    def addSection(section):
+        cf = ReadWriteConfFile.getConfigParser()
+        allSections = cf.sections()
+        if section in allSections:
+            return
+        else:
+            cf.add_section(section)
+        ReadWriteConfFile.writeConfigParser(cf)
+
+    @staticmethod
+    def setSectionValue(section, key, value):
+        cf = ReadWriteConfFile.getConfigParser()
+        cf.set(section, key, value)
+        ReadWriteConfFile.writeConfigParser(cf)
+
+
 if __name__ == "__main__":
-    result = print_var("你好")
-    print(result)
+    # result = print_var("你好")
+    # print(result)
     # redirObj = RedirectStdout()
     # sys.stdout = redirObj #本句会抑制"Let's begin!"输出
     # print("Let's begin!")
+    ReadWriteConfFile.addSection("messages")
+    ReadWriteConfFile.setSectionValue("messages", "name", "sophia")
+    x = ReadWriteConfFile.getSectionValue("General", "chrome_version")
+    print(x)

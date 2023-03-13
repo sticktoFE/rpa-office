@@ -3,19 +3,9 @@ from myutils.GeneralThread import Worker
 from ui.mainwindow_event import MainWindow
 from PySide6.QtWidgets import QApplication, QMessageBox
 from PySide6.QtGui import QGuiApplication
-from PySide6.QtCore import QThreadPool, QEvent, QObject
+from PySide6.QtCore import QThreadPool
 from myutils.LazyImport import lazy_import
 from myutils import globalvar
-
-
-# ocr服务较慢，程序一开始就运行起来
-def startup_ocrserver():
-    # 实例化 OCRRequestProcess，并存储为全局变量，全局可调用进行OCR，并在实例化时启动模型服务
-    worker_ocr_server = Worker("OCRRequestProcess", module="route.OCRRequestProcess")
-    worker_ocr_server.communication.result.connect(
-        partial(globalvar.set_var, "ocrserver")
-    )
-    QThreadPool.globalInstance().start(worker_ocr_server)
 
 
 class Main(MainWindow):
@@ -32,7 +22,6 @@ class Main(MainWindow):
         self.init_all_gui()
 
     # 初始后台对象
-
     def init_all_object(self, progress_signal):
         super().init_all_object(progress_signal)
         # progress_signal.emit(100*2/2)
@@ -56,9 +45,9 @@ class Main(MainWindow):
         # self.context_menu.moveToThread(self.menuthread)
         # self.menuthread.start()
         # 综合截屏界面
-        from mytools.screen_shot.SMainLayer import SMainLayer
+        from mytools.screen_shot.MainLayer import MainLayer
 
-        self.screenshot = SMainLayer()
+        self.screenshot = MainLayer()
         self.screenshot.screen_shot_pic_signal.connect(self.ocrResult)
         # self.screenshot.progress_signal.connect(self.update_progress)
 
@@ -69,7 +58,6 @@ class Main(MainWindow):
             self.progressBar.setVisible(False)
 
     # 1、右键菜单设置区
-
     def contextMenuEvent(self, event):
         # print(event.type())
         # self.context_menu.exec(event.globalPos())
@@ -79,8 +67,7 @@ class Main(MainWindow):
         # self.context_menu.show_signal.emit()
         self.context_menu.show()
 
-    # 打开配置选项
-
+    # 打开右键菜单选项
     def menu_choice(self, res):
         eval(res)
 
@@ -107,7 +94,6 @@ class Main(MainWindow):
         self.ocrmg.show()
 
     # 手工画范围截图
-
     def drawExtract(self):
         """开始截图"""
         self.hide()
@@ -170,33 +156,14 @@ class Main(MainWindow):
                 self.PO.stop()
 
 
-# 扩展QApplication是为了捕获所有事件，看下什么在影响GUI主线程
-
-
-class App(QApplication):
-    def notify(self, eventobject: QObject, event: QEvent):
-        """
-        本次重写notify是为了截获应用的所有事件，并针对鼠标和键盘按下事件输出事件相关的信息
-        :param eventobject: 事件接收对象
-        :param event: 具体事件
-        :return: True表示事件已经处理，False表示没有处理，需要继续往下传递
-        """
-        eventtype = event.type()
-        print(f"所有事件类型{eventtype},事件接收者:{eventobject}，child={eventobject.children()}")
-        flag = eventtype in [QEvent.Close, QEvent.KeyPress, QEvent.MouseButtonPress]
-        if flag:
-            print("-----------------")
-            print(
-                f"In app notify:事件类型值={eventtype}，事件接收者:{eventobject},parent={eventobject.parent()},child={eventobject.children()}"
-            )
-
-        ret = super().notify(eventobject, event)
-        if flag:
-            print("***************")
-            print(
-                f"App notify end,事件接收者:{eventobject}，事件返回值={ret},app={self},parent={eventobject.parent()}"
-            )
-        return ret
+# ocr服务较慢，程序一开始就运行起来
+def startup_ocrserver():
+    # 实例化 OCRRequestProcess，并存储为全局变量，全局可调用进行OCR，并在实例化时启动模型服务
+    worker_ocr_server = Worker("OCRRequestProcess", module="route.OCRRequestProcess")
+    worker_ocr_server.communication.result.connect(
+        partial(globalvar.set_var, "ocrserver")
+    )
+    QThreadPool.globalInstance().start(worker_ocr_server)
 
 
 if __name__ == "__main__":

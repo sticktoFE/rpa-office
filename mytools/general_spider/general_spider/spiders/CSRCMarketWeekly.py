@@ -2,10 +2,10 @@ import os
 import re
 import scrapy
 from mytools.general_spider.general_spider.items import CSRCMarketWeeklyItem
-from mytools.general_spider.general_spider.extendsion.SeleniumSpider import (
+from mytools.general_spider.general_spider.extension.SeleniumSpider import (
     SeleniumSpider,
 )
-from mytools.general_spider.general_spider.extendsion.tools import waitForXpath
+from mytools.general_spider.general_spider.extension.tools import waitForXpath
 from pathlib import Path
 from selenium.webdriver.common.by import By
 
@@ -42,7 +42,11 @@ class CSRCMarketWeeklySpider(SeleniumSpider):
         meta = response.meta
         # 获取当前页面中的文章列表
         articles = response.xpath('//ul[@class="list mt10" and @id="list"]/li')
+        i = 0
         for article in articles:
+            i = i + 1
+            if i == 2:
+                break
             # 获取文章的标题和链接
             title = article.xpath("./a/text()").get()
             link = article.xpath("./a/@href").get()
@@ -131,7 +135,7 @@ class CSRCMarketWeeklySpider(SeleniumSpider):
             a = waitForXpath(
                 self.browser, '//div[@id="files"]/a[1]', timeout=self.timeout
             )
-            a.click()
+            # a.click()
 
     def closed(self, reason):
         # # 判断文件是否存在

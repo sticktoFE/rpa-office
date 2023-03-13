@@ -2,121 +2,128 @@
 # sys.path.append(dirpath)
 # 一、待办任务处理
 from pathlib import Path
-import time, os
-from mytools.general_spider.start_spider import Scraper
-from mytools.general_spider.general_spider.spiders.OAProAdmitToDo import (
-    OAProAdmitToDoSpider,
-)
-from mytools.general_spider.general_spider.spiders.OAProAdmitHaveDone import (
-    OAProAdmitHaveDoneSpider,
-)
-from mytools.general_spider.general_spider.spiders.CSRCMarketWeekly import (
-    CSRCMarketWeeklySpider,
-)
+import random
+import time
+from mytools.general_spider.SpiderManager import SpiderManager, run_spiders
 from myutils.GeneralThread import Worker
-from myutils.info_out_manager import get_temp_folder
+from myutils.info_out_manager import get_temp_folder, load_json_table
 from biz.monitor_oa.zy_email import SeleMail
 from biz.monitor_oa.tx_doc import TXDocument
 from biz.monitor_oa.wc_sendinfo import send_webchat
 from PySide6.QtCore import QThreadPool
+from myutils.GeneralThread import Worker
+from multiprocessing import Process, Queue
 
 
 # 获取数据形成文件
 class RPAClient:
     # 1、启动信息获取，获取列表信息和详情信息
-    def __init__(self, scrapy_userID, scrapy_passwd, mail_userID, mail_passwd):
+    def __init__(
+        self,
+        scrapy_userID=None,
+        scrapy_passwd=None,
+        mail_userID=None,
+        mail_passwd=None,
+        data_start_date=None,
+        data_end_date=None,
+    ):
         self.scrapy_userID = scrapy_userID
         self.scrapy_passwd = scrapy_passwd
         self.mail_userID = mail_userID
         self.mail_passwd = mail_passwd
+        self.data_start_date = data_start_date
+        self.data_end_date = data_end_date
         self.out_folder = get_temp_folder(
             des_folder_name="spiders_out", is_clear_folder=True
         )
         self.out_file = f"{self.out_folder}/csrc_market_weekly.txt"
         self.out_finished = self.out_file + "_finished"
 
-    # 待办
-    def to_do(self):
-        # 1）生成结构化的json文件，并下载表单中附件到相应目录
-        self.scraper = Scraper(
-            OAProAdmitToDoSpider,
-            self.scrapy_userID,
-            self.scrapy_passwd,
-            out_file=self.out_file,
-            down_path=self.out_folder,
+    def start_spider(self, spider_name):
+        q = Queue()
+        p = Process(
+            target=run_spiders,
+            args=(
+                q,
+                spider_name,
+                self.scrapy_userID,
+                self.scrapy_passwd,
+                self.data_start_date,
+                self.data_end_date,
+            ),
+            kwargs={
+                "out_file": self.out_file,
+                "down_path": self.out_folder,
+            },
         )
-        self.scraper.run_spiders(start_proxy=False)
-        # 2、把发送需求文档邮件给相关人，同时上传台账更新文件
-        # 上传附件到草稿箱
+        p.start()
+        result = q.get()
+        p.join()
+        if result is not None:
+            raise result
+        else:
+            return True
+
+    # 客户端待办、已办任务处理
+    # 爬取信息
+    def scrapy_info(self):
+        # 1、启动信息获取，获取详情信息，生成台账更新文件（已经是子线程模式了）
+        # self.scraper = SpiderManager(
+        #     self.scrapy_userID,
+        #     self.scrapy_passwd,
+        #     out_file=self.out_file,
+        #     down_path=self.out_folder,
+        # )
+        # self.scraper.run_spiders(
+        #     "csrc_market_weekly"
+        # )  # csrc_market_weekly OAProAdmitHaveDone
+        # # self.scraper.spider_finished.connect()
+        # 2、由上面的直接调用改成下面的启动进程方式
+        return self.start_spider(
+            "OAProAdmitHaveDone"
+        )  # csrc_market_weekly OAProAdmitHaveDone
+
+    # 上传附件
+    def upload_file_to_mail(self):
+        # 2、获取台账更新文件并上传到邮件（开启子线程）
         while not Path(self.out_finished).exists():
-            time.sleep(1)
-        # 把json文件上传到邮件
+            time.sleep(0.5)
         self.sm = SeleMail(self.mail_userID, self.mail_passwd, self.out_folder)
         self.sm.upload_through_draft(get_file=self.out_finished)
-        # 把需求说明书发给相关人
-        # self.sm = SeleMail(self.out_folder)
-        # item_generator = load_json_table(self.out_finished)
-        # self.sm.send_mails(item_generator)
 
-    # 二、已办任务处理
+    # 把需求说明书发给相关人
+    def notify_attache(self):
+        self.sm = SeleMail(self.mail_userID, self.mail_passwd, self.out_folder)
+        item_generator = load_json_table(self.out_finished)
+        self.sm.send_mails(item_generator)
+
     def have_done(self):
-        # 1、启动信息获取，获取详情信息，生成台账更新文件（已经是子线程模式了）
-        self.scraper = Scraper(
-            CSRCMarketWeeklySpider,
-            self.scrapy_userID,
-            self.scrapy_passwd,
-            out_file=self.out_file,
-            down_path=self.out_folder,
-        )
-        self.scraper.run_spiders(start_proxy=False)
-        # 等待文件约定的文件出现
-        while not Path(self.out_finished).exists():
-            time.sleep(1)
-        # 2、获取台账更新文件并上传到邮件（开启子线程）
-        # self.sm = SeleMail(self.mail_userID, self.mail_passwd, self.out_folder)
-        # self.sm.upload_through_draft(get_file=self.out_finished)
-        worker_server = Worker(
-            SeleMail,
-            classMethod="upload_through_draft",
-            classMethodArgs={"get_file": self.out_finished},
-            userID=self.mail_userID,
-            passwd=self.mail_passwd,
-            down_path=self.out_folder,
-        )
-        QThreadPool.globalInstance().start(worker_server)
+        re = self.scrapy_info()
+        if re:
+            # self.rpacli = RPAClient(userID_oa, password_oa, userID, password)
+            # self.rpacli.scrapy_info()
+            # # 启动上传功能
+            # self.rpacli.scraper.spider_finished.connect(self.after_scrapy)
+            # worK_server = Worker(self.rpacli.scrapy_info)
+            self.upload_file_to_mail()
 
 
 # 服务端接收数据并进行相应处理，如更新文档，统计分析等
 class RPAServer:
     def __init__(self, mail_userID, mail_passwd):
+        self.mail_userID = mail_userID
+        self.mail_passwd = mail_passwd
         self.out_folder = get_temp_folder(
             des_folder_name="spiders_out", is_clear_folder=True
         )
         self.out_file = f"{self.out_folder}\\csrc_market_weekly.txt"
         self.out_finished = self.out_file + "_finished"
-        self.mail_userID = mail_userID
-        self.mail_passwd = mail_passwd
 
-    # 一、待办任务处理
-    def to_do(self):
-        # 1、下载文件获取列表信息和详情信息结束后并新增到腾讯文档台账
-        # # 判断文件是否存在,存在，则删除文件
-        if os.path.exists(self.out_finished):
-            os.remove(self.out_finished)
-        self.sm = SeleMail(self.mail_userID, self.mail_passwd, self.out_folder)
-        self.sm.download_through_draft()
-        self.td = TXDocument(self.mail_userID, self.mail_passwd, self.out_finished)
-        self.td.modify()
-        # 2、发信息通知相关人登陆邮件查看需求说明书并更新腾讯文档
-        send_webchat()
-
-    # 二、已办任务处理
+    # 已办任务处理
     # server端
     # 1、登陆邮件并下载台账更新文件，然后更新到腾讯文档台账
-    def have_done(self):
+    def start(self):
         # 下载json结构化信息
-        if os.path.exists(self.out_finished):
-            os.remove(self.out_finished)
         self.sm = SeleMail(self.mail_userID, self.mail_passwd, self.out_folder)
         self.sm.download_through_draft()
         # 更新腾讯文档给台账
@@ -126,9 +133,19 @@ class RPAServer:
         # send_webchat()
 
 
-if __name__ == "__main__":
-    # client = RPAClient()
-    # client.have_done()
+def start_ip_proxy():
+    worker_schedule = Worker("schedule", module="mytools.proxy_pool.proxyPool")
+    QThreadPool.globalInstance().start(worker_schedule)
+    # 等一下再启动服务
+    time.sleep(random.randint(1, 3))
+    worker_server = Worker("server", module="mytools.proxy_pool.proxyPool")
+    QThreadPool.globalInstance().start(worker_server)
+    time.sleep(random.randint(1, 3))
 
-    client = RPAServer()
+
+if __name__ == "__main__":
+    client = RPAClient(mail_userID="loubenlei@zybank.com.cn", mail_passwd="abcd@1234")
     client.have_done()
+
+    # client = RPAServer()
+    # client.have_done()

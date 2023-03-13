@@ -5,10 +5,10 @@ import time
 import scrapy
 from scrapy.http import HtmlResponse
 from mytools.general_spider.general_spider.items import OAProAdmitToDoItem
-from mytools.general_spider.general_spider.extendsion.SeleniumSpider import (
+from mytools.general_spider.general_spider.extension.SeleniumSpider import (
     SeleniumSpider,
 )
-from mytools.general_spider.general_spider.extendsion.tools import waitForXpath
+from mytools.general_spider.general_spider.extension.tools import waitForXpath
 from pathlib import Path
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys

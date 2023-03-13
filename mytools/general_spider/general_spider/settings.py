@@ -131,13 +131,3 @@ HTTPERROR_ALLOWED_CODES = [404]
 KEYWORDS = ["iPhone"]
 MAX_PAGE = 5
 SELENIUM_TIMEOUT = 20
-# 设置获取数据的日期
-from datetime import date, datetime, timedelta
-
-today = date.today()
-yesterday = today - timedelta(days=1)
-today_str = datetime.strftime(today, "%Y-%m-%d")
-yesterday_str = datetime.strftime(yesterday, "%Y-%m-%d")
-# current_date = str(time.strftime("%Y-%m-%d", time.localtime()))
-DATA_START_DATE = yesterday_str  # "2023-02-28"
-DATA_END_DATE = today_str

@@ -12,7 +12,7 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.action_chains import ActionChains
 import time
 from pathlib import Path
-from myutils.sele_driver import web_driver_manager
+from myutils import web_driver_manager
 
 
 class SeleMail:
@@ -54,7 +54,7 @@ class SeleMail:
     """
 
     def login(self):
-        self.driver.get("https://email.zybank.com.cn/coremail")
+        self.driver.get("https://email.zybank.com.cn/coremail/index.jsp")
         # 登陆
         # 用户名
         user_name = self.driver.find_element(by=By.XPATH, value='//input[@name="uid"]')
@@ -70,6 +70,7 @@ class SeleMail:
             pass_word.clear()
             pass_word.send_keys(self.passwd)
         # 登录
+        time.sleep(random.uniform(2,4))
         login_button = self.driver.find_element(
             by=By.XPATH, value='//*[@class="u-btn u-btn-primary submit j-submit"]'
         )
@@ -110,6 +111,8 @@ class SeleMail:
 
     # 针对存在的草稿，上传附件并保存
     def upload_through_draft(self, get_file=None):
+        print("------------------")
+        print(get_file)
         get_file = os.fspath(get_file)
         # 登录邮箱
         self.login()
@@ -145,19 +148,29 @@ class SeleMail:
             ).click()
             time.sleep(random.randint(3, 6))
         # 上传附件
+        get_file = os.fspath(get_file).replace("/", "\\")
         self.driver.find_element(
             by=By.XPATH,
             value='//input[@type="file" and @name="attachments" and @id="attachments"]',
         ).send_keys(get_file)
+        # 等待上传完成,一定要加等待时间，否则可能显示上传成功，实际上传不成功
+        time.sleep(random.uniform(3, 6))
         # 上传成功绿色对勾出现
-        self.driver.find_element(by=By.XPATH, value='//div[@class="info j-info"]')
+        result = self.driver.find_element(
+            by=By.XPATH, value='//div[@class="info j-info"]'
+        )
+        if result is not None:
+            print("附件上传成功")
+        else:
+            print("附件上传失败")
         # 保存草稿
         self.driver.find_element(by=By.XPATH, value='//span[text()="存草稿"]').click()
-        time.sleep(random.uniform(0.5, 2))
-        assert "保存草稿成功" in self.driver.page_source
+        time.sleep(random.uniform(1, 3))
+        # assert "保存草稿成功" in self.driver.page_source
+        # time.sleep(10)
         logout_link = self.driver.find_element(by=By.XPATH, value="//a[text()='退出']")
         logout_link.click()
-        time.sleep(random.uniform(1, 3))
+        time.sleep(random.uniform(2, 5))
         # assert "登录" in self.driver.page_source
         self.driver.quit()
 
@@ -242,10 +255,11 @@ class SeleMail:
         )
         title.send_keys(mail_title)
         # 3、上传附件
+        get_file = os.fspath(get_file)
         self.driver.find_element(
             by=By.XPATH,
             value='//input[@type="file" and @name="attachments" and @id="attachments"]',
-        ).send_keys(os.fspath(get_file))
+        ).send_keys()
         # 上传成功绿色对勾出现
         self.driver.find_element(by=By.XPATH, value='//div[@class="info j-info"]')
         # 4、邮件内容
@@ -290,11 +304,8 @@ class SeleMail:
         logout_link.click()
         self.driver.quit()
 
-    def clear_mail(self):
-        pass
-
 
 if __name__ == "__main__":
     sm = SeleMail()
-    # sm.uploadOrDownload_through_draft(type=1)
-    sm.send_mail()
+    sm.uploadOrDownload_through_draft(type=1)
+    # sm.send_mail()

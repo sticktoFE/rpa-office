@@ -1,8 +1,3 @@
-import sys
-from PySide6.QtWidgets import (
-    QApplication,
-)
-
 from biz.monitor_oa.AppActionExecThread import AppExec
 
 

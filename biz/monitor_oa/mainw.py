@@ -1,18 +1,14 @@
 import sys
-import time
 from PySide6.QtCore import (
     QThreadPool,
     Signal,
     QObject,
-    QEventLoop,
-    QTimer,
     QSettings,
     Qt,
+    Slot,
+    QEventLoop,
+    QTimer,
 )
-from biz.monitor_oa.manager import RPAClient, RPAServer
-from myutils.GeneralThread import Worker
-from myutils.info_secure import dectry, enctry
-from PySide6.QtCore import Slot
 from PySide6.QtGui import QTextCursor
 from PySide6.QtWidgets import (
     QApplication,
@@ -21,9 +17,15 @@ from PySide6.QtWidgets import (
     QTableWidgetItem,
     QComboBox,
 )
-from Form import Ui_Form
 
-"""Redirects console output to text widget."""
+from biz.monitor_oa.manager import RPAClient, RPAServer  # , start_ip_proxy
+from myutils.GeneralThread import Worker
+from myutils.info_secure import dectry, enctry
+from Form import Ui_Form
+import schedule
+
+# 设置获取数据的日期
+from datetime import date, datetime, timedelta
 
 
 class Stream(QObject):
@@ -34,75 +36,131 @@ class Stream(QObject):
 
 
 class MainWindow(QMainWindow, Ui_Form):
-    t_temp = time.perf_counter()
-    delay_time = 500
-
-    def __init__(self, parent=None):
-        super(MainWindow, self).__init__(parent)
+    def __init__(self):
+        super().__init__()
         self.setupUi(self)
         # 把标准输出展示到重定向窗口中
         redirect_out = Stream()
         redirect_out.newText.connect(self.onUpdateText)
         sys.stdout = redirect_out
-        self.settings = QSettings("./config.ini", QSettings.Format.IniFormat)
+        self.config = QSettings("./config.ini", QSettings.Format.IniFormat)
         # 如果输入登录信息保存了，自动回显到输入框里
-        userID = self.settings.value("userID")
+        userID = self.config.value("userID")
         if userID is not None:
             self.userID.setText(userID)
-            password = self.settings.value("password")
-            self.password.setText(dectry(password))
-        userID_oa = self.settings.value("userID_oa")
+            passwd = self.config.value("passwd")
+            self.passwd.setText(dectry(passwd))
+        userID_oa = self.config.value("userID_oa")
         if userID_oa is not None:
             self.userID_oa.setText(userID_oa)
-            password_oa = self.settings.value("password_oa")
-            self.password_oa.setText(dectry(password_oa))
-        # 创建定时器
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.run_command)
+            passwd_oa = self.config.value("passwd_oa")
+            self.passwd_oa.setText(dectry(passwd_oa))
+        today = date.today()
+        yesterday = today - timedelta(days=1)
+        today_str = datetime.strftime(today, "%Y-%m-%d")
+        yesterday_str = datetime.strftime(yesterday, "%Y-%m-%d")
+        self.data_start_date.setText(yesterday_str)
+        self.data_end_date.setText(today_str)
+        self.scheduled_jobs = []
+        self.srapy_running = False
 
     @Slot()
     def on_start_clicked(self):
-        interval = int(self.interval_edit.text())
-        self.timer.start(interval * 1000)
         self.start.setEnabled(False)
         self.stop.setEnabled(True)
+        interval = self.interval_edit.text()
+        set_times = self.set_time.text()
+        for set_time in set_times.split("~"):
+            # 设计一个定时器，支持间隔时间或者定时触发
+            self.scheduled_jobs.append(
+                schedule.every().day.at(set_time).do(self.run_command)
+            )
+        # schedule.every(int(interval * 1000)).minutes.do(self.run_command)
+        print("Spider working now")
+        while True:
+            schedule.run_pending()
+            app.processEvents()
+
+    # 点击任务开始
+    @Slot()
+    def on_start_now_clicked(self):
+        self.start_now.setEnabled(False)
+        self.run_command()
+        self.start_now.setEnabled(True)
 
     @Slot()
     def on_stop_clicked(self):
-        self.timer.stop()
         self.start.setEnabled(True)
         self.stop.setEnabled(False)
+        # Cancel the scheduled job
+        for job in self.scheduled_jobs:
+            schedule.cancel_job(job)
+        self.scheduled_jobs.clear()
 
     def run_command(self):
         # 执行命令
         userID = self.userID.text()
-        password = self.password.text()
+        passwd = self.passwd.text()
         userID_oa = self.userID_oa.text()
-        password_oa = self.password_oa.text()
-        if len(userID) == 0 or len(password) == 0:
+        passwd_oa = self.passwd_oa.text()
+        data_start_date = self.data_start_date.text()
+        data_end_date = self.data_end_date.text()
+        if len(userID) == 0 or len(passwd) == 0:
             QMessageBox.warning(self, "注意", "邮箱用户名或密码都不能为空")
         else:
             # 默认保存登录信息，快捷开始
-            self.settings.setValue("userID", userID)
-            self.settings.setValue("password", enctry(password))
-            self.settings.setValue("userID_oa", userID_oa)
-            self.settings.setValue("password_oa", enctry(password_oa))
-            if self.RPAClient.isChecked():
-                RPAClient(userID_oa, password_oa, userID, password).have_done()
-            elif self.RPAServer.isChecked():
-                RPAServer(userID, password).have_done()
+            self.config.setValue("userID", userID)
+            self.config.setValue("passwd", enctry(passwd))
+            self.config.setValue("userID_oa", userID_oa)
+            self.config.setValue("passwd_oa", enctry(passwd_oa))
+            if self.rpa_client.isChecked():
+                # 打开代理
+                # start_ip_proxy()
+                # # 1、分开启动
+                # self.rpacli = RPAClient(userID_oa, passwd_oa, userID, passwd)
+                # self.rpacli.scrapy_info()
+                # # 启动上传功能
+                # self.rpacli.scraper.spider_finished.connect(
+                #     lambda: QThreadPool.globalInstance().start(
+                #         Worker(self.rpacli.upload_file_to_mail)
+                #     )
+                # )
+                # 1、打包启动
+                worK_server = Worker(
+                    RPAClient,
+                    classMethod="have_done",
+                    classMethodArgs={},
+                    scrapy_userID=userID_oa,
+                    scrapy_passwd=passwd_oa,
+                    mail_userID=userID,
+                    mail_passwd=passwd,
+                    data_start_date=data_start_date,
+                    data_end_date=data_end_date,
+                )
+                QThreadPool.globalInstance().start(worK_server)
+
+            elif self.rpa_server.isChecked():
+                QThreadPool.globalInstance().start(
+                    Worker(
+                        RPAServer,
+                        classMethod="start",
+                        classMethodArgs={},
+                        mail_userID=userID,
+                        mail_passwd=passwd,
+                    )
+                )
             # 循环刷新界面，以显示最新日志内容
             loop = QEventLoop()
             QTimer.singleShot(2000, loop.quit)
             loop.exec()
 
     # 后期可以在界面添加编排任务，然后在此处解析循环执行
-    def task_execute(self, userID, password, userID_oa, password_oa):
+    def task_execute(self, userID, passwd, userID_oa, passwd_oa):
         # 默认保存登录信息，快捷开始
-        self.settings.setValue("userID", userID)
-        self.settings.setValue("password", enctry(password))
-        self.settings.setValue("userID_oa", userID_oa)
-        self.settings.setValue("password_oa", enctry(password_oa))
+        self.config.setValue("userID", userID)
+        self.config.setValue("passwd", enctry(passwd))
+        self.config.setValue("userID_oa", userID_oa)
+        self.config.setValue("passwd_oa", enctry(passwd_oa))
         # 暂时支持一行，后面可以实现编排并增加优先级，按优先级顺序执行
         # 获取第一行第一列单元格对象
         item = self.taskTableWidget.item(0, 0)
@@ -117,13 +175,9 @@ class MainWindow(QMainWindow, Ui_Form):
                 classMethod=class_method_,
                 module=module_,
                 mail_userID=userID,
-                mail_passwd=password,
+                mail_passwd=passwd,
             )
             QThreadPool.globalInstance().start(worker_server)
-            # 循环刷新界面，以显示最新日志内容
-            loop = QEventLoop()
-            QTimer.singleShot(2000, loop.quit)
-            loop.exec()
         else:
             QMessageBox.warning(self, "注意", "请新增任务")
             return
@@ -158,23 +212,13 @@ class MainWindow(QMainWindow, Ui_Form):
     # 点击移除
     @Slot()
     def on_fileRemove_clicked(self):
-        # root = self.taskTreeWidget.invisibleRootItem()
-        # for item in self.taskTreeWidget.selectedItems():
-        #     (item.parent() or root).removeChild(item)
         row_select = self.taskTableWidget.selectedItems()
         if len(row_select) == 0:
             return
         row_2 = self.taskTableWidget.currentRow()
         self.taskTableWidget.removeRow(row_2)
 
-    # 点击任务开始
-    @Slot()
-    def on_start_now_clicked(self):
-        self.run_command()
-
     def closeEvent(self, event):
-        """Shuts down application on close."""
-        # reset stdout to defaults.
         sys.stdout = sys.__stdout__
         super().closeEvent(event)
 

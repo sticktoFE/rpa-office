@@ -6,7 +6,7 @@ import subprocess
 cmd = """
 nuitka 
 --windows-disable-console 
---standalone  --mingw64 --show-memory --show-progress  
+--standalone  --mingw64 --show-progress  
 --nofollow-imports  
 --plugin-enable=pyside6  
 --include-qt-plugins=sensible,styles  
@@ -46,3 +46,39 @@ else:
     print(
         f"-------------------------Subprogram failed:{completedProcess.stderr.readlines()}"
     )
+
+
+def zipfile_7zip():
+    import os
+    import subprocess
+
+    # 7zip安装路径
+    seven_zip = r"D:\Program Files\7-Zip\7z.exe"
+
+    # 要压缩的文件夹路径
+    folder_path = r".\output\mainw.dist"
+
+    # 压缩后的文件名前缀
+    output_filename = "compressed"
+
+    # 压缩级别（0为无压缩，9为最高压缩率）
+    compression_level = 5
+
+    # 分割大小（单位为字节，45MB = 45 * 1024 * 1024字节）
+    split_size = 45 * 1024 * 1024
+
+    # 使用7zip进行压缩和分割
+    subprocess.run(
+        [
+            seven_zip,
+            "a",
+            "-v" + str(split_size),
+            "-mx" + str(compression_level),
+            output_filename,
+            folder_path,
+        ]
+    )
+
+
+if __name__ == "__main__":
+    zipfile_7zip()

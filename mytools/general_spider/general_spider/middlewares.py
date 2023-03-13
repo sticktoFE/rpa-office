@@ -9,10 +9,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from scrapy.http import HtmlResponse
 from logging import getLogger
 from fake_useragent import UserAgent
-from mytools.general_spider.general_spider.extendsion import IPProxy
+from mytools.general_spider.general_spider.extension import IPProxy
 from scrapy import signals
 from scrapy.http.response.html import HtmlResponse
-from myutils.sele_driver.web_driver_manager import get_driver_ChromeDriver
+from myutils.web_driver_manager import get_driver_ChromeDriver
 
 
 # 随机IP

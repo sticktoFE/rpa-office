@@ -4,7 +4,7 @@ import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
-from myutils.sele_driver import web_driver_manager
+from myutils import web_driver_manager
 from myutils import office_tools
 from myutils.info_out_manager import load_json_table
 

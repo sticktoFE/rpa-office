@@ -1,20 +1,15 @@
-import os
 import random
-import re
 import time
 import scrapy
 from scrapy.http import HtmlResponse
 from mytools.general_spider.general_spider.items import OAProAdmitHaveDoneItem
-from mytools.general_spider.general_spider.extendsion.SeleniumSpider import (
+from mytools.general_spider.general_spider.extension.SeleniumSpider import (
     SeleniumSpider,
 )
-from mytools.general_spider.general_spider.extendsion.tools import waitForXpath
+from mytools.general_spider.general_spider.extension.tools import waitForXpath
 from pathlib import Path
-from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import (
-    NoSuchElementException,
-    ElementNotInteractableException,
     TimeoutException,
 )
 
@@ -85,20 +80,39 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
                 for window in all_windows:
                     if window != current_window:
                         self.browser.switch_to.window(window)
+
                 # 寻找流程节点中产创办审核时间点
                 # 切换到“流程跟踪”
                 submit = waitForXpath(
                     self.browser,
-                    "//div[@class='ant-tabs ant-tabs-top ant-tabs-line ant-tabs-no-animation sd-has-table']//div[@role='tab'][2]",  # 2是已办理tab页
+                    "//div[@class=' ant-tabs-tab' and @role='tab' and contains(text(),'流程跟踪')]",  # 2是已办理tab页
                     timeout=self.timeout,
                 )
                 submit.click()
-                # 寻找需求内容
-                waitForXpath(
+                # 寻找审批时间
+                admit_time_ele = waitForXpath(
                     self.browser,
-                    '//div[@class="ant-tabs-content ant-tabs-content-no-animated ant-tabs-top-content"]/div[@class="ant-tabs-tabpane ant-tabs-tabpane-active"]',
+                    '//div[@class="ant-table-body"]//tbody[@class="ant-table-tbody"]//td[contains(text(),"产品管理委员会办公室意见")]/following-sibling::td[2]/span',
                     timeout=self.timeout,
                 )
+                admit_time = admit_time_ele.text
+                admit_date = admit_time[:10]
+                # 使用产创办审批时间来判断时间范围
+                if not (
+                    admit_date <= self.settings.get("data_end_date")
+                    and admit_date >= self.settings.get("data_start_date")
+                ):
+                    self.browser.close()
+                    self.browser.switch_to.window(current_window)
+                    continue
+                # 如果满足时间范围，切换回需求表单获取相关内容
+                # 切换到“基本信息”
+                submit = waitForXpath(
+                    self.browser,
+                    "//div[@class=' ant-tabs-tab' and @role='tab']/span[contains(text(),'基本信息')]",
+                    timeout=self.timeout,
+                )
+                submit.click()
                 body = self.browser.page_source
                 url = self.browser.current_url
                 response = HtmlResponse(
@@ -111,12 +125,12 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
                 time.sleep(random.randint(3, 6))
                 self.browser.close()
                 self.browser.switch_to.window(current_window)
-                # 根据日期判断停止继续,大于等于设定日期的才获取  存在作废的需求 demand_no为空，不为空的才获取
+                # 存在作废的需求 demand_no为空，不为空的才获取
+                # 根据提交日期判断停止继续,大于等于设定日期的才获取----换成上面的委员会审批日期来判断
                 # 注意item不设置值的情况下报keyerror错误
-                if item["demand_no"] == "None" or not (
-                    item["submit_date"] < self.settings.get("DATA_END_DATE")
-                    and item["submit_date"] >= self.settings.get("DATA_START_DATE")
-                ):
+                if (
+                    item["demand_no"] == "None"
+                ):  # or not (item["submit_date"] <= self.settings.get("data_end_date") and item["submit_date"] >= self.settings.get("data_start_date")):
                     continue
                 yield item
             # 翻页

@@ -32,8 +32,8 @@ class Ui_Form(object):
         Form.setSizePolicy(sizePolicy)
         self.centralwidget = QWidget(Form)
         self.centralwidget.setObjectName(u"centralwidget")
-        self.horizontalLayout_13 = QHBoxLayout(self.centralwidget)
-        self.horizontalLayout_13.setObjectName(u"horizontalLayout_13")
+        self.horizontalLayout_14 = QHBoxLayout(self.centralwidget)
+        self.horizontalLayout_14.setObjectName(u"horizontalLayout_14")
         self.verticalLayout_7 = QVBoxLayout()
         self.verticalLayout_7.setObjectName(u"verticalLayout_7")
         self.verticalLayout_5 = QVBoxLayout()
@@ -49,16 +49,16 @@ class Ui_Form(object):
 
         self.horizontalLayout_10.addWidget(self.label_8)
 
-        self.RPAClient = QCheckBox(self.centralwidget)
-        self.RPAClient.setObjectName(u"RPAClient")
-        self.RPAClient.setChecked(True)
+        self.rpa_client = QCheckBox(self.centralwidget)
+        self.rpa_client.setObjectName(u"rpa_client")
+        self.rpa_client.setChecked(True)
 
-        self.horizontalLayout_10.addWidget(self.RPAClient)
+        self.horizontalLayout_10.addWidget(self.rpa_client)
 
-        self.RPAServer = QCheckBox(self.centralwidget)
-        self.RPAServer.setObjectName(u"RPAServer")
+        self.rpa_server = QCheckBox(self.centralwidget)
+        self.rpa_server.setObjectName(u"rpa_server")
 
-        self.horizontalLayout_10.addWidget(self.RPAServer)
+        self.horizontalLayout_10.addWidget(self.rpa_server)
 
 
         self.verticalLayout_5.addLayout(self.horizontalLayout_10)
@@ -94,11 +94,11 @@ class Ui_Form(object):
 
         self.horizontalLayout_3.addWidget(self.label_2)
 
-        self.password = QLineEdit(self.centralwidget)
-        self.password.setObjectName(u"password")
-        self.password.setEchoMode(QLineEdit.Password)
+        self.passwd = QLineEdit(self.centralwidget)
+        self.passwd.setObjectName(u"passwd")
+        self.passwd.setEchoMode(QLineEdit.Password)
 
-        self.horizontalLayout_3.addWidget(self.password)
+        self.horizontalLayout_3.addWidget(self.passwd)
 
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_3)
@@ -140,11 +140,11 @@ class Ui_Form(object):
 
         self.horizontalLayout_8.addWidget(self.label_6)
 
-        self.password_oa = QLineEdit(self.centralwidget)
-        self.password_oa.setObjectName(u"password_oa")
-        self.password_oa.setEchoMode(QLineEdit.Password)
+        self.passwd_oa = QLineEdit(self.centralwidget)
+        self.passwd_oa.setObjectName(u"passwd_oa")
+        self.passwd_oa.setEchoMode(QLineEdit.Password)
 
-        self.horizontalLayout_8.addWidget(self.password_oa)
+        self.horizontalLayout_8.addWidget(self.passwd_oa)
 
 
         self.verticalLayout_3.addLayout(self.horizontalLayout_8)
@@ -245,6 +245,7 @@ class Ui_Form(object):
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.label_7 = QLabel(self.centralwidget)
         self.label_7.setObjectName(u"label_7")
+        self.label_7.setAlignment(Qt.AlignCenter)
 
         self.horizontalLayout.addWidget(self.label_7)
 
@@ -256,6 +257,22 @@ class Ui_Form(object):
 
         self.verticalLayout_4.addLayout(self.horizontalLayout)
 
+        self.horizontalLayout_13 = QHBoxLayout()
+        self.horizontalLayout_13.setObjectName(u"horizontalLayout_13")
+        self.label_11 = QLabel(self.centralwidget)
+        self.label_11.setObjectName(u"label_11")
+        self.label_11.setAlignment(Qt.AlignCenter)
+
+        self.horizontalLayout_13.addWidget(self.label_11)
+
+        self.set_time = QLineEdit(self.centralwidget)
+        self.set_time.setObjectName(u"set_time")
+
+        self.horizontalLayout_13.addWidget(self.set_time)
+
+
+        self.verticalLayout_4.addLayout(self.horizontalLayout_13)
+
         self.horizontalLayout_9 = QHBoxLayout()
         self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
         self.start = QPushButton(self.centralwidget)
@@ -265,19 +282,19 @@ class Ui_Form(object):
 
         self.horizontalLayout_9.addWidget(self.start)
 
-        self.stop = QPushButton(self.centralwidget)
-        self.stop.setObjectName(u"stop")
-        sizePolicy1.setHeightForWidth(self.stop.sizePolicy().hasHeightForWidth())
-        self.stop.setSizePolicy(sizePolicy1)
-
-        self.horizontalLayout_9.addWidget(self.stop)
-
         self.start_now = QPushButton(self.centralwidget)
         self.start_now.setObjectName(u"start_now")
         sizePolicy1.setHeightForWidth(self.start_now.sizePolicy().hasHeightForWidth())
         self.start_now.setSizePolicy(sizePolicy1)
 
         self.horizontalLayout_9.addWidget(self.start_now)
+
+        self.stop = QPushButton(self.centralwidget)
+        self.stop.setObjectName(u"stop")
+        sizePolicy1.setHeightForWidth(self.stop.sizePolicy().hasHeightForWidth())
+        self.stop.setSizePolicy(sizePolicy1)
+
+        self.horizontalLayout_9.addWidget(self.stop)
 
 
         self.verticalLayout_4.addLayout(self.horizontalLayout_9)
@@ -286,34 +303,34 @@ class Ui_Form(object):
         self.verticalLayout_7.addLayout(self.verticalLayout_4)
 
 
-        self.horizontalLayout_13.addLayout(self.verticalLayout_7)
+        self.horizontalLayout_14.addLayout(self.verticalLayout_7)
 
         self.out_log = QTextEdit(self.centralwidget)
         self.out_log.setObjectName(u"out_log")
 
-        self.horizontalLayout_13.addWidget(self.out_log)
+        self.horizontalLayout_14.addWidget(self.out_log)
 
         Form.setCentralWidget(self.centralwidget)
 #if QT_CONFIG(shortcut)
         self.label.setBuddy(self.userID)
-        self.label_2.setBuddy(self.password)
+        self.label_2.setBuddy(self.passwd)
         self.label_5.setBuddy(self.userID_oa)
-        self.label_6.setBuddy(self.password_oa)
+        self.label_6.setBuddy(self.passwd_oa)
         self.label_9.setBuddy(self.userID_oa)
         self.label_10.setBuddy(self.userID_oa)
         self.label_7.setBuddy(self.interval_edit)
+        self.label_11.setBuddy(self.interval_edit)
 #endif // QT_CONFIG(shortcut)
-        QWidget.setTabOrder(self.userID, self.password)
-        QWidget.setTabOrder(self.password, self.userID_oa)
-        QWidget.setTabOrder(self.userID_oa, self.password_oa)
-        QWidget.setTabOrder(self.password_oa, self.fileAdd)
+        QWidget.setTabOrder(self.userID, self.passwd)
+        QWidget.setTabOrder(self.passwd, self.userID_oa)
+        QWidget.setTabOrder(self.userID_oa, self.passwd_oa)
+        QWidget.setTabOrder(self.passwd_oa, self.fileAdd)
         QWidget.setTabOrder(self.fileAdd, self.fileRemove)
         QWidget.setTabOrder(self.fileRemove, self.taskTableWidget)
         QWidget.setTabOrder(self.taskTableWidget, self.interval_edit)
         QWidget.setTabOrder(self.interval_edit, self.start_now)
         QWidget.setTabOrder(self.start_now, self.start)
-        QWidget.setTabOrder(self.start, self.stop)
-        QWidget.setTabOrder(self.stop, self.out_log)
+        QWidget.setTabOrder(self.start, self.out_log)
 
         self.retranslateUi(Form)
 
@@ -323,8 +340,8 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"auto_mobile", None))
         self.label_8.setText(QCoreApplication.translate("Form", u"\u8fd0\u884c\u7aef", None))
-        self.RPAClient.setText(QCoreApplication.translate("Form", u"\u5ba2\u6237\u7aef", None))
-        self.RPAServer.setText(QCoreApplication.translate("Form", u"\u670d\u52a1\u7aef", None))
+        self.rpa_client.setText(QCoreApplication.translate("Form", u"\u5ba2\u6237\u7aef", None))
+        self.rpa_server.setText(QCoreApplication.translate("Form", u"\u670d\u52a1\u7aef", None))
         self.label_3.setText(QCoreApplication.translate("Form", u"\u90ae\u7bb1", None))
         self.label.setText(QCoreApplication.translate("Form", u"\u767b\u5f55\u7528\u6237", None))
         self.label_2.setText(QCoreApplication.translate("Form", u"\u767b\u5f55\u5bc6\u7801", None))
@@ -342,8 +359,9 @@ class Ui_Form(object):
         ___qtablewidgetitem2 = self.taskTableWidget.horizontalHeaderItem(2)
         ___qtablewidgetitem2.setText(QCoreApplication.translate("Form", u"\u65b9\u6cd5", None));
         self.label_7.setText(QCoreApplication.translate("Form", u"\u6267\u884c\u95f4\u9694\uff08\u79d2\uff09\uff1a", None))
+        self.label_11.setText(QCoreApplication.translate("Form", u"\u6bcf\u65e5\u5b9a\u65f6\uff1a", None))
         self.start.setText(QCoreApplication.translate("Form", u"\u5f00\u59cb", None))
-        self.stop.setText(QCoreApplication.translate("Form", u"\u505c\u6b62", None))
         self.start_now.setText(QCoreApplication.translate("Form", u"\u7acb\u5373\u5f00\u59cb", None))
+        self.stop.setText(QCoreApplication.translate("Form", u"\u505c\u6b62", None))
     # retranslateUi
 
