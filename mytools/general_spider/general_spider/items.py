@@ -45,10 +45,11 @@ class CSRCMarketWeeklyItem(Item):
     定义所需字段
     """
 
+    index_no = Field()
     title = Field()
     detail_url = Field()
     pub_date = Field()
-    index = Field()
+
     con_type = Field()
     pub_org = Field()
     text_num = Field()
@@ -88,8 +89,11 @@ class OAProAdmitHaveDoneItem(Item):
     submit_date = Field()
     background = Field()
     summary = Field()
-    admit_result = Field()
     pro_type = Field()
+    admit_person = Field()
+    admit_date = Field()
+    admit_result = Field()
+    weeks = Field()
     attach_save_path = Field()
     relate_attach_save_path = Field()
     handling_date = Field()

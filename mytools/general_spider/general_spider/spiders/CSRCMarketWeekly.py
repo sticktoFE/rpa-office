@@ -91,7 +91,7 @@ class CSRCMarketWeeklySpider(SeleniumSpider):
         # 获取文章的正文内容
         content = response.xpath('//div[@class="xxgk-table"]//tbody')
         # 获取文章的标题和链接
-        item["index"] = content.xpath("./tr[1]/td[1]/text()").get()
+        item["index_no"] = content.xpath("./tr[1]/td[1]/text()").get()
         item["con_type"] = content.xpath("./tr[1]/td[1]/text()").get()
         item["pub_org"] = content.xpath("./tr[2]/td[1]/text()").get()
         content_attach = response.xpath('//div[@id="files"]')

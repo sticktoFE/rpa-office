@@ -65,7 +65,7 @@ class JianShuPipeline(object):
         if not self._sql:
             self._sql = """
             INSERT INTO article(id,title,content,author,avatar,pub_time,article_id,origin_url)
-            VALUE(null,%s,%s,%s,%s,%s,%s,%s)
+            VALUE(null,?,?,?,?,?,?,?)
             """
             return self._sql
         return self._sql
@@ -77,26 +77,19 @@ class JianShuTwistedPipeline(object):
     """
 
     def __init__(self):
-        db_parames = {
-            "host": "wslip",
-            "port": 3306,
-            "user": "root",
-            "password": "root",
-            "database": "ter",
-            "charset": "utf8",
-            "cursorclass": cursors.DictCursor,
-        }
-
+        self.conn = connect("dw/risk.db")
+        # 获取游标、数据
+        self.cursor = self.conn.cursor()
+        self._sql = None
         # 定义数据库连接池
         self.dbpool = adbapi.ConnectionPool("pymysql", **db_parames)
-        self._sql = None
 
     @property
     def sql(self):
         if not self._sql:
             self._sql = """
                 INSERT INTO article(id,title,content,author,avatar,pub_time,article_id,origin_url,word_count)
-                VALUE(null,%s,%s,%s,%s,%s,%s,%s,%s)
+                VALUE(null,?,?,?,?,?,?,?,?)
                 """
             return self._sql
         return self._sql
@@ -183,17 +176,67 @@ class CSRCPenaltyPipeline(object):
         return item
 
 
-class CSRCMarketWeeklyPipeline(object):
+class TwistedPipeline(object):
+    def __init__(self, table_name):
+        # 定义数据库连接池
+        self.dbpool = adbapi.ConnectionPool(
+            "sqlite3", database="dw/risk.db", check_same_thread=False
+        )
+        self.sqlite_table = table_name
+        self._sql = None
+
+    def exeute(self, item, spider, action="insert"):
+        if action == "insert":
+            defer = self.dbpool.runInteraction(self.insert_item, item)
+            defer.addErrback(self.handle_error, item, spider)
+
+    def insert_item(self, cursor, item):
+        self.insert_sql(item)
+        values = tuple(
+            "\\n".join(value) if isinstance(value, list) else value
+            for value in item.values()
+        )
+        cursor.execute(self._sql, values)  # tuple(item.values()))
+
+    def insert_sql(self, item):
+        if not self._sql:
+            self._sql = f"insert into {self.sqlite_table}({', '.join(item.keys())}) values ({', '.join(['?'] * len(item.keys()))})"
+            return self._sql
+        return self._sql
+
+    def handle_error(self, error, item, spider):
+        print("=" * 15 + "error" + "=" * 15)
+        print(error)
+        print("=" * 15 + "error" + "=" * 15)
+
+
+class CSRCMarketWeeklyPipeline(TwistedPipeline):
+    def __init__(self):
+        super().__init__("csrc_market_weekly")
+
     def process_item(self, item, spider):
+        # 1、存入数据库
+        super().exeute(item, spider, action="insert")
+        # 2、接着导出为json
         dump_json_table(dict(item), spider.out_file)
         return item
-# 任务待办内容处理 
+
+
+# 任务待办内容处理
 class OAProAdmitToDoPipeline(object):
     def process_item(self, item, spider):
         dump_json_table(dict(item), spider.out_file)
         return item
-# 任务已办内容处理 
-class OAProAdmitHaveDonePipeline(object):
+
+
+# 任务已办内容处理
+class OAProAdmitHaveDonePipeline(TwistedPipeline):
+    def __init__(self):
+        super().__init__("pro_demand_admit_ledger")
+
     def process_item(self, item, spider):
+        # 1、存入数据库
+        super().exeute(item, spider, action="insert")
+        # 2、接着导出为json
         dump_json_table(dict(item), spider.out_file)
         return item

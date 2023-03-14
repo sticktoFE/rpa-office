@@ -134,7 +134,7 @@ class TXDocument:
     def modify(self):
         self.login()
         list_generator = load_json_table(self.infile)
-        # 使用列表的元素数来定义循环次数，7个为一组
+        # 循环字典形成的列表
         for line_record in list_generator:
             demand_no = line_record.get("demand_no")
             submitter = line_record.get("submitter")
@@ -147,7 +147,10 @@ class TXDocument:
             # 把summary合并到background中
             background.extend(summary)
             pro_type = line_record.get("pro_type")
+            admit_person = line_record.get("admit_person")
+            admit_date = line_record.get("admit_date")
             admit_result = line_record.get("admit_result")
+            weeks = line_record.get("weeks")
             # 不存在新增，存在避开主键去覆盖
             if not self.exists_key("需求编号", demand_no):
                 # 先跳到第一列
@@ -169,13 +172,15 @@ class TXDocument:
                 self.write_content(submit_depart)
                 self.write_content(submit_date)
                 self.write_content(title)
-                ActionChains(self.driver).send_keys(Keys.TAB).perform()
+                self.key_tabs_nums(1)
                 self.write_content(background)
-                ActionChains(self.driver).send_keys(Keys.TAB).perform()
-                ActionChains(self.driver).send_keys(Keys.TAB).perform()
-                ActionChains(self.driver).send_keys(Keys.TAB).perform()
+                self.key_tabs_nums(3)
                 self.write_content(admit_result)
                 self.write_content(pro_type)
+                self.key_tabs_nums(7)
+                self.write_content(admit_date)
+                self.write_content(admit_person)
+                self.write_content(weeks)
             else:
                 # 先跳到第一列
                 edit_text = self.driver.find_element(
@@ -183,17 +188,98 @@ class TXDocument:
                 )
                 edit_text.send_keys(Keys.HOME)
                 time.sleep(random.uniform(0.1, 0.5))
-                ActionChains(self.driver).send_keys(Keys.TAB).perform()
+                self.key_tabs_nums(1)
                 self.write_content(submitter)
                 self.write_content(submit_depart)
                 self.write_content(submit_date)
                 self.write_content(title)
-                ActionChains(self.driver).send_keys(Keys.TAB).perform()
+                self.key_tabs_nums(1)
                 self.write_content(background)
-                ActionChains(self.driver).send_keys(Keys.TAB).perform()
-                ActionChains(self.driver).send_keys(Keys.TAB).perform()
-                ActionChains(self.driver).send_keys(Keys.TAB).perform()
+                self.key_tabs_nums(3)
                 self.write_content(admit_result)
                 self.write_content(pro_type)
+                self.key_tabs_nums(7)
+                self.write_content(admit_date)
+                self.write_content(admit_person)
+                self.write_content(weeks)
         time.sleep(1)
         self.driver.close()
+
+    # 查询腾讯文档进行统计分析
+    def get_data(self):
+        self.login()
+        list_generator = load_json_table(self.infile)
+        # 循环字典形成的列表
+        for line_record in list_generator:
+            demand_no = line_record.get("demand_no")
+            submitter = line_record.get("submitter")
+            submit_depart = line_record.get("submit_depart")
+            submit_date = line_record.get("submit_date")
+            title = line_record.get("title")
+            # 以下两个考虑到长文本，获取信息时是list
+            background = line_record.get("background")
+            summary = line_record.get("summary")
+            # 把summary合并到background中
+            background.extend(summary)
+            pro_type = line_record.get("pro_type")
+            admit_person = line_record.get("admit_person")
+            admit_date = line_record.get("admit_date")
+            admit_result = line_record.get("admit_result")
+            weeks = line_record.get("weeks")
+            # 不存在新增，存在避开主键去覆盖
+            if not self.exists_key("需求编号", demand_no):
+                # 先跳到第一列
+                edit_text = self.driver.find_element(
+                    by=By.ID, value="alloy-simple-text-editor"
+                )
+                edit_text.send_keys(Keys.HOME)
+                # 编号--如果不需要，则注释掉
+                # s = self.driver.find_element(
+                #     by=By.XPATH,
+                #     value="/html/body/div[3]/div/div[4]/div[2]/div/div/div[1]/div/div/div[1]/div[1]",
+                # ).text  # 获取此行的行数
+                # a = int(s[1:])  # 将A**去除A，留下数字
+                # a = str(a - 2)  # 如果你的排序为行的相差则减去几即可
+                # edit_text.send_keys(a)  # 输出a以形成序号
+                # 按照标题顺序写入
+                self.write_content(demand_no)
+                self.write_content(submitter)
+                self.write_content(submit_depart)
+                self.write_content(submit_date)
+                self.write_content(title)
+                self.key_tabs_nums(1)
+                self.write_content(background)
+                self.key_tabs_nums(3)
+                self.write_content(admit_result)
+                self.write_content(pro_type)
+                self.key_tabs_nums(7)
+                self.write_content(admit_date)
+                self.write_content(admit_person)
+                self.write_content(weeks)
+            else:
+                # 先跳到第一列
+                edit_text = self.driver.find_element(
+                    by=By.ID, value="alloy-simple-text-editor"
+                )
+                edit_text.send_keys(Keys.HOME)
+                time.sleep(random.uniform(0.1, 0.5))
+                self.key_tabs_nums(1)
+                self.write_content(submitter)
+                self.write_content(submit_depart)
+                self.write_content(submit_date)
+                self.write_content(title)
+                self.key_tabs_nums(1)
+                self.write_content(background)
+                self.key_tabs_nums(3)
+                self.write_content(admit_result)
+                self.write_content(pro_type)
+                self.key_tabs_nums(7)
+                self.write_content(admit_date)
+                self.write_content(admit_person)
+                self.write_content(weeks)
+        time.sleep(1)
+        self.driver.close()
+
+    def key_tabs_nums(self, nums):
+        for _ in range(nums):
+            ActionChains(self.driver).send_keys(Keys.TAB).perform()

@@ -13,6 +13,8 @@ from selenium.common.exceptions import (
     TimeoutException,
 )
 
+from myutils.DateAndTime import get_weeks_current_date
+
 
 class OAProAdmitHaveDoneSpider(SeleniumSpider):
     name = "OAProAdmitHaveDone"
@@ -97,6 +99,16 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
                 )
                 admit_time = admit_time_ele.text
                 admit_date = admit_time[:10]
+                item["admit_date"] = admit_date
+                item["weeks"] = get_weeks_current_date(admit_date)
+                # 寻找审批人
+                admit_person_ele = waitForXpath(
+                    self.browser,
+                    '//div[@class="ant-table-body"]//tbody[@class="ant-table-tbody"]//td[contains(text(),"产品管理委员会办公室意见")]/preceding-sibling::td[2]/span',
+                    timeout=self.timeout,
+                )
+                admit_person = admit_person_ele.text
+                item["admit_person"] = admit_person
                 # 使用产创办审批时间来判断时间范围
                 if not (
                     admit_date <= self.settings.get("data_end_date")
