@@ -8,7 +8,6 @@
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
 import random
-import time
 
 
 BOT_NAME = "general_spider"
