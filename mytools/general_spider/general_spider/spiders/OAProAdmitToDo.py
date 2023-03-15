@@ -186,9 +186,9 @@ class OAProAdmitToDoSpider(SeleniumSpider):
                 timeout=self.timeout,
             )
             userid_input.clear()
-            userid_input.send_keys("loubenlei")
+            userid_input.send_keys(self.settings.get("userID"))
             password_input.clear()
-            password_input.send_keys("abcd@1234")
+            password_input.send_keys(self.settings.get("passwd"))
             submit = waitForXpath(
                 self.browser,
                 "//form[@class='ant-form ant-form-horizontal form_sd-login_login']//span[text()='登 录']",

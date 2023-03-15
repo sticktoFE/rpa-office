@@ -80,7 +80,7 @@ class RPAClient:
         # # self.scraper.spider_finished.connect()
         # 2、由上面的直接调用改成下面的启动进程方式
         return self.start_spider(
-            "OAProAdmitHaveDone"
+            "csrc_market_weekly"
         )  # csrc_market_weekly OAProAdmitHaveDone
 
     # 上传附件
@@ -144,7 +144,7 @@ def start_ip_proxy():
 
 
 if __name__ == "__main__":
-    client = RPAClient(mail_userID="loubenlei@zybank.com.cn", mail_passwd="abcd@1234")
+    client = RPAClient(mail_userID="", mail_passwd="")
     client.have_done()
 
     # client = RPAServer()

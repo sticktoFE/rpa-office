@@ -183,12 +183,18 @@ class TwistedPipeline(object):
             "sqlite3", database="dw/risk.db", check_same_thread=False
         )
         self.sqlite_table = table_name
-        self._sql = None
+        self.in_sql = None
+        self.up_sql = None
+        self.de_sql = None
 
-    def exeute(self, item, spider, action="insert"):
+    def execute(self, item, spider, action="insert", primary=None):
         if action == "insert":
             defer = self.dbpool.runInteraction(self.insert_item, item)
-            defer.addErrback(self.handle_error, item, spider)
+        elif action == "update":
+            defer = self.dbpool.runInteraction(self.update_item, item, primary=primary)
+        elif action == "delete":
+            defer = self.dbpool.runInteraction(self.delete_item, item, primary=primary)
+        defer.addErrback(self.handle_error, item, spider)
 
     def insert_item(self, cursor, item):
         self.insert_sql(item)
@@ -196,13 +202,41 @@ class TwistedPipeline(object):
             "\\n".join(value) if isinstance(value, list) else value
             for value in item.values()
         )
-        cursor.execute(self._sql, values)  # tuple(item.values()))
+        cursor.execute(self.in_sql, values)  # tuple(item.values()))
 
     def insert_sql(self, item):
-        if not self._sql:
-            self._sql = f"insert into {self.sqlite_table}({', '.join(item.keys())}) values ({', '.join(['?'] * len(item.keys()))})"
-            return self._sql
-        return self._sql
+        if not self.in_sql:
+            self.in_sql = f"insert into {self.sqlite_table}({', '.join(item.keys())}) values ({', '.join(['?'] * len(item.keys()))})"
+            return self.in_sql
+        return self.in_sql
+
+    def delete_item(self, cursor, item, primary=None):
+        self.delete_sql(item, primary)
+        cursor.execute(self.de_sql, (item[primary],))  # tuple(item.values()))
+
+    def delete_sql(self, item, primary=None):
+        if not self.de_sql:
+            self.de_sql = f"delete from {self.sqlite_table} "
+            if primary is not None:
+                self.de_sql = f"{self.de_sql} where {primary} = ?"
+            return self.de_sql
+        return self.de_sql
+
+    def update_item(self, cursor, item, primary=None):
+        self.update_sql(item, primary)
+        values = tuple(
+            "\\n".join(value) if isinstance(value, list) else value
+            for value in item.values()
+        )
+        cursor.execute(self.up_sql, values)  # tuple(item.values()))
+
+    def update_sql(self, item, primary=None):
+        if not self.up_sql:
+            self.up_sql = f"update {self.sqlite_table} set ({', '.join(item.keys())}) = ({', '.join(['?'] * len(item.keys()))}) "
+            if primary is not None:
+                self.up_sql = f"{self.up_sql} where {primary} = '{item[primary]}'"
+            return self.up_sql
+        return self.up_sql
 
     def handle_error(self, error, item, spider):
         print("=" * 15 + "error" + "=" * 15)
@@ -216,7 +250,8 @@ class CSRCMarketWeeklyPipeline(TwistedPipeline):
 
     def process_item(self, item, spider):
         # 1、存入数据库
-        super().exeute(item, spider, action="insert")
+        super().execute(item, spider, action="delete", primary="index_no")
+        super().execute(item, spider, action="insert")
         # 2、接着导出为json
         dump_json_table(dict(item), spider.out_file)
         return item
@@ -236,7 +271,8 @@ class OAProAdmitHaveDonePipeline(TwistedPipeline):
 
     def process_item(self, item, spider):
         # 1、存入数据库
-        super().exeute(item, spider, action="insert")
+        super().execute(item, spider, action="delete", primary="demand_no")
+        super().execute(item, spider, action="insert")
         # 2、接着导出为json
         dump_json_table(dict(item), spider.out_file)
         return item
