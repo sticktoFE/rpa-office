@@ -4,7 +4,7 @@
 from pathlib import Path
 import random
 import time
-from mytools.general_spider.SpiderManager import SpiderManager, run_spiders
+from mytools.general_spider.SpiderManager import run_spiders
 from myutils.GeneralThread import Worker
 from myutils.info_out_manager import get_temp_folder, load_json_table
 from biz.monitor_oa.zy_email import SeleMail
@@ -80,7 +80,7 @@ class RPAClient:
         # # self.scraper.spider_finished.connect()
         # 2、由上面的直接调用改成下面的启动进程方式
         return self.start_spider(
-            "csrc_market_weekly"
+            "OAProAdmitHaveDone"
         )  # csrc_market_weekly OAProAdmitHaveDone
 
     # 上传附件

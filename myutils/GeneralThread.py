@@ -93,8 +93,6 @@ class Worker(QRunnable):
                             self.communication.result.emit(result)
 
                         _signal = getattr(fn_result, self.classSignal)
-                        print("++++++++++++++++++++++++++")
-                        print(_signal)
                         _signal.connect(sigal_r)
                         cm(**self.classMethodArgs)
                     else:

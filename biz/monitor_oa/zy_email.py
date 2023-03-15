@@ -1,11 +1,6 @@
 import os
 import pickle
 import random
-
-# 导入显示等待类
-
-# 导入期望场景类
-
 # 导入By类
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
@@ -44,7 +39,7 @@ class SeleMail:
             driver.add_cookie(cookie)
         # 本网站密码并没有保存，所以手动增加进去，而且短信验证后选中信任本机不要再短信验证，但也没有保留到cookie中
         # 所以利用cookie来自动登录对此网站无法使用
-        # driver.add_cookie({"name": "fakePassword", "value": "abcd@1234"}) 找不到 输入密码的input之name，所以无效
+        # driver.add_cookie({"name": "fakePassword", "value": "88888"}) 找不到 输入密码的input之name，所以无效
         # 加载完cookies后再访问
         driver.refresh()  # .get("https://email.zybank.com.cn/coremail")
 
@@ -70,7 +65,7 @@ class SeleMail:
             pass_word.clear()
             pass_word.send_keys(self.passwd)
         # 登录
-        time.sleep(random.uniform(2,4))
+        time.sleep(random.uniform(2, 4))
         login_button = self.driver.find_element(
             by=By.XPATH, value='//*[@class="u-btn u-btn-primary submit j-submit"]'
         )
