@@ -147,7 +147,7 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
                 yield item
             # 翻页
             meta["page_num"] += 1
-            if meta["page_num"] <= self.settings.get("MAX_PAGE"):  # 不超过3页
+            if meta["page_num"] <= self.settings.get("MAX_PAGE"):
                 meta.update(
                     {
                         "useSelenium": True,

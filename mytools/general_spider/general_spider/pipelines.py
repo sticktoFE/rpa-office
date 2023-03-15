@@ -1,83 +1,89 @@
-# Define your item pipelines here
-#
-# Don't forget to add your pipeline to the ITEM_PIPELINES setting
-# See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-
-
-# useful for handling different item types with a single interface
 import os
-
-# import pymysql
-# from pymysql import cursors
 from sqlite3 import connect
 from twisted.enterprise import adbapi
 import json
-
 from myutils.info_out_manager import dump_json_table
 
 
 # 定义一个异步操作数据库的通用类
 class TwistedPipeline(object):
-    def __init__(self, table_name):
-        # 定义数据库连接池
-        self.dbpool = adbapi.ConnectionPool(
-            "sqlite3", database="dw/risk.db", check_same_thread=False
-        )
-        self.sqlite_table = table_name
+    def __init__(self, db_path):
+        self.dbpool = None
+        self.db_path = db_path
+        self.sqlite_table = None
         self.in_sql = None
         self.up_sql = None
         self.de_sql = None
 
-    def execute(self, item, spider, action="insert", primary=None):
+    @classmethod
+    def from_crawler(cls, crawler):
+        db_path = crawler.settings.get("SQLITE_DB_PATH")
+        return cls(db_path)
+
+    def open_spider(self, spider):
+        # 定义数据库连接池
+        self.dbpool = adbapi.ConnectionPool(
+            "sqlite3", self.db_path, check_same_thread=False
+        )
+
+    def close_spider(self, spider):
+        self.dbpool.close()
+
+    def execute(self, item, spider, table_name, action="insert", primary=None):
         if action == "insert":
-            defer = self.dbpool.runInteraction(self.insert_item, item)
+            defer = self.dbpool.runInteraction(self.insert_item, item, table_name)
         elif action == "update":
-            defer = self.dbpool.runInteraction(self.update_item, item, primary=primary)
+            defer = self.dbpool.runInteraction(
+                self.update_item, item, table_name, primary=primary
+            )
         elif action == "delete":
-            defer = self.dbpool.runInteraction(self.delete_item, item, primary=primary)
+            defer = self.dbpool.runInteraction(
+                self.delete_item, item, table_name, primary=primary
+            )
+        elif action == "deleteAinsert":
+            defer = self.dbpool.runInteraction(
+                self.deleteAinsert_item, item, table_name, primary=primary
+            )
         defer.addErrback(self.handle_error, item, spider)
 
-    def insert_item(self, cursor, item):
-        self.insert_sql(item)
+    def deleteAinsert_item(self, cursor, item, table_name, primary=None):
+        cursor.execute("BEGIN")
+        try:
+            self.delete_item(cursor, item, table_name, primary)
+            self.insert_item(cursor, item, table_name)
+        except:
+            cursor.execute("ROLLBACK")
+            raise
+        else:
+            cursor.execute("COMMIT")
+
+    def insert_item(self, cursor, item, table_name):
+        if not self.in_sql:
+            self.in_sql = f"insert into {table_name}({', '.join(item.keys())}) values ({', '.join(['?'] * len(item.keys()))})"
+
         values = tuple(
             "\\n".join(value) if isinstance(value, list) else value
             for value in item.values()
         )
         cursor.execute(self.in_sql, values)  # tuple(item.values()))
 
-    def insert_sql(self, item):
-        if not self.in_sql:
-            self.in_sql = f"insert into {self.sqlite_table}({', '.join(item.keys())}) values ({', '.join(['?'] * len(item.keys()))})"
-            return self.in_sql
-        return self.in_sql
-
-    def delete_item(self, cursor, item, primary=None):
-        self.delete_sql(item, primary)
-        cursor.execute(self.de_sql, (item[primary],))  # tuple(item.values()))
-
-    def delete_sql(self, item, primary=None):
+    def delete_item(self, cursor, item, table_name, primary=None):
         if not self.de_sql:
-            self.de_sql = f"delete from {self.sqlite_table} "
+            self.de_sql = f"delete from {table_name} "
             if primary is not None:
                 self.de_sql = f"{self.de_sql} where {primary} = ?"
-            return self.de_sql
-        return self.de_sql
+        cursor.execute(self.de_sql, (item[primary],))  # tuple(item.values()))
 
-    def update_item(self, cursor, item, primary=None):
-        self.update_sql(item, primary)
+    def update_item(self, cursor, item, table_name, primary=None):
+        if not self.up_sql:
+            self.up_sql = f"update {table_name} set ({', '.join(item.keys())}) = ({', '.join(['?'] * len(item.keys()))}) "
+            if primary is not None:
+                self.up_sql = f"{self.up_sql} where {primary} = '{item[primary]}'"
         values = tuple(
             "\\n".join(value) if isinstance(value, list) else value
             for value in item.values()
         )
-        cursor.execute(self.up_sql, values)  # tuple(item.values()))
-
-    def update_sql(self, item, primary=None):
-        if not self.up_sql:
-            self.up_sql = f"update {self.sqlite_table} set ({', '.join(item.keys())}) = ({', '.join(['?'] * len(item.keys()))}) "
-            if primary is not None:
-                self.up_sql = f"{self.up_sql} where {primary} = '{item[primary]}'"
-            return self.up_sql
-        return self.up_sql
+        cursor.execute(self.up_sql, values)
 
     def handle_error(self, error, item, spider):
         print("=" * 15 + "error" + "=" * 15)
@@ -124,7 +130,6 @@ class JianShuPipeline(object):
             ),
         )
         # self.cursor.commit()
-        print(item)
         return item
 
     @property
@@ -191,13 +196,15 @@ class CSRCPenaltyPipeline(object):
 
 
 class CSRCMarketWeeklyPipeline(TwistedPipeline):
-    def __init__(self):
-        super().__init__("csrc_market_weekly")
-
     def process_item(self, item, spider):
         # 1、存入数据库
-        super().execute(item, spider, action="delete", primary="index_no")
-        super().execute(item, spider, action="insert")
+        super().execute(
+            item,
+            spider,
+            "csrc_market_weekly",
+            action="deleteAinsert",
+            primary="index_no",
+        )
         # 2、接着导出为json
         dump_json_table(dict(item), spider.out_file)
         return item
@@ -212,13 +219,15 @@ class OAProAdmitToDoPipeline(object):
 
 # 任务已办内容处理
 class OAProAdmitHaveDonePipeline(TwistedPipeline):
-    def __init__(self):
-        super().__init__("pro_demand_admit_ledger")
-
     def process_item(self, item, spider):
         # 1、存入数据库
-        super().execute(item, spider, action="delete", primary="demand_no")
-        super().execute(item, spider, action="insert")
+        super().execute(
+            item,
+            spider,
+            "pro_demand_admit_ledger",
+            action="deleteAinsert",
+            primary="demand_no",
+        )
         # 2、接着导出为json
         dump_json_table(dict(item), spider.out_file)
         return item

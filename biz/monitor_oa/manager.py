@@ -80,7 +80,7 @@ class RPAClient:
         # # self.scraper.spider_finished.connect()
         # 2、由上面的直接调用改成下面的启动进程方式
         return self.start_spider(
-            "OAProAdmitHaveDone"
+            "csrc_market_weekly"
         )  # csrc_market_weekly OAProAdmitHaveDone
 
     # 上传附件

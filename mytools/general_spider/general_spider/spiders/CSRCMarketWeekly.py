@@ -38,53 +38,57 @@ class CSRCMarketWeeklySpider(SeleniumSpider):
         yield scrapy.Request(start_url, meta=meta, callback=self.parse)
 
     def parse(self, response):
-        self.current_url = response.url
         meta = response.meta
-        # 获取当前页面中的文章列表
-        articles = response.xpath('//ul[@class="list mt10" and @id="list"]/li')
-        i = 0
-        for article in articles:
-            i = i + 1
-            if i == 2:
-                break
-            # 获取文章的标题和链接
-            title = article.xpath("./a/text()").get()
-            link = article.xpath("./a/@href").get()
-            date = article.xpath("./span/text()").get()
-            # 2.实例化：
-            item = CSRCMarketWeeklyItem()
-            # 3.赋值
-            item["title"] = title
-            item["detail_url"] = response.urljoin(link)
-            item["pub_date"] = date
-            # 构造请求，访问文章详情页并传递title参数
-            meta.update(
-                {
-                    "useSelenium": True,
-                    "questCurrentLink": True,
-                    "dont_redirect": True,
-                    "purpose": "download",
-                    "data": item,
-                }
-            )
-            yield scrapy.Request(
-                url=response.urljoin(link), callback=self.parse_article, meta=meta
-            )
+        if meta["page_num"] != -1:  # -1表示没有下一页了
+            self.current_url = response.url
+            # 获取当前页面中的文章列表
+            articles = response.xpath('//ul[@class="list mt10" and @id="list"]/li')
+            i = 0
+            for article in articles:
+                i = i + 1
+                if i == 3:  # 为了测试 取两个记录即退出
+                    break
+                # 获取文章的标题和链接
+                title = article.xpath("./a/text()").get()
+                link = article.xpath("./a/@href").get()
+                date = article.xpath("./span/text()").get()
+                # 2.实例化：
+                item = CSRCMarketWeeklyItem()
+                # 3.赋值
+                item["title"] = title
+                item["detail_url"] = response.urljoin(link)
+                item["pub_date"] = date
+                # 构造请求，访问文章详情页并传递title参数
+                meta.update(
+                    {
+                        "useSelenium": True,
+                        "questCurrentLink": True,
+                        "dont_redirect": True,
+                        "purpose": "download",
+                        "data": item,
+                    }
+                )
+                yield scrapy.Request(
+                    url=response.urljoin(link), callback=self.parse_article, meta=meta
+                )
 
-        # 获取下一页的链接
-        meta["page_num"] += 1
-        if meta["page_num"] < 2:  # 不超过3页
-            meta.update(
-                {
-                    "useSelenium": True,
-                    "questCurrentLink": True,
-                    "dont_redirect": True,
-                    "purpose": "next",
-                }
-            )
-            yield scrapy.Request(
-                url=self.current_url, meta=meta, callback=self.parse, dont_filter=True
-            )
+            # 获取下一页的链接
+            meta["page_num"] += 1
+            if meta["page_num"] <= self.settings.get("MAX_PAGE"):
+                meta.update(
+                    {
+                        "useSelenium": True,
+                        "questCurrentLink": True,
+                        "dont_redirect": True,
+                        "purpose": "next",
+                    }
+                )
+                yield scrapy.Request(
+                    url=self.current_url,
+                    meta=meta,
+                    callback=self.parse,
+                    dont_filter=True,
+                )
 
     def parse_article(self, response):
         item = response.meta["data"]
@@ -98,7 +102,7 @@ class CSRCMarketWeeklySpider(SeleniumSpider):
         attach_name = content_attach.xpath("./a[1]/text()").get()
         item["attach_name"] = re.sub(r"\s+", "", attach_name)
         item["attach_link"] = content_attach.xpath("./a[1]/@href").get()
-        item["attach_save_path"] = f'{self.down_path} / {item["attach_name"]}'
+        item["attach_save_path"] = f'{self.down_path}/{item["attach_name"]}'
         yield item
 
     def selenium_func(self, request):
