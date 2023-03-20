@@ -60,6 +60,11 @@ class Ui_Form(object):
 
         self.horizontalLayout_10.addWidget(self.rpa_server)
 
+        self.remember_check = QCheckBox(self.centralwidget)
+        self.remember_check.setObjectName(u"remember_check")
+
+        self.horizontalLayout_10.addWidget(self.remember_check)
+
 
         self.verticalLayout_5.addLayout(self.horizontalLayout_10)
 
@@ -342,6 +347,7 @@ class Ui_Form(object):
         self.label_8.setText(QCoreApplication.translate("Form", u"\u8fd0\u884c\u7aef", None))
         self.rpa_client.setText(QCoreApplication.translate("Form", u"\u5ba2\u6237\u7aef", None))
         self.rpa_server.setText(QCoreApplication.translate("Form", u"\u670d\u52a1\u7aef", None))
+        self.remember_check.setText(QCoreApplication.translate("Form", u"\u8bb0\u4f4f\u5bc6\u7801", None))
         self.label_3.setText(QCoreApplication.translate("Form", u"\u90ae\u7bb1", None))
         self.label.setText(QCoreApplication.translate("Form", u"\u767b\u5f55\u7528\u6237", None))
         self.label_2.setText(QCoreApplication.translate("Form", u"\u767b\u5f55\u5bc6\u7801", None))

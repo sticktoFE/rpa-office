@@ -46,6 +46,13 @@ def get_driver_Chromeexe():
 # 2、获取driver，通过驱动程序
 def get_driver_ChromeDriver(SetHeadless=True, down_file_save_path="D:\\转型\\downloads"):
     options = webdriver.ChromeOptions()
+    # 切换成便携版chrome，避免跨平台时，所在平台没有安装chrome或chrome和chromedriver版本不一致
+    chrome_portable_path = (
+        f"{Path(__file__).parent}\\GoogleChromePortable\\App\\Chrome-bin\\chrome.exe"
+    )
+    options.binary_location = chrome_portable_path
+    # 浏览器地址栏访问chrome://version/查看个人资料路径,去掉最后的/Default
+    options.add_argument("user-data-dir=d:\\temp\\selenum_zy\\AutomationProfile")
     # 此步骤很重要，设置为开发者模式，防止被各大网站识别出来使用了Selenium#禁止打印日志
     # 访问https的网站，Selenium可能会报错，使用ignore-certificate-errors可以忽略报错
     options.add_experimental_option(
@@ -83,9 +90,6 @@ def get_driver_ChromeDriver(SetHeadless=True, down_file_save_path="D:\\转型\\d
     # 不要轻易打开
     # options.add_argument("--incognito")  # 无痕隐身模式
     # options.add_argument("--no-sandbox")
-    # 浏览器地址栏访问chrome://version/查看个人资料路径,去掉最后的/Default
-    # cookie等浏览器默认参数保存路径
-    options.add_argument("user-data-dir=d:\\temp\\selenum_zy\\AutomationProfile")
     # options.add_argument("--no-startup-window")
     # 不加载图片, 提升速度 不知为什么，打开后导致checkbox显示不出来
     # options.add_argument("blink-settings=imagesEnabled=false")
@@ -108,11 +112,11 @@ def get_driver_ChromeDriver(SetHeadless=True, down_file_save_path="D:\\转型\\d
     options.add_experimental_option("prefs", prefs)
     # options.add_experimental_option("prefs", {: prefs})
     # 添加启用的去去广告插件,以拦截广告
-    options.add_extension(f"{Path(__file__).parent}\\adblock_v5.4.1.crx")
-    # 从配置文本中获取chrome版本
-    chrome_version = ReadWriteConfFile.getSectionValue("General", "chrome_version")
+    options.add_extension(
+        f"{Path(__file__).parent}\\GoogleChromePortable\\adblock_v5.4.1.crx"
+    )
     driver = webdriver.Chrome(
-        executable_path=f"{Path(__file__).parent}\\chromedriver{chrome_version}.exe",  # {Path(__file__).parent}\\
+        executable_path=f"{Path(__file__).parent}\\GoogleChromePortable\\chromedriver.exe",  # {Path(__file__).parent}\\
         chrome_options=options,
     )
     # driver = webdriver.Chrome(

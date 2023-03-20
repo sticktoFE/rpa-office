@@ -1,3 +1,4 @@
+from pathlib import Path
 import random
 from scrapy.http import HtmlResponse
 import logging
@@ -32,32 +33,18 @@ class RandomProxyMiddleware(object):
 
 
 # 更换请求标识头
-class RandomUserAgentMiddlware(object):
+class RandomUserAgentMiddleware(object):
     """
     随机更换user-agent
     模仿并替换site-package/scrapy/downloadermiddlewares源代码中的
     useragent.py中的UserAgentMiddleware类
     """
 
-    def __init__(self, crawler):
-        super(RandomUserAgentMiddlware, self).__init__()
-        self.ua = UserAgent(verify_ssl=False)
-        # 可读取在settings文件中的配置，来决定开源库ua执行的方法，
-        # 默认是random，也可是ie、Firefox等等 ua.random
-        # 在配置文件中 可以 RANDOM_UA_TYPE = "ie"
-        self.ua_type = crawler.settings.get("RANDOM_UA_TYPE", "random")
-
-    @classmethod
-    def from_crawler(cls, crawler):
-        return cls(crawler)
-
     # 更换用户代理逻辑在此方法中
     def process_request(self, request, spider):
-        def get_ua():
-            return getattr(self.ua, self.ua_type)
-
-        print(get_ua())
-        request.headers.setdefault("User-Agent", get_ua())
+        location = f"{Path(__file__).parent}/browsers.json"
+        ua = UserAgent(use_external_data=True, cache_path=location)
+        request.headers["User-Agent"] = ua.random
 
 
 """

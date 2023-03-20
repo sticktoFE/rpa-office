@@ -73,7 +73,7 @@ class TXDocument:
         row = pos.group(2)
         col = pos.group(1)
         # 移动到关注要素所在列的首行
-        # 右移动格子  # 移动到表格左上角
+        # 左移动格子  # 移动到表格左上角
         if move_dirc == "left" or move_dirc == "left_up":
             col_n = office_tools.convert_to_number(col, 1)
             for _ in range(col_n - 1):
@@ -116,14 +116,51 @@ class TXDocument:
                 ActionChains(self.driver).send_keys(Keys.DOWN).perform()
                 time.sleep(random.uniform(0.1, 0.5))
 
+    # 构建腾讯文档的元数据，思路为：
+    # 形成标题和列的字典
+    # 形成主键的所有值和行的字典，用于判断要插入的记录是不是存在，如果不存在把当前主键值和行更新进去
+    # 要有一个表示空行开始行数的变量，用于插入记录
+    # 无法根据行列确定element，所以暂时不知道怎么实现，暂缓
+    def produce_doc_metadat(self, key_value, key_title=None):
+        self.back_first_rowcol("left_up")
+        # 找到并移动到第一行标题栏中的关键字
+        while True:
+            elmet = self.driver.find_element(by=By.ID, value="alloy-simple-text-editor")
+            txt = elmet.text.strip()
+            if txt == key_title:
+                print("找到关键字所在列")
+                break
+            elif len(txt) == 0:
+                raise Exception("关键字不存在")
+            else:
+                ActionChains(self.driver).send_keys(Keys.RIGHT).perform()
+                time.sleep(random.uniform(0.1, 0.5))
+        # 寻找关键字对应的值存不存在
+        ActionChains(self.driver).send_keys(Keys.DOWN).perform()
+        while True:
+            elmet = self.driver.find_element(by=By.ID, value="alloy-simple-text-editor")
+            txt = elmet.text.strip()
+            # 这一行遇到主键列为空视为寻找的主键值
+            if len(txt) == 0:
+                print("要保存的值不存在")
+                return False
+            elif txt == key_value:
+                print("要保存的值已存在")
+                return True
+            else:
+                ActionChains(self.driver).send_keys(Keys.DOWN).perform()
+                time.sleep(random.uniform(0.1, 0.5))
+
     def write_content(self, contents):
         edit_text = self.driver.find_element(by=By.ID, value="alloy-simple-text-editor")
         time.sleep(random.uniform(0.1, 3))
         edit_text.clear()
         if isinstance(contents, list):
-            for content in contents:
+            for count, content in enumerate(contents):
+                if count > 0:
+                    edit_text.send_keys(Keys.ALT + Keys.ENTER)
                 edit_text.send_keys("" if content is None else content)
-                edit_text.send_keys(Keys.ALT + Keys.ENTER)
+
                 # ActionChains(self.driver).send_keys(Keys.ALT + Keys.ENTER).perform()
         else:
             edit_text.send_keys("" if contents is None else contents)
@@ -172,7 +209,6 @@ class TXDocument:
                 self.write_content(submit_depart)
                 self.write_content(submit_date)
                 self.write_content(title)
-                self.key_tabs_nums(1)
                 self.write_content(background)
                 self.key_tabs_nums(3)
                 self.write_content(admit_result)
@@ -187,88 +223,11 @@ class TXDocument:
                     by=By.ID, value="alloy-simple-text-editor"
                 )
                 edit_text.send_keys(Keys.HOME)
-                time.sleep(random.uniform(0.1, 0.5))
                 self.key_tabs_nums(1)
                 self.write_content(submitter)
                 self.write_content(submit_depart)
                 self.write_content(submit_date)
                 self.write_content(title)
-                self.key_tabs_nums(1)
-                self.write_content(background)
-                self.key_tabs_nums(3)
-                self.write_content(admit_result)
-                self.write_content(pro_type)
-                self.key_tabs_nums(7)
-                self.write_content(admit_date)
-                self.write_content(admit_person)
-                self.write_content(weeks)
-        time.sleep(1)
-        self.driver.close()
-
-    # 查询腾讯文档进行统计分析
-    def get_data(self):
-        self.login()
-        list_generator = load_json_table(self.infile)
-        # 循环字典形成的列表
-        for line_record in list_generator:
-            demand_no = line_record.get("demand_no")
-            submitter = line_record.get("submitter")
-            submit_depart = line_record.get("submit_depart")
-            submit_date = line_record.get("submit_date")
-            title = line_record.get("title")
-            # 以下两个考虑到长文本，获取信息时是list
-            background = line_record.get("background")
-            summary = line_record.get("summary")
-            # 把summary合并到background中
-            background.extend(summary)
-            pro_type = line_record.get("pro_type")
-            admit_person = line_record.get("admit_person")
-            admit_date = line_record.get("admit_date")
-            admit_result = line_record.get("admit_result")
-            weeks = line_record.get("weeks")
-            # 不存在新增，存在避开主键去覆盖
-            if not self.exists_key("需求编号", demand_no):
-                # 先跳到第一列
-                edit_text = self.driver.find_element(
-                    by=By.ID, value="alloy-simple-text-editor"
-                )
-                edit_text.send_keys(Keys.HOME)
-                # 编号--如果不需要，则注释掉
-                # s = self.driver.find_element(
-                #     by=By.XPATH,
-                #     value="/html/body/div[3]/div/div[4]/div[2]/div/div/div[1]/div/div/div[1]/div[1]",
-                # ).text  # 获取此行的行数
-                # a = int(s[1:])  # 将A**去除A，留下数字
-                # a = str(a - 2)  # 如果你的排序为行的相差则减去几即可
-                # edit_text.send_keys(a)  # 输出a以形成序号
-                # 按照标题顺序写入
-                self.write_content(demand_no)
-                self.write_content(submitter)
-                self.write_content(submit_depart)
-                self.write_content(submit_date)
-                self.write_content(title)
-                self.key_tabs_nums(1)
-                self.write_content(background)
-                self.key_tabs_nums(3)
-                self.write_content(admit_result)
-                self.write_content(pro_type)
-                self.key_tabs_nums(7)
-                self.write_content(admit_date)
-                self.write_content(admit_person)
-                self.write_content(weeks)
-            else:
-                # 先跳到第一列
-                edit_text = self.driver.find_element(
-                    by=By.ID, value="alloy-simple-text-editor"
-                )
-                edit_text.send_keys(Keys.HOME)
-                time.sleep(random.uniform(0.1, 0.5))
-                self.key_tabs_nums(1)
-                self.write_content(submitter)
-                self.write_content(submit_depart)
-                self.write_content(submit_date)
-                self.write_content(title)
-                self.key_tabs_nums(1)
                 self.write_content(background)
                 self.key_tabs_nums(3)
                 self.write_content(admit_result)

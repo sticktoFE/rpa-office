@@ -12,8 +12,8 @@ def nuitka_export():
         "--include-qt-plugins=sensible,styles --plugin-enable=pyside6 "
         "--follow-import-to=biz.monitor_oa,myutils "
         "--include-package=mytools.general_spider.general_spider,"
-        "mytools.general_spider.general_spider.spiders,scrapy,fake_useragent "
-        "--nofollow-import-to=tkinter,pil,numpy,scipy,matplotlib,pandas,xlwings,"
+        "mytools.general_spider.general_spider.spiders,scrapy,fake_useragent  "
+        "--nofollow-import-to=tkinter,pil,numpy,scipy,matplotlib,pandas,"
         "openpyxl,pyautogui,email,requests,docx,openssl,paddle,paddleocr,schedule,"
         "fitz,pyput,unittest,Ipython,jedi,win32gui,win32con,pygments,pip,mss,asyncio,"
         "blib2to3,lib2to3,idna,cryptography,hyperlink,attr,wrapt,selenium,click,jinja2,"
@@ -21,7 +21,6 @@ def nuitka_export():
         "--output-dir=output --windows-icon-from-ico=./rpa.ico --jobs=10 ./biz/monitor_oa/mainw.py"
     )
     # cmd_list = cmd.split()
-    print(cmd)
     completedProcess = subprocess.Popen(
         cmd,
         shell=True,

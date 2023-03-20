@@ -17,15 +17,19 @@ from PySide6.QtWidgets import (
     QTableWidgetItem,
     QComboBox,
 )
-
+import keyring
 from biz.monitor_oa.manager import RPAClient, RPAServer  # , start_ip_proxy
 from myutils.GeneralThread import Worker
-from myutils.info_secure import dectry, enctry
 from Form import Ui_Form
 import schedule
 
 # 设置获取数据的日期
 from datetime import date, datetime, timedelta
+
+# import win32timezone
+from keyring.backends import Windows
+
+keyring.set_keyring(Windows.WinVaultKeyring())
 
 
 class Stream(QObject):
@@ -45,16 +49,27 @@ class MainWindow(QMainWindow, Ui_Form):
         sys.stdout = redirect_out
         self.config = QSettings("./config.ini", QSettings.Format.IniFormat)
         # 如果输入登录信息保存了，自动回显到输入框里
-        userID = self.config.value("userID")
-        if userID is not None:
+        # Load saved settings
+        # 设置默认的密码存储后端 避免NoKeyringError异常
+        # keyring.set_keyring(WinVaultKeyring())
+        remember_me = self.config.value("remember_me", False, type=bool)
+        self.remember_check.setChecked(remember_me)
+        if remember_me:
+            try:
+                userID = keyring.get_password("myapp", "userID")
+                passwd = keyring.get_password("myapp", userID)
+                userID_oa = keyring.get_password("myapp", "userID_oa")
+                passwd_oa = keyring.get_password("myapp", userID_oa)
+            except keyring.errors.NoKeyringError:
+                # 如果没有安装任何密钥环后端，使用默认密码
+                userID = ""
+                passwd = ""
+                userID_oa = ""
+                passwd_oa = ""
             self.userID.setText(userID)
-            passwd = self.config.value("passwd")
-            self.passwd.setText(dectry(passwd))
-        userID_oa = self.config.value("userID_oa")
-        if userID_oa is not None:
+            self.passwd.setText(passwd)
             self.userID_oa.setText(userID_oa)
-            passwd_oa = self.config.value("passwd_oa")
-            self.passwd_oa.setText(dectry(passwd_oa))
+            self.passwd_oa.setText(passwd_oa)
         today = date.today()
         yesterday = today - timedelta(days=1)
         today_str = datetime.strftime(today, "%Y-%m-%d")
@@ -109,10 +124,15 @@ class MainWindow(QMainWindow, Ui_Form):
             QMessageBox.warning(self, "注意", "邮箱用户名或密码都不能为空")
         else:
             # 默认保存登录信息，快捷开始
-            self.config.setValue("userID", userID)
-            self.config.setValue("passwd", enctry(passwd))
-            self.config.setValue("userID_oa", userID_oa)
-            self.config.setValue("passwd_oa", enctry(passwd_oa))
+            # 如果登录成功，保存“记住密码”选项和用户名到 QSettings 中
+            self.config.setValue("remember_me", self.remember_check.isChecked())
+            # 如果用户选择了“记住密码”选项，将用户名和密码保存到 Qt Keychain API 中
+            if self.remember_check.isChecked():
+                keyring.set_password("myapp", "userID", userID)
+                keyring.set_password("myapp", userID, passwd)
+                keyring.set_password("myapp", "userID_oa", userID_oa)
+                keyring.set_password("myapp", userID_oa, passwd_oa)
+
             if self.rpa_client.isChecked():
                 # 打开代理
                 # start_ip_proxy()
@@ -157,10 +177,10 @@ class MainWindow(QMainWindow, Ui_Form):
     # 后期可以在界面添加编排任务，然后在此处解析循环执行
     def task_execute(self, userID, passwd, userID_oa, passwd_oa):
         # 默认保存登录信息，快捷开始
-        self.config.setValue("userID", userID)
-        self.config.setValue("passwd", enctry(passwd))
-        self.config.setValue("userID_oa", userID_oa)
-        self.config.setValue("passwd_oa", enctry(passwd_oa))
+        # self.config.setValue("userID", userID)
+        # self.config.setValue("passwd", enctry(passwd))
+        # self.config.setValue("userID_oa", userID_oa)
+        # self.config.setValue("passwd_oa", enctry(passwd_oa))
         # 暂时支持一行，后面可以实现编排并增加优先级，按优先级顺序执行
         # 获取第一行第一列单元格对象
         item = self.taskTableWidget.item(0, 0)

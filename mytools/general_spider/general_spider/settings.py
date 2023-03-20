@@ -56,27 +56,15 @@ COOKIES_ENABLED = False
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 # 开启中间件
 DOWNLOADER_MIDDLEWARES = {
-    # 'general_spider.middlewares.SeleniumDownloadMiddleware': 543,
-    # 'general_spider.middlewares.RandomUserAgentMiddlware': 400,
-    "scrapy_fake_useragent.middleware.RandomUserAgentMiddleware": 400,
-    "scrapy_fake_useragent.middleware.RetryUserAgentMiddleware": 401,
+    "scrapy.downloadermiddlewares.useragent.UserAgentMiddleware": None,  # 关闭默认方法
+    # 随机useragent
+    "mytools.general_spider.general_spider.middlewares.RandomUserAgentMiddleware": 400,
+    # ip代理
     "mytools.general_spider.general_spider.middlewares.RandomProxyMiddleware": 350,
     # 'scrapy.contrib.downloadermiddleware.cookies.CookiesMiddleware': 700,
+    # 结合selenium，以增加网页互动能力
     "mytools.general_spider.general_spider.middlewares.SeleniumDownloaderMiddleware": 550,
-    # "scrapy.downloadermiddlewares.retry.RetryMiddleware": None,
-    # 这里要设置原来的scrapy的useragent为None，否者会被覆盖掉
-    # "scrapy.downloadermiddlewares.useragent.UserAgentMiddleware": None,
 }
-
-
-FAKEUSERAGENT_PROVIDERS = [
-    # this is the first provider we'll try
-    "scrapy_fake_useragent.providers.FakeUserAgentProvider",
-    # if FakeUserAgentProvider fails, we'll use faker to generate a user-agent string for us
-    "scrapy_fake_useragent.providers.FakerProvider",
-    # fall back to USER_AGENT value
-    "scrapy_fake_useragent.providers.FixedUserAgentProvider",
-]
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
 # EXTENSIONS = {
@@ -128,7 +116,5 @@ LOG_LEVEL = 'DEBUG' """
 HTTPERROR_ALLOWED_CODES = [404]
 
 KEYWORDS = ["iPhone"]
-MAX_PAGE = 2
 SELENIUM_TIMEOUT = 20
-
 SQLITE_DB_PATH = "dw/risk.db"

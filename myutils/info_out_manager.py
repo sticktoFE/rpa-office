@@ -182,9 +182,9 @@ class ReadWriteConfFile:
             cf.write(f)
 
     @staticmethod
-    def getSectionValue(section, key):
+    def getSectionValue(section, key, type="str"):
         cf = ReadWriteConfFile.getConfigParser()
-        return cf.get(section, key)
+        return cf.get(section, key) if type == "str" else cf.getint(section, key)
 
     @staticmethod
     def addSection(section):

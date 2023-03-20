@@ -9,6 +9,8 @@ from mytools.general_spider.general_spider.extension.tools import waitForXpath
 from pathlib import Path
 from selenium.webdriver.common.by import By
 
+from myutils.info_out_manager import ReadWriteConfFile
+
 
 class CSRCMarketWeeklySpider(SeleniumSpider):
     name = "csrc_market_weekly"
@@ -74,7 +76,8 @@ class CSRCMarketWeeklySpider(SeleniumSpider):
 
             # 获取下一页的链接
             meta["page_num"] += 1
-            if meta["page_num"] <= self.settings.get("MAX_PAGE"):
+            MAX_PAGE = ReadWriteConfFile.getSectionValue("General", "MAX_PAGE",type='int')
+            if meta["page_num"] <= MAX_PAGE:
                 meta.update(
                     {
                         "useSelenium": True,

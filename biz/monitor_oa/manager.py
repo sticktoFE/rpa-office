@@ -6,7 +6,7 @@ import random
 import time
 from mytools.general_spider.SpiderManager import run_spiders
 from myutils.GeneralThread import Worker
-from myutils.info_out_manager import get_temp_folder, load_json_table
+from myutils.info_out_manager import ReadWriteConfFile, get_temp_folder, load_json_table
 from biz.monitor_oa.zy_email import SeleMail
 from biz.monitor_oa.tx_doc import TXDocument
 from biz.monitor_oa.wc_sendinfo import send_webchat
@@ -79,9 +79,9 @@ class RPAClient:
         # )  # csrc_market_weekly OAProAdmitHaveDone
         # # self.scraper.spider_finished.connect()
         # 2、由上面的直接调用改成下面的启动进程方式
-        return self.start_spider(
-            "csrc_market_weekly"
-        )  # csrc_market_weekly OAProAdmitHaveDone
+        # 从配置文本中获取要执行的爬虫
+        spider_name = ReadWriteConfFile.getSectionValue("General", "spider_name")
+        return self.start_spider(spider_name)
 
     # 上传附件
     def upload_file_to_mail(self):

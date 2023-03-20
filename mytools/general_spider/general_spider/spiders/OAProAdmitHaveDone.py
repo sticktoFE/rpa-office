@@ -14,6 +14,7 @@ from selenium.common.exceptions import (
 )
 
 from myutils.DateAndTime import get_weeks_current_date
+from myutils.info_out_manager import ReadWriteConfFile
 
 
 class OAProAdmitHaveDoneSpider(SeleniumSpider):
@@ -147,7 +148,10 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
                 yield item
             # 翻页
             meta["page_num"] += 1
-            if meta["page_num"] <= self.settings.get("MAX_PAGE"):
+            MAX_PAGE = ReadWriteConfFile.getSectionValue(
+                "General", "MAX_PAGE", type="int"
+            )
+            if meta["page_num"] <= MAX_PAGE:
                 meta.update(
                     {
                         "useSelenium": True,
@@ -181,18 +185,26 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
             )
             # 需求背景
             item["background"] = []
-            backgrounds = content.xpath("./tr[8]/td[2]//text()").getall()
+            backgrounds = content.xpath(
+                ".//label[@title='需求背景及必要性分析']/../following-sibling::td[1]//text()"
+            ).getall()
             for background in backgrounds:
                 item["background"].append(background.strip())
             # 需求概述
             item["summary"] = []
-            summarys = content.xpath("./tr[9]/td[2]//text()").getall()
+            summarys = content.xpath(
+                ".//label[@title='需求概述']/../following-sibling::td[1]//text()"
+            ).getall()
             for summary in summarys:
                 item["summary"].append(summary.strip())
             # 产品登记预审结果 准入 备案 不涉及
-            item["admit_result"] = content.xpath("./tr[39]/td[2]//text()").get()
+            item["admit_result"] = content.xpath(
+                ".//label[@title='产品登记预审']/../following-sibling::td[1]//text()"
+            ).get()
             # 产品分类
-            item["pro_type"] = content.xpath("./tr[39]/td[4]//text()").get()
+            item["pro_type"] = content.xpath(
+                ".//label[@title='产品分类']/../following-sibling::td[1]//text()"
+            ).get()
 
     # 使用selenium请求时，请求后的动作
     # 这个方法会在我们的下载器中间件返回Response之前被调用

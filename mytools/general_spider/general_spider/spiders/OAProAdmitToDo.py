@@ -18,6 +18,8 @@ from selenium.common.exceptions import (
     TimeoutException,
 )
 
+from myutils.info_out_manager import ReadWriteConfFile
+
 
 class OAProAdmitToDoSpider(SeleniumSpider):
     name = "OAProAdmitToDo"
@@ -110,7 +112,10 @@ class OAProAdmitToDoSpider(SeleniumSpider):
                 yield item
             # 翻页
             meta["page_num"] += 1
-            if meta["page_num"] <= self.settings.get("MAX_PAGE"):  # 不超过3页
+            MAX_PAGE = ReadWriteConfFile.getSectionValue(
+                "General", "MAX_PAGE", type="int"
+            )
+            if meta["page_num"] <= MAX_PAGE:  # 不超过3页
                 meta.update(
                     {
                         "useSelenium": True,
