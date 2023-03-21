@@ -12,7 +12,7 @@ def nuitka_export():
         "--include-qt-plugins=sensible,styles --plugin-enable=pyside6 "
         "--follow-import-to=biz.monitor_oa,myutils "
         "--include-package=mytools.general_spider.general_spider,"
-        "mytools.general_spider.general_spider.spiders,scrapy,fake_useragent  "
+        "mytools.general_spider.general_spider.spiders,scrapy "
         "--nofollow-import-to=tkinter,pil,numpy,scipy,matplotlib,pandas,"
         "openpyxl,pyautogui,email,requests,docx,openssl,paddle,paddleocr,schedule,"
         "fitz,pyput,unittest,Ipython,jedi,win32gui,win32con,pygments,pip,mss,asyncio,"

@@ -1,4 +1,3 @@
-from pathlib import Path
 import random
 from scrapy.http import HtmlResponse
 import logging
@@ -10,8 +9,11 @@ from selenium.webdriver.support import expected_conditions as EC
 from scrapy.http import HtmlResponse
 from logging import getLogger
 from fake_useragent import UserAgent
+
+# 为了解决使用nuitka导出exe后，报fake_useragent.data找不到的问题
+# 搜索了两天，使用其他方式解决不了，这个方法还可以
+from fake_useragent import data
 from mytools.general_spider.general_spider.extension import IPProxy
-from scrapy import signals
 from scrapy.http.response.html import HtmlResponse
 from myutils.web_driver_manager import get_driver_ChromeDriver
 
@@ -42,8 +44,8 @@ class RandomUserAgentMiddleware(object):
 
     # 更换用户代理逻辑在此方法中
     def process_request(self, request, spider):
-        location = f"{Path(__file__).parent}/browsers.json"
-        ua = UserAgent(use_external_data=True, cache_path=location)
+        # location = "browsers.json"
+        ua = UserAgent(verify_ssl=False)  # ,cache_path=data.brow)
         request.headers["User-Agent"] = ua.random
 
 
