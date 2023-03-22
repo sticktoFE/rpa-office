@@ -1,6 +1,7 @@
 import os
 import pickle
 import random
+
 # 导入By类
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
@@ -202,7 +203,7 @@ class SeleMail:
             self.driver.find_element(
                 by=By.XPATH, value='//a[@class="link j-download" and text()="下载"]'
             ).click()
-            # time.sleep(random.randint(3, 6))
+        time.sleep(random.randint(3, 6))
         logout_link = self.driver.find_element(by=By.XPATH, value="//a[text()='退出']")
         logout_link.click()
         time.sleep(random.uniform(1, 3))

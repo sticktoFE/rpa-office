@@ -128,7 +128,7 @@ class RPAServer:
         self.sm.download_through_draft()
         # 更新腾讯文档给台账
         txd = TXDocument(self.mail_userID, self.mail_passwd, self.out_finished)
-        txd.modify()
+        txd.modify_up()
         # 发信息通知管理人员今天的任务处理完毕
         # send_webchat()
 
@@ -143,9 +143,9 @@ def start_ip_proxy():
     time.sleep(random.randint(1, 3))
 
 
-if __name__ == "__main__":
-    client = RPAClient(mail_userID="", mail_passwd="")
-    client.have_done()
+# if __name__ == "__main__":
+# client = RPAClient(mail_userID="", mail_passwd="")
+# client.have_done()
 
-    # client = RPAServer()
-    # client.have_done()
+# client = RPAServer("", "")
+# client.start()
