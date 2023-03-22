@@ -2,6 +2,9 @@ import re
 import subprocess
 from pathlib import Path
 
+curr_dir = Path(__file__).parent
+root_dir = curr_dir.parent.parent
+
 
 def nuitka_export():
     # print(__loader__)
@@ -18,9 +21,9 @@ def nuitka_export():
         "fitz,pyput,unittest,Ipython,jedi,win32gui,win32con,pygments,pip,mss,asyncio,"
         "blib2to3,lib2to3,idna,cryptography,hyperlink,attr,wrapt,selenium,click,jinja2,"
         "configparser,dateutil "
-        "--output-dir=output --windows-icon-from-ico=./rpa.ico --jobs=10 ./biz/monitor_oa/mainw.py"
+        "--output-dir=./biz/monitor_oa/output --remove-output --windows-icon-from-ico=./biz/monitor_oa/rpa.ico --jobs=8 "
+        "./biz/monitor_oa/mainw.py"
     )
-    # cmd_list = cmd.split()
     completedProcess = subprocess.Popen(
         cmd,
         shell=True,
@@ -29,7 +32,7 @@ def nuitka_export():
         stderr=subprocess.PIPE,
         universal_newlines=True,
         # encoding="utf8",
-        # cwd=ip_pool,
+        cwd=root_dir,
     )
     # 程序执行中
     while completedProcess.poll() is None:
@@ -59,8 +62,8 @@ def copyfile():
     import shutil
 
     # 拷贝源文件夹中的所有文件和子文件夹到目标文件夹
-    src_folder = r".\output\packages"
-    dst_folder = r".\output\mainw.dist"
+    src_folder = rf"{curr_dir}\output\packages"
+    dst_folder = rf"{curr_dir}\output\mainw.dist"
     shutil.copytree(src_folder, dst_folder, dirs_exist_ok=True)
 
 
@@ -68,11 +71,11 @@ def zipfile_7zip():
     # 7zip安装路径
     seven_zip = r"D:\Program Files\7-Zip\7z.exe"
     # 要压缩的文件夹路径
-    folder_path = r".\output\mainw.dist"
+    folder_path = rf"{curr_dir}\output\mainw.dist"
     # 压缩后的文件名前缀
-    output_filename = r".\output\rpa"
+    output_filename = rf"{curr_dir}\output\rpa"
     # 删掉旧的压缩文件
-    for file_path in Path(".\output").glob("rpa.7z.*"):
+    for file_path in curr_dir.joinpath("output").glob("rpa.7z.*"):
         file_path.unlink()
     # 压缩级别（0为无压缩，9为最高压缩率）
     compression_level = 5

@@ -2,7 +2,9 @@
 import functools
 import time
 
-# 装饰器，用于计时
+# 设置获取数据的日期
+from datetime import date, datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
 
 def clock(func):
@@ -18,11 +20,8 @@ def clock(func):
     return caltime
 
 
-from datetime import datetime, timedelta
-from dateutil.relativedelta import relativedelta
-
-start_date = datetime(2023, 1, 2)
-end_date = datetime(2023, 12, 31)
+# start_date = datetime(2023, 1, 2)
+# end_date = datetime(2023, 12, 31)
 
 # delta = relativedelta(end_date, start_date)
 # num_weeks = (delta.years * 52) + delta.weeks
@@ -47,9 +46,7 @@ end_date = datetime(2023, 12, 31)
 #     week_num += 1
 
 
-import datetime
-
-
+# 获取日期所在的周数
 def get_weeks_current_date(current_date_str=None):
     current_date = None
     if current_date_str is None:
@@ -60,6 +57,16 @@ def get_weeks_current_date(current_date_str=None):
     start_date = current_date - datetime.timedelta(days=current_date.weekday())
     end_date = start_date + datetime.timedelta(days=4)
     return f'{start_date.strftime("%m%d")}-{end_date.strftime("%m%d")}({week_num})'
+
+
+# 获取时间字符串，type为0表示今天，昨天是-1 明天是1 以此类推
+def get_date(type=0, format="%Y-%m-%d"):
+    today = date.today()
+    if type >= 0:
+        reurn_date = today + timedelta(days=type)
+    else:
+        reurn_date = today - timedelta(days=-type)
+    return datetime.strftime(reurn_date, format)
 
 
 if __name__ == "__main__":

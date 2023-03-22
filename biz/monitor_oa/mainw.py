@@ -18,7 +18,8 @@ from PySide6.QtWidgets import (
     QComboBox,
 )
 import keyring
-from biz.monitor_oa.manager import RPAClient, RPAServer  # , start_ip_proxy
+from biz.monitor_oa.manager import RPAClient, RPAServer
+from myutils.DateAndTime import get_date  # , start_ip_proxy
 from myutils.GeneralThread import Worker
 from Form import Ui_Form
 import schedule
@@ -70,10 +71,9 @@ class MainWindow(QMainWindow, Ui_Form):
             self.passwd.setText(passwd)
             self.userID_oa.setText(userID_oa)
             self.passwd_oa.setText(passwd_oa)
-        today = date.today()
-        yesterday = today - timedelta(days=1)
-        today_str = datetime.strftime(today, "%Y-%m-%d")
-        yesterday_str = datetime.strftime(yesterday, "%Y-%m-%d")
+
+        today_str = get_date()
+        yesterday_str = get_date(-1)
         self.data_start_date.setText(yesterday_str)
         self.data_end_date.setText(today_str)
         self.scheduled_jobs = []
@@ -81,14 +81,24 @@ class MainWindow(QMainWindow, Ui_Form):
 
     @Slot()
     def on_start_clicked(self):
+        set_times = self.set_time.text()
+        if len(set_times) == 0:
+            QMessageBox.warning(
+                self, "注意", "定时任务请在“每日定时中输入时间如16:00”,如多个，如16:00~19:00~24:00"
+            )
+            return
         self.start.setEnabled(False)
         self.stop.setEnabled(True)
+        today_str = get_date()
+        data_start_date = today_str
+        data_end_date = today_str
         interval = self.interval_edit.text()
-        set_times = self.set_time.text()
         for set_time in set_times.split("~"):
             # 设计一个定时器，支持间隔时间或者定时触发
             self.scheduled_jobs.append(
-                schedule.every().day.at(set_time).do(self.run_command)
+                schedule.every()
+                .day.at(set_time)
+                .do(self.run_command, data_start_date, data_end_date)
             )
         # schedule.every(int(interval * 1000)).minutes.do(self.run_command)
         print("Spider working now")
@@ -100,7 +110,9 @@ class MainWindow(QMainWindow, Ui_Form):
     @Slot()
     def on_start_now_clicked(self):
         self.start_now.setEnabled(False)
-        self.run_command()
+        data_start_date = self.data_start_date.text()
+        data_end_date = self.data_end_date.text()
+        self.run_command(data_start_date, data_end_date)
         self.start_now.setEnabled(True)
 
     @Slot()
@@ -112,14 +124,12 @@ class MainWindow(QMainWindow, Ui_Form):
             schedule.cancel_job(job)
         self.scheduled_jobs.clear()
 
-    def run_command(self):
+    def run_command(self, data_start_date, data_end_date):
         # 执行命令
         userID = self.userID.text()
         passwd = self.passwd.text()
         userID_oa = self.userID_oa.text()
         passwd_oa = self.passwd_oa.text()
-        data_start_date = self.data_start_date.text()
-        data_end_date = self.data_end_date.text()
         if len(userID) == 0 or len(passwd) == 0:
             QMessageBox.warning(self, "注意", "邮箱用户名或密码都不能为空")
         else:
@@ -136,15 +146,6 @@ class MainWindow(QMainWindow, Ui_Form):
             if self.rpa_client.isChecked():
                 # 打开代理
                 # start_ip_proxy()
-                # # 1、分开启动
-                # self.rpacli = RPAClient(userID_oa, passwd_oa, userID, passwd)
-                # self.rpacli.scrapy_info()
-                # # 启动上传功能
-                # self.rpacli.scraper.spider_finished.connect(
-                #     lambda: QThreadPool.globalInstance().start(
-                #         Worker(self.rpacli.upload_file_to_mail)
-                #     )
-                # )
                 # 1、打包启动
                 worK_server = Worker(
                     RPAClient,

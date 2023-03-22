@@ -76,7 +76,9 @@ class CSRCMarketWeeklySpider(SeleniumSpider):
 
             # 获取下一页的链接
             meta["page_num"] += 1
-            MAX_PAGE = ReadWriteConfFile.getSectionValue("General", "MAX_PAGE",type='int')
+            MAX_PAGE = ReadWriteConfFile.getSectionValue(
+                "General", "MAX_PAGE", type="int"
+            )
             if meta["page_num"] <= MAX_PAGE:
                 meta.update(
                     {

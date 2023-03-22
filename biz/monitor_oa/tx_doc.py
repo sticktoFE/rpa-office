@@ -232,6 +232,7 @@ class TXDocument:
     # 形成主键的所有值和行的字典，用于判断要插入的记录是不是存在，如果不存在把当前主键值和行更新进去
     # 要有一个表示空行开始行数的变量，用于插入记录
     def produce_doc_metadat(self, key_title=None):
+        caction = ActionChains(self.driver)
         # 主键及所在列数
         self.primary = {}
         # 数据最后一列的下一个空行，用于插入新记录
@@ -260,11 +261,11 @@ class TXDocument:
                 if txt == key_title:
                     print("找到关键字所在列")
                     self.primary = {key_title: col_}
-                ActionChains(self.driver).send_keys(Keys.RIGHT).perform()
+                caction.send_keys(Keys.RIGHT).perform()
                 # time.sleep(random.uniform(0.1, 0.5))
         # 下移一行并进入主键列，获取主键值列表
-        ActionChains(self.driver).send_keys(Keys.DOWN).perform()
         self.move_from_to(self.curent_point_col, self.primary[key_title], type="col")
+        caction.send_keys(Keys.DOWN).perform()
         while True:
             elmet = self.driver.find_element(by=By.ID, value="alloy-simple-text-editor")
             txt = elmet.text.strip()
@@ -278,24 +279,25 @@ class TXDocument:
             else:
                 row_, col_ = self.get_current_cell_pos()
                 self.exist_primary_values[txt] = row_
-                ActionChains(self.driver).send_keys(Keys.DOWN).perform()
+                caction.send_keys(Keys.DOWN).perform()
 
     # DOWN UP LEFT RIGHT不如 ENTER,SHIFT+ENTER,SHIFT+TAB,TAB好使
     # 但是编码时ENTER等并不能用 唉！！！
     def move_from_to(self, from_roc, to__roc, type="row"):
+        caction = ActionChains(self.driver)
         jump_roc = to__roc - from_roc
         if jump_roc >= 0:
             for _ in range(jump_roc):
                 if type == "row":
-                    ActionChains(self.driver).send_keys(Keys.DOWN).perform()
+                    caction.send_keys(Keys.DOWN).perform()
                 elif type == "col":
-                    ActionChains(self.driver).send_keys(Keys.RIGHT).perform()
+                    caction.send_keys(Keys.RIGHT).perform()
         else:
             for _ in range(-jump_roc):
                 if type == "row":
-                    ActionChains(self.driver).send_keys(Keys.UP).perform()
+                    caction.send_keys(Keys.UP).perform()
                 elif type == "col":
-                    ActionChains(self.driver).send_keys(Keys.LEFT).perform()
+                    caction.send_keys(Keys.LEFT).perform()
         if type == "row":
             self.curent_point_row = to__roc
         elif type == "col":

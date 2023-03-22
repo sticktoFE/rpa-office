@@ -13,7 +13,7 @@ from myutils import web_driver_manager
 
 class SeleMail:
     def __init__(self, userID, passwd, down_path):
-        self.cookies_path = Path("D:/tmp/db_cookie_1")
+        self.cookies_path = Path("D:/temp/db_cookie_1")
         self.userID = userID
         self.passwd = passwd
         # 下面两个都行 # driver = WebDriverManager().get_driver_Chromeexe()
