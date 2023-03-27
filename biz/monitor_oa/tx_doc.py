@@ -96,127 +96,10 @@ class TXDocument:
             for _ in range(int(row) - 1):
                 ActionChains(self.driver).send_keys(Keys.UP).perform()
 
-    # 搜索关键列关键值是否存在
-    def exists_key(self, key_title, key_value):
-        self.back_first_rowcol("left_up")
-        # 找到并移动到第一行标题栏中的关键字
-        while True:
-            elmet = self.driver.find_element(by=By.ID, value="alloy-simple-text-editor")
-            txt = elmet.text.strip()
-            if txt == key_title:
-                print("找到关键字所在列")
-                break
-            elif len(txt) == 0:
-                raise Exception("关键字不存在")
-            else:
-                ActionChains(self.driver).send_keys(Keys.RIGHT).perform()
-        # 寻找关键字对应的值存不存在
-        ActionChains(self.driver).send_keys(Keys.DOWN).perform()
-        while True:
-            elmet = self.driver.find_element(by=By.ID, value="alloy-simple-text-editor")
-            txt = elmet.text.strip()
-            # 这一行遇到主键列为空视为寻找的主键值
-            if len(txt) == 0:
-                print("要保存的值不存在")
-                return False
-            elif txt == key_value:
-                print("要保存的值已存在")
-                return True
-            else:
-                ActionChains(self.driver).send_keys(Keys.DOWN).perform()
-
-    def write_content(self, contents):
-        edit_text = self.driver.find_element(by=By.ID, value="alloy-simple-text-editor")
-        time.sleep(random.uniform(0.1, 3))
-        edit_text.clear()
-        if isinstance(contents, list):
-            for count, content in enumerate(contents):
-                if count > 0:
-                    edit_text.send_keys(Keys.ALT + Keys.ENTER)
-                edit_text.send_keys("" if content is None else content)
-
-                # ActionChains(self.driver).send_keys(Keys.ALT + Keys.ENTER).perform()
-        else:
-            edit_text.send_keys("" if contents is None else contents)
-        # edit_text.click()  # 模拟鼠标点击
-        edit_text.send_keys(Keys.TAB)  # 进入下一个单元格
-
     # tab nums次
     def key_tabs_nums(self, nums):
         for _ in range(nums):
             ActionChains(self.driver).send_keys(Keys.TAB).perform()
-
-    # 更新内容到腾讯文档（旧版，速度较慢）
-    def modify(self):
-        self.login()
-        list_generator = load_json_table(self.infile)
-        # 循环字典形成的列表
-        for line_record in list_generator:
-            demand_no = line_record.get("demand_no")
-            submitter = line_record.get("submitter")
-            submit_depart = line_record.get("submit_depart")
-            submit_date = line_record.get("submit_date")
-            title = line_record.get("title")
-            # 以下两个考虑到长文本，获取信息时是list
-            background = line_record.get("background")
-            summary = line_record.get("summary")
-            # 把summary合并到background中
-            background.extend(summary)
-            pro_type = line_record.get("pro_type")
-            admit_person = line_record.get("admit_person")
-            admit_date = line_record.get("admit_date")
-            admit_result = line_record.get("admit_result")
-            weeks = line_record.get("weeks")
-            # 不存在新增，存在避开主键去覆盖
-            if not self.exists_key("需求编号", demand_no):
-                # 先跳到第一列
-                edit_text = self.driver.find_element(
-                    by=By.ID, value="alloy-simple-text-editor"
-                )
-                edit_text.send_keys(Keys.HOME)
-                # 编号--如果不需要，则注释掉
-                # s = self.driver.find_element(
-                #     by=By.XPATH,
-                #     value="/html/body/div[3]/div/div[4]/div[2]/div/div/div[1]/div/div/div[1]/div[1]",
-                # ).text  # 获取此行的行数
-                # a = int(s[1:])  # 将A**去除A，留下数字
-                # a = str(a - 2)  # 如果你的排序为行的相差则减去几即可
-                # edit_text.send_keys(a)  # 输出a以形成序号
-                # 按照标题顺序写入
-                self.write_content(demand_no)
-                self.write_content(submitter)
-                self.write_content(submit_depart)
-                self.write_content(submit_date)
-                self.write_content(title)
-                self.write_content(background)
-                self.key_tabs_nums(3)
-                self.write_content(admit_result)
-                self.write_content(pro_type)
-                self.key_tabs_nums(7)
-                self.write_content(admit_date)
-                self.write_content(admit_person)
-                self.write_content(weeks)
-            else:
-                # 先跳到第一列
-                edit_text = self.driver.find_element(
-                    by=By.ID, value="alloy-simple-text-editor"
-                )
-                edit_text.send_keys(Keys.HOME)
-                self.key_tabs_nums(1)
-                self.write_content(submitter)
-                self.write_content(submit_depart)
-                self.write_content(submit_date)
-                self.write_content(title)
-                self.write_content(background)
-                self.key_tabs_nums(3)
-                self.write_content(admit_result)
-                self.write_content(pro_type)
-                self.key_tabs_nums(7)
-                self.write_content(admit_date)
-                self.write_content(admit_person)
-                self.write_content(weeks)
-        time.sleep(1)
-        self.driver.close()
 
     # 获取选中的当前单元格所在的行和列，都是从1开始
     def get_current_cell_pos(self):
@@ -319,6 +202,8 @@ class TXDocument:
             for count, content in enumerate(contents):
                 if count > 0:
                     edit_text.send_keys(Keys.ALT + Keys.ENTER)
+                # 字符里存在 \t 所以要替换掉，否则会导致文档输入错位
+                content = re.sub(r"\t+", " ", content).strip()
                 edit_text.send_keys("" if content is None else content)
                 # ActionChains(self.driver).send_keys(Keys.ALT + Keys.ENTER).perform()
         else:

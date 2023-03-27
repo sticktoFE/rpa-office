@@ -10,7 +10,7 @@ mytools.general_spider.general_spider.spiders,scrapy,fake_useragent ^
 openpyxl,pyautogui,email,requests,docx,openssl,paddle,paddleocr,schedule,^
 fitz,pyput,unittest,Ipython,jedi,win32gui,win32con,pygments,pip,mss,asyncio,^
 blib2to3,lib2to3,idna,cryptography,hyperlink,attr,wrapt,selenium,click,jinja2,^
-configparser,dateutil ^
+configparser ^
 --output-dir=output --windows-icon-from-ico=.\rpa.ico --jobs=10 .\biz\monitor_oa\mainw.py
 ::把没有编译的库，复制到打包文件中
 set source=.\output\packages

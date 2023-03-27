@@ -4,7 +4,6 @@ import time
 
 # 设置获取数据的日期
 from datetime import date, datetime, timedelta
-from dateutil.relativedelta import relativedelta
 
 
 def clock(func):
@@ -50,12 +49,12 @@ def clock(func):
 def get_weeks_current_date(current_date_str=None):
     current_date = None
     if current_date_str is None:
-        current_date = datetime.datetime.today()
+        current_date = datetime.today()
     else:
-        current_date = datetime.datetime.strptime(current_date_str, "%Y-%m-%d")
+        current_date = datetime.strptime(current_date_str, "%Y-%m-%d")
     week_num = current_date.isocalendar()[1]
-    start_date = current_date - datetime.timedelta(days=current_date.weekday())
-    end_date = start_date + datetime.timedelta(days=4)
+    start_date = current_date - timedelta(days=current_date.weekday())
+    end_date = start_date + timedelta(days=4)
     return f'{start_date.strftime("%m%d")}-{end_date.strftime("%m%d")}({week_num})'
 
 
@@ -70,4 +69,4 @@ def get_date(type=0, format="%Y-%m-%d"):
 
 
 if __name__ == "__main__":
-    print(get_weeks_current_date("2023-03-03"))
+    print(get_weeks_current_date("2023-03-23"))

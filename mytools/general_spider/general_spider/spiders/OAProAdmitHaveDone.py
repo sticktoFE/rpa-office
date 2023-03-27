@@ -6,7 +6,10 @@ from mytools.general_spider.general_spider.items import OAProAdmitHaveDoneItem
 from mytools.general_spider.general_spider.extension.SeleniumSpider import (
     SeleniumSpider,
 )
-from mytools.general_spider.general_spider.extension.tools import waitForXpath
+from mytools.general_spider.general_spider.extension.tools import (
+    waitForXpath,
+    waitNotForXpath,
+)
 from pathlib import Path
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import (
@@ -77,7 +80,7 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
                     title_ele.click()
                 except TimeoutException as e:
                     print(e)
-                time.sleep(random.randint(3, 6))
+                time.sleep(random.uniform(1.6, 3.8))
                 # 也未涉及到跳转窗口，所以需要切换窗口
                 all_windows = self.browser.window_handles
                 for window in all_windows:
@@ -148,10 +151,10 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
                 yield item
             # 翻页
             meta["page_num"] += 1
-            MAX_PAGE = ReadWriteConfFile.getSectionValue(
-                "General", "MAX_PAGE", type="int"
+            max_page = ReadWriteConfFile.getSectionValue(
+                "General", "max_page", type="int"
             )
-            if meta["page_num"] <= MAX_PAGE:
+            if meta["page_num"] <= max_page:
                 meta.update(
                     {
                         "useSelenium": True,
@@ -167,6 +170,7 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
                     dont_filter=True,
                 )
 
+    # 解析详情页
     def parse_article(self, item, response):
         # item = response.meta["data"]
         # 获取文章的正文内容
@@ -235,16 +239,17 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
             # submit.click()
             login = self.browser.switch_to.active_element
             login.send_keys(Keys.ENTER)
-
+            # 等待待处理出现
             waitForXpath(
                 self.browser,
                 "//div[@class='ant-tabs-tab-active ant-tabs-tab' and @role='tab' and contains(text(),'待处理')]",
                 timeout=self.timeout,
             )
-            # 切换到已处理
+            # 切换到已处理或已办结
+            which_tab = ReadWriteConfFile.getSectionValue("General", "which_tab")
             submit = waitForXpath(
                 self.browser,
-                "//div[@class='ant-tabs ant-tabs-top ant-tabs-line ant-tabs-no-animation sd-has-table']//div[@role='tab'][2]",  # 2是已办理tab页
+                f"//div[@class=' ant-tabs-tab' and @role='tab' and contains(text(),'{which_tab}')]",  # 已处理或已办结tab页
                 timeout=self.timeout,
             )
             submit.click()
@@ -283,17 +288,10 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
             #     input.clear()
             #     input.send_keys(page)
             #     self.browser.switch_to.active_element.send_keys(Keys.ENTER)
-            # 切换到已处理
-            submit = waitForXpath(
+            # 等待页面加载完标识出现，即等待覆盖上面的元素消失
+            waitNotForXpath(
                 self.browser,
-                "//div[@class='ant-tabs ant-tabs-top ant-tabs-line ant-tabs-no-animation sd-has-table']//div[@role='tab'][2]",
-                timeout=self.timeout,
-            )
-            submit.click()
-            # 等待页面加载完标识出现
-            waitForXpath(
-                self.browser,
-                f"//ul[@class='ant-pagination ant-table-pagination']",
+                "//div[@class='ant-spin ant-spin-spinning']",
                 timeout=self.timeout,
             )
         # elif meta["purpose"] == "download":

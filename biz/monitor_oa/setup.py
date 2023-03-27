@@ -20,7 +20,7 @@ def nuitka_export():
         "openpyxl,pyautogui,email,requests,docx,openssl,paddle,paddleocr,schedule,"
         "fitz,pyput,unittest,Ipython,jedi,win32gui,win32con,pygments,pip,mss,asyncio,"
         "blib2to3,lib2to3,idna,cryptography,hyperlink,attr,wrapt,selenium,click,jinja2,"
-        "configparser,dateutil "
+        "configparser "
         "--output-dir=./biz/monitor_oa/output --remove-output --windows-icon-from-ico=./biz/monitor_oa/rpa.ico --jobs=8 "
         "./biz/monitor_oa/mainw.py"
     )

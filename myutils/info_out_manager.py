@@ -173,7 +173,7 @@ class ReadWriteConfFile:
     @staticmethod
     def getConfigParser():
         cf = configparser.ConfigParser()
-        cf.read(ReadWriteConfFile.filepath)
+        cf.read(ReadWriteConfFile.filepath, encoding="utf-8") #加encoding以支持配置文件中有中文
         return cf
 
     @staticmethod

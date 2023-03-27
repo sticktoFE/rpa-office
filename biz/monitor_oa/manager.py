@@ -114,7 +114,7 @@ class RPAServer:
         self.mail_userID = mail_userID
         self.mail_passwd = mail_passwd
         self.out_folder = get_temp_folder(
-            des_folder_name="spiders_out", is_clear_folder=True
+            des_folder_name="spiders_out", is_clear_folder=False
         )
         self.out_file = f"{self.out_folder}\\csrc_market_weekly.txt"
         self.out_finished = self.out_file + "_finished"
@@ -124,8 +124,8 @@ class RPAServer:
     # 1、登陆邮件并下载台账更新文件，然后更新到腾讯文档台账
     def start(self):
         # 下载json结构化信息
-        self.sm = SeleMail(self.mail_userID, self.mail_passwd, self.out_folder)
-        self.sm.download_through_draft()
+        # self.sm = SeleMail(self.mail_userID, self.mail_passwd, self.out_folder)
+        # self.sm.download_through_draft()
         # 更新腾讯文档给台账
         txd = TXDocument(self.mail_userID, self.mail_passwd, self.out_finished)
         txd.modify_up()
@@ -147,5 +147,5 @@ def start_ip_proxy():
 # client = RPAClient(mail_userID="", mail_passwd="")
 # client.have_done()
 
-# client = RPAServer("", "")
-# client.start()
+client = RPAServer("", "")
+client.start()

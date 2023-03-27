@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QHeaderView,
 )
 from PySide6.QtGui import QImage
-from mytools.video.model.inference.OCRVideo import OCRVideo
+from mytools.video.OCRVideo import OCRVideo
 from myutils.image_convert import cv2pixmap
 from myutils.info_out_manager import get_temp_file, get_temp_folder
 from ui.component.TipsShower import TipsShower
