@@ -1,3 +1,4 @@
+from pathlib import Path
 import random
 import re
 import time
@@ -10,14 +11,13 @@ from myutils.info_out_manager import load_json_table
 
 
 class TXDocument:
-    def __init__(self, userID, passwd, infile):
+    def __init__(self, userID, passwd):
         self.userID = userID
         self.passwd = passwd
         self.driver = web_driver_manager.get_driver_ChromeDriver(SetHeadless=False)
         self.driver.implicitly_wait(15)
         # 最大化窗口
         self.driver.maximize_window()
-        self.infile = infile
         self.metadata = {
             "demand_no": "需求编号",
             "submitter": "报送人",
@@ -213,75 +213,77 @@ class TXDocument:
         self.curent_point_col = self.curent_point_col + 1
 
     # 更新内容到腾讯文档，升级一下，加快速度
-    def modify_up(self):
+    def modify_up(self, infolder):
         self.login()
-        list_generator = load_json_table(self.infile)
-        # 根据主键生成主键相关数据
-        self.produce_doc_metadat(key_title="需求编号")
-        # 循环字典形成的列表
-        for line_record in list_generator:
-            demand_no = line_record.get("demand_no")
-            submitter = line_record.get("submitter")
-            submit_depart = line_record.get("submit_depart")
-            submit_date = line_record.get("submit_date")
-            title = line_record.get("title")
-            # 以下两个考虑到长文本，获取信息时是list
-            background = line_record.get("background")
-            summary = line_record.get("summary")
-            # 把summary合并到background中
-            background.extend(summary)
-            pro_type = line_record.get("pro_type")
-            admit_person = line_record.get("admit_person")
-            admit_date = line_record.get("admit_date")
-            admit_result = line_record.get("admit_result")
-            weeks = line_record.get("weeks")
-            # 不存在就新增记录，存在则避开主键去覆盖其他值
-            curent_data_row = self.exist_primary_values.get(demand_no, 0)
-            if curent_data_row == 0:
-                self.move_from_to(self.curent_point_row, self.last_empty_point)
-                # 把新主键放入缓存表
-                self.exist_primary_values[demand_no] = self.curent_point_row
-                self.last_empty_point = self.last_empty_point + 1
-                # 编号--如果不需要，则注释掉
-                # s = self.driver.find_element(
-                #     by=By.XPATH,
-                #     value="/html/body/div[3]/div/div[4]/div[2]/div/div/div[1]/div/div/div[1]/div[1]",
-                # ).text  # 获取此行的行数
-                # a = int(s[1:])  # 将A**去除A，留下数字
-                # a = str(a - 2)  # 如果你的排序为行的相差则减去几即可
-                # edit_text.send_keys(a)  # 输出a以形成序号
-                self.write_content_up("demand_no", demand_no)
-                self.write_content_up("submitter", submitter)
-                self.write_content_up("submit_depart", submit_depart)
-                self.write_content_up("submit_date", submit_date)
-                self.write_content_up("title", title)
-                self.write_content_up("background", background)
-                self.write_content_up("admit_result", admit_result)
-                self.write_content_up("pro_type", pro_type)
-                self.write_content_up("admit_date", admit_date)
-                self.write_content_up("admit_person", admit_person)
-                self.write_content_up("weeks", weeks)
-            else:
-                # 回当前行第一列
-                # ActionChains(self.driver).send_keys(Keys.HOME).perform()
-                self.move_from_to(self.curent_point_row, curent_data_row)
-                self.write_content_up("submitter", submitter)
-                self.write_content_up("submit_depart", submit_depart)
-                self.write_content_up("submit_date", submit_date)
-                self.write_content_up("title", title)
-                self.write_content_up("background", background)
-                self.write_content_up("admit_result", admit_result)
-                self.write_content_up("pro_type", pro_type)
-                self.write_content_up("admit_date", admit_date)
-                self.write_content_up("admit_person", admit_person)
-                self.write_content_up("weeks", weeks)
+        # 循环文件夹下的特定文件，解析到线上文档
+        for infile in Path(infolder).glob("*_finished"):
+            list_generator = load_json_table(infile)
+            # 根据主键生成主键相关数据
+            self.produce_doc_metadat(key_title="需求编号")
+            # 循环字典形成的列表
+            for line_record in list_generator:
+                demand_no = line_record.get("demand_no")
+                submitter = line_record.get("submitter")
+                submit_depart = line_record.get("submit_depart")
+                submit_date = line_record.get("submit_date")
+                title = line_record.get("title")
+                # 以下两个考虑到长文本，获取信息时是list
+                background = line_record.get("background")
+                summary = line_record.get("summary")
+                # 把summary合并到background中
+                background.extend(summary)
+                pro_type = line_record.get("pro_type")
+                admit_person = line_record.get("admit_person")
+                admit_date = line_record.get("admit_date")
+                admit_result = line_record.get("admit_result")
+                weeks = line_record.get("weeks")
+                # 不存在就新增记录，存在则避开主键去覆盖其他值
+                curent_data_row = self.exist_primary_values.get(demand_no, 0)
+                if curent_data_row == 0:
+                    self.move_from_to(self.curent_point_row, self.last_empty_point)
+                    # 把新主键放入缓存表
+                    self.exist_primary_values[demand_no] = self.curent_point_row
+                    self.last_empty_point = self.last_empty_point + 1
+                    # 编号--如果不需要，则注释掉
+                    # s = self.driver.find_element(
+                    #     by=By.XPATH,
+                    #     value="/html/body/div[3]/div/div[4]/div[2]/div/div/div[1]/div/div/div[1]/div[1]",
+                    # ).text  # 获取此行的行数
+                    # a = int(s[1:])  # 将A**去除A，留下数字
+                    # a = str(a - 2)  # 如果你的排序为行的相差则减去几即可
+                    # edit_text.send_keys(a)  # 输出a以形成序号
+                    self.write_content_up("demand_no", demand_no)
+                    self.write_content_up("submitter", submitter)
+                    self.write_content_up("submit_depart", submit_depart)
+                    self.write_content_up("submit_date", submit_date)
+                    self.write_content_up("title", title)
+                    self.write_content_up("background", background)
+                    self.write_content_up("admit_result", admit_result)
+                    self.write_content_up("pro_type", pro_type)
+                    self.write_content_up("admit_date", admit_date)
+                    self.write_content_up("admit_person", admit_person)
+                    self.write_content_up("weeks", weeks)
+                else:
+                    # 回当前行第一列
+                    # ActionChains(self.driver).send_keys(Keys.HOME).perform()
+                    self.move_from_to(self.curent_point_row, curent_data_row)
+                    self.write_content_up("submitter", submitter)
+                    self.write_content_up("submit_depart", submit_depart)
+                    self.write_content_up("submit_date", submit_date)
+                    self.write_content_up("title", title)
+                    self.write_content_up("background", background)
+                    self.write_content_up("admit_result", admit_result)
+                    self.write_content_up("pro_type", pro_type)
+                    self.write_content_up("admit_date", admit_date)
+                    self.write_content_up("admit_person", admit_person)
+                    self.write_content_up("weeks", weeks)
         time.sleep(1)
         self.driver.close()
 
     # 留档，有move_by_offset的一些用法
-    def test(self):
+    def test(self, infile):
         self.login()
-        list_generator = load_json_table(self.infile)
+        list_generator = load_json_table(infile)
         # 循环字典形成的列表
         # for line_record in list_generator:
         #     demand_no = line_record.get("demand_no")

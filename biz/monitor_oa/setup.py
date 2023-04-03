@@ -10,8 +10,10 @@ def nuitka_export():
     # print(__loader__)
     # --windows-disable-console 打的包可以输出日志
     python_path = r"D:\leichui\Miniconda3\envs\rpa\python.exe"
+    # 最终使用版 加上--windows-disable-console，去掉控制台输出
     cmd = (
         f"{python_path} -m nuitka --standalone --mingw64 --show-progress "
+        "--windows-disable-console "
         "--include-qt-plugins=sensible,styles --plugin-enable=pyside6 "
         "--follow-import-to=biz.monitor_oa,myutils "
         "--include-package=mytools.general_spider.general_spider,"

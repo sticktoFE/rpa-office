@@ -8,6 +8,7 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.action_chains import ActionChains
 import time
 from pathlib import Path
+from mytools.general_spider.general_spider.extension.tools import waitForXpath
 from myutils import web_driver_manager
 
 
@@ -106,10 +107,10 @@ class SeleMail:
         self.driver.switch_to.default_content()
 
     # 针对存在的草稿，上传附件并保存
+    # 调试库
+    # import pysnooper
+    # @pysnooper.snoop()
     def upload_through_draft(self, get_file=None):
-        print("------------------")
-        print(get_file)
-        get_file = os.fspath(get_file)
         # 登录邮箱
         self.login()
         # 等着退出按钮显示出来（webdriver提供的显示等待，元素级别的等待），此处显示等待不启用，使用隐式等待
@@ -133,16 +134,24 @@ class SeleMail:
             by=By.XPATH,
             value='//div[@class="name j-name"]',
         )
-        # 删除存量邮件
+        # 删除存量相同的文件名的附件
+        print(get_file)
+        get_file_name = Path(get_file).name
         for element in element_to_hover_overs:
-            # 附件的删除按钮只有鼠标悬停在相应元素上才能显示
-            hover = ActionChains(self.driver).move_to_element(element)  # 找到元素
-            hover.perform()  # 悬停
-            # 删除一个附件
-            self.driver.find_element(
-                by=By.XPATH, value='//a[@class="link j-delete" and text()="删除"]'
-            ).click()
-            time.sleep(random.randint(3, 6))
+            # 判断存在的附件名称是否和要上传的附件名称一样
+            if element.text.strip() == get_file_name:
+                # 附件的删除按钮只有鼠标悬停在相应元素上才能显示
+                hover = ActionChains(self.driver).move_to_element(element)  # 找到元素
+                hover.perform()  # 悬停
+                # 删除一个附件
+                # 这个也可以用，后期根据需要再用
+                # element = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'element_id')))
+                delete_btn = element.find_element(
+                    by=By.XPATH,
+                    value='./following-sibling::div[5]/a[@class="link j-delete" and text()="删除"]',
+                )
+                delete_btn.click()
+                time.sleep(random.randint(1, 3))
         # 上传附件
         get_file = os.fspath(get_file).replace("/", "\\")
         self.driver.find_element(
@@ -200,13 +209,13 @@ class SeleMail:
             hover = ActionChains(self.driver).move_to_element(element)  # 找到元素
             hover.perform()  # 悬停
             # 下载附件
-            self.driver.find_element(
-                by=By.XPATH, value='//a[@class="link j-download" and text()="下载"]'
+            element.find_element(
+                by=By.XPATH,
+                value='./following-sibling::div[5]/a[@class="link j-download" and text()="下载"]',
             ).click()
-        time.sleep(random.randint(3, 6))
+            time.sleep(random.uniform(1.5, 4))
         logout_link = self.driver.find_element(by=By.XPATH, value="//a[text()='退出']")
         logout_link.click()
-        time.sleep(random.uniform(1, 3))
         # assert "登录" in self.driver.page_source
         self.driver.quit()
 

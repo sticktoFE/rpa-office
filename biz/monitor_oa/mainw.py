@@ -78,6 +78,7 @@ class MainWindow(QMainWindow, Ui_Form):
         self.data_end_date.setText(today_str)
         self.scheduled_jobs = []
         self.srapy_running = False
+        self.set_time.setText("11:30~19:00~22:00")
 
     @Slot()
     def on_start_clicked(self):

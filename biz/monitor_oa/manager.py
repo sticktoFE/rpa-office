@@ -36,7 +36,7 @@ class RPAClient:
         self.out_folder = get_temp_folder(
             des_folder_name="spiders_out", is_clear_folder=True
         )
-        self.out_file = f"{self.out_folder}/csrc_market_weekly.txt"
+        self.out_file = f"{self.out_folder}/{scrapy_userID}.txt"
         self.out_finished = self.out_file + "_finished"
 
     def start_spider(self, spider_name):
@@ -72,7 +72,7 @@ class RPAClient:
         #     self.scrapy_userID,
         #     self.scrapy_passwd,
         #     out_file=self.out_file,
-        #     down_path=self.out_folder,
+        #     down_path=out_folder,
         # )
         # self.scraper.run_spiders(
         #     "csrc_market_weekly"
@@ -114,21 +114,19 @@ class RPAServer:
         self.mail_userID = mail_userID
         self.mail_passwd = mail_passwd
         self.out_folder = get_temp_folder(
-            des_folder_name="spiders_out", is_clear_folder=False
+            des_folder_name="spiders_out", is_clear_folder=True
         )
-        self.out_file = f"{self.out_folder}\\csrc_market_weekly.txt"
-        self.out_finished = self.out_file + "_finished"
 
     # 已办任务处理
     # server端
     # 1、登陆邮件并下载台账更新文件，然后更新到腾讯文档台账
     def start(self):
         # 下载json结构化信息
-        # self.sm = SeleMail(self.mail_userID, self.mail_passwd, self.out_folder)
-        # self.sm.download_through_draft()
+        self.sm = SeleMail(self.mail_userID, self.mail_passwd, self.out_folder)
+        self.sm.download_through_draft()
         # 更新腾讯文档给台账
-        txd = TXDocument(self.mail_userID, self.mail_passwd, self.out_finished)
-        txd.modify_up()
+        txd = TXDocument(self.mail_userID, self.mail_passwd)
+        txd.modify_up(self.out_folder)
         # 发信息通知管理人员今天的任务处理完毕
         # send_webchat()
 
@@ -143,9 +141,9 @@ def start_ip_proxy():
     time.sleep(random.randint(1, 3))
 
 
-# if __name__ == "__main__":
-# client = RPAClient(mail_userID="", mail_passwd="")
-# client.have_done()
+if __name__ == "__main__":
+    # client = RPAClient(mail_userID="", mail_passwd="")
+    # client.have_done()
 
-client = RPAServer("", "")
-client.start()
+    client = RPAServer("", "")
+    client.start()
