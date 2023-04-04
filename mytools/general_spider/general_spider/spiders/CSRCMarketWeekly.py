@@ -1,4 +1,3 @@
-import os
 import re
 import scrapy
 from mytools.general_spider.general_spider.items import CSRCMarketWeeklyItem
@@ -7,7 +6,7 @@ from mytools.general_spider.general_spider.extension.SeleniumSpider import (
 )
 from mytools.general_spider.general_spider.extension.tools import waitForXpath
 from pathlib import Path
-from selenium.webdriver.common.by import By
+from myutils import web_driver_manager
 
 from myutils.info_out_manager import ReadWriteConfFile
 
@@ -24,7 +23,6 @@ class CSRCMarketWeeklySpider(SeleniumSpider):
     }
 
     def start_requests(self):
-        # self.out_file = self.settings.get('out_file')
         """
         开始发起请求，记录页码
         """

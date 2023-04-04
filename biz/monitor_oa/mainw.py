@@ -16,7 +16,11 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QTableWidgetItem,
     QComboBox,
+    QStyledItemDelegate,
+    QLineEdit,
+    QStyle,
 )
+
 import keyring
 from biz.monitor_oa.manager import RPAClient, RPAServer
 from myutils.DateAndTime import get_date  # , start_ip_proxy
@@ -24,13 +28,26 @@ from myutils.GeneralThread import Worker
 from Form import Ui_Form
 import schedule
 
-# 设置获取数据的日期
-from datetime import date, datetime, timedelta
-
 # import win32timezone
 from keyring.backends import Windows
 
 keyring.set_keyring(Windows.WinVaultKeyring())
+
+
+class PasswordDelegate(QStyledItemDelegate):
+    def createEditor(self, parent, option, index):
+        editor = QLineEdit(parent)
+        editor.setEchoMode(QLineEdit.Password)
+        return editor
+
+    def updateEditorGeometry(self, editor, option, index):
+        editor.setGeometry(option.rect)
+
+    def initStyleOption(self, option, index):
+        super().initStyleOption(option, index)
+        style = option.widget.style() or QApplication.style()
+        hint = style.styleHint(QStyle.SH_LineEdit_PasswordCharacter)
+        option.text = chr(hint) * len(option.text)
 
 
 class Stream(QObject):
@@ -44,6 +61,9 @@ class MainWindow(QMainWindow, Ui_Form):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+        # Set the delegate for the password column
+        delegate = PasswordDelegate()
+        self.taskTableWidget.setItemDelegateForColumn(2, delegate)
         # 把标准输出展示到重定向窗口中
         redirect_out = Stream()
         redirect_out.newText.connect(self.onUpdateText)
@@ -61,6 +81,19 @@ class MainWindow(QMainWindow, Ui_Form):
                 passwd = keyring.get_password("myapp", userID)
                 userID_oa = keyring.get_password("myapp", "userID_oa")
                 passwd_oa = keyring.get_password("myapp", userID_oa)
+                config_parameter_row_count = keyring.get_password(
+                    "myapp", "config_parameter_row_count"
+                )
+                for one_para in range(
+                    int(
+                        0
+                        if config_parameter_row_count is None
+                        else config_parameter_row_count
+                    )
+                ):
+                    userID_oa_ = keyring.get_password("myapp", f"userID_oa_{one_para}")
+                    passwd_oa_ = keyring.get_password("myapp", userID_oa_)
+                    self.insert_row_inTable(1, userID_oa_, passwd_oa_, 0)
             except keyring.errors.NoKeyringError:
                 # 如果没有安装任何密钥环后端，使用默认密码
                 userID = ""
@@ -143,7 +176,29 @@ class MainWindow(QMainWindow, Ui_Form):
                 keyring.set_password("myapp", userID, passwd)
                 keyring.set_password("myapp", "userID_oa", userID_oa)
                 keyring.set_password("myapp", userID_oa, passwd_oa)
-
+            # 可以增加多个oa登录账号和密码，放到userID_Passwd
+            userID_Passwd = [(userID_oa, passwd_oa)]
+            config_parameter_row_count = self.taskTableWidget.rowCount()
+            # 记录行数，为了启动初始化时，知道增加多少记录
+            if self.remember_check.isChecked():
+                keyring.set_password(
+                    "myapp", "config_parameter_row_count", config_parameter_row_count
+                )
+            for row in range(config_parameter_row_count):
+                item_type = self.taskTableWidget.cellWidget(row, 0).currentText()
+                item_status = self.taskTableWidget.cellWidget(row, 3).currentText()
+                if (
+                    item_type is not None
+                    and item_type == "EMAIL"
+                    and item_status == "有效"
+                ):
+                    # 获取单元格文本
+                    item_user = self.taskTableWidget.item(row, 1).text()
+                    item_passwd = self.taskTableWidget.item(row, 2).text()
+                    userID_Passwd.append((item_user, item_passwd))
+                    if self.remember_check.isChecked():
+                        keyring.set_password("myapp", f"userID_oa_{row}", item_user)
+                        keyring.set_password("myapp", item_user, item_passwd)
             if self.rpa_client.isChecked():
                 # 打开代理
                 # start_ip_proxy()
@@ -152,8 +207,7 @@ class MainWindow(QMainWindow, Ui_Form):
                     RPAClient,
                     classMethod="have_done",
                     classMethodArgs={},
-                    scrapy_userID=userID_oa,
-                    scrapy_passwd=passwd_oa,
+                    scrapy_account=userID_Passwd,
                     mail_userID=userID,
                     mail_passwd=passwd,
                     data_start_date=data_start_date,
@@ -213,23 +267,32 @@ class MainWindow(QMainWindow, Ui_Form):
         self.out_log.setTextCursor(cursor)
         self.out_log.ensureCursorVisible()
 
-    # 点击添加文件
-    @Slot()
-    def on_fileAdd_clicked(self):
+    def insert_row_inTable(self, account_type_index, user, passwd, status_index):
         row = self.taskTableWidget.rowCount()
         # 在末尾插入一空行
         self.taskTableWidget.insertRow(row)
-        item_module = QTableWidgetItem("biz.monitor_oa.manager")
-        item_module.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
-        self.taskTableWidget.setItem(row, 0, item_module)
-
-        comBox_object = QComboBox()
-        comBox_object.addItems(["RPAServer", "RPAClient"])
-        self.taskTableWidget.setCellWidget(row, 1, comBox_object)
+        comBox_class_method = QComboBox()
+        comBox_class_method.addItems(["OA", "EMAIL"])
+        comBox_class_method.setCurrentIndex(account_type_index)
+        self.taskTableWidget.setCellWidget(row, 0, comBox_class_method)
+        # 用户名
+        item_user = QTableWidgetItem(user)
+        item_user.setFlags(item_user.flags() | Qt.ItemIsEditable)
+        self.taskTableWidget.setItem(row, 1, item_user)
+        # 密码
+        item_passwd = QTableWidgetItem(passwd)
+        item_passwd.setFlags(item_passwd.flags() | Qt.ItemIsEditable)
+        self.taskTableWidget.setItem(row, 2, item_passwd)
 
         comBox_class_method = QComboBox()
-        comBox_class_method.addItems(["to_do", "have_done"])
-        self.taskTableWidget.setCellWidget(row, 2, comBox_class_method)
+        comBox_class_method.addItems(["有效", "无效"])
+        comBox_class_method.setCurrentIndex(status_index)  # 选择哪个值
+        self.taskTableWidget.setCellWidget(row, 3, comBox_class_method)
+
+    # 点击添加文件
+    @Slot()
+    def on_fileAdd_clicked(self):
+        self.insert_row_inTable(1, "", "", 0)
 
     # 点击移除
     @Slot()

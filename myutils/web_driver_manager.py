@@ -1,8 +1,9 @@
 from pathlib import Path
+import random
 import subprocess
 from selenium import webdriver
 
-from myutils.info_out_manager import ReadWriteConfFile
+from myutils.info_out_manager import ReadWriteConfFile, get_temp_folder
 
 # 1、获取driver，用本地浏览器，据说可以有效反反爬
 
@@ -44,15 +45,34 @@ def get_driver_Chromeexe():
 
 
 # 2、获取driver，通过驱动程序
-def get_driver_ChromeDriver(SetHeadless=True, down_file_save_path="D:\\转型\\downloads"):
+def get_driver_ChromeDriver(
+    browser_parameter_name=None,
+    down_file_save_path="D:\\downloads",
+):
     options = webdriver.ChromeOptions()
     # 切换成便携版chrome，避免跨平台时，所在平台没有安装chrome或chrome和chromedriver版本不一致
     chrome_portable_path = (
         f"{Path(__file__).parent}\\GoogleChromePortable\\App\\Chrome-bin\\chrome.exe"
     )
     options.binary_location = chrome_portable_path
+    # 设置浏览器运行参数
     # 浏览器地址栏访问chrome://version/查看个人资料路径,去掉最后的/Default
-    options.add_argument("user-data-dir=d:\\temp\\selenum_zy\\AutomationProfile")
+    chrome_parameter_path = get_temp_folder(
+        des_folder_name="spiders_out/selenum_zy",
+        is_clear_folder=False,
+    ).replace("/", "\\")
+    options.add_argument(
+        f"user-data-dir={chrome_parameter_path}\\AutomationProfile_{'default' if browser_parameter_name is None else browser_parameter_name}"
+    )
+    # 配置下载文件的保存目录
+    prefs = {
+        "profile": {"exit_type": "Normal"},  # 避免有头打开浏览器时出现恢复页面的弹窗提醒
+        "download.default_directory": down_file_save_path.replace(
+            "/", "\\"
+        ),  # 必须采取 \\xx\\格式，/xx/格式会报错误，下载失败
+        "download.prompt_for_download": False,  # 为True则弹框，选择保存文件路径，False则用down_file_save_path为保存目录
+    }
+    options.add_experimental_option("prefs", prefs)
     # 此步骤很重要，设置为开发者模式，防止被各大网站识别出来使用了Selenium#禁止打印日志
     # 访问https的网站，Selenium可能会报错，使用ignore-certificate-errors可以忽略报错
     options.add_experimental_option(
@@ -70,17 +90,18 @@ def get_driver_ChromeDriver(SetHeadless=True, down_file_save_path="D:\\转型\\d
     options.add_argument(
         "log-level=3"
     )  # INFO = 0 WARNING = 1 LOG_ERROR = 2 LOG_FATAL = 3 default is 0
-    options.add_argument("--window-size=1920,1080")  # 使用无头模式，需设置初始窗口大小
+    options.add_argument("--window-size=1920,1080")  # 使用有头模式，需设置初始窗口大小
     options.add_argument("--no-first-run")  # 不打开首页
     options.add_argument("--no-default-browser-check")  # 不检查默认浏览器
-    # options.add_argument("--start-maximized")  # 最大化
     # 默认是无头模式，意思是浏览器将会在后台运行，也是为了加速scrapy
     # 我们可不想跑着爬虫时，旁边还显示着浏览器访问的页面
     # 调试的时候可以把SetHeadless设为False，看一下跑着爬虫时候，浏览器在干什么
+    SetHeadless = ReadWriteConfFile.getSectionValue(
+        "General", "SetHeadless", type="boolean"
+    )
     if SetHeadless:
         # 无头模式，无UI
         options.add_argument("--headless")
-        # options.add_argument("--headless")  # 无头模式--静默运行 不提供可视化页面
     options.add_argument("--disable-gpu")  # 谷歌文档提到需要加上这个属性来规避bug
     # 针对UA请求头的操作，防止因为没有添加请求头导致的访问被栏截了
     options.add_argument(
@@ -93,31 +114,15 @@ def get_driver_ChromeDriver(SetHeadless=True, down_file_save_path="D:\\转型\\d
     # options.add_argument("--no-startup-window")
     # 不加载图片, 提升速度 不知为什么，打开后导致checkbox显示不出来
     # options.add_argument("blink-settings=imagesEnabled=false")
-    # 配置下载文件的保存目录
-
-    # prefs = {
-    #     "download.default_directory": down_file_save_path.replace(
-    #         "/", "\\"
-    #     ),  # 必须采取 \\xx\\格式，/xx/格式会报错误，下载失败
-    #     "download.prompt_for_download": False,  # 为True则弹框，选择保存文件路径，False则用down_file_save_path为保存目录
-    # }
-    # options.add_experimental_option("prefs", prefs)
-    prefs = {
-        "profile": {"exit_type": "Normal"},  # 避免有头打开浏览器时出现恢复页面的弹窗提醒
-        "download.default_directory": down_file_save_path.replace(
-            "/", "\\"
-        ),  # 必须采取 \\xx\\格式，/xx/格式会报错误，下载失败
-        "download.prompt_for_download": False,  # 为True则弹框，选择保存文件路径，False则用down_file_save_path为保存目录
-    }
-    options.add_experimental_option("prefs", prefs)
-    # options.add_experimental_option("prefs", {: prefs})
     # 添加启用的去去广告插件,以拦截广告
     options.add_extension(
         f"{Path(__file__).parent}\\GoogleChromePortable\\adblock_v5.4.1.crx"
     )
+    # options.add_argument(f"--remote-debugging-port={random.randint(9000, 9999)}")
     driver = webdriver.Chrome(
-        executable_path=f"{Path(__file__).parent}\\GoogleChromePortable\\chromedriver.exe",  # {Path(__file__).parent}\\
+        executable_path=f"{Path(__file__).parent}\\GoogleChromePortable\\chromedriver.exe",
         chrome_options=options,
+        port=random.randint(9000, 9999),
     )
     # driver = webdriver.Chrome(
     #     service=Service(ChromeDriverManager().install()), options=options

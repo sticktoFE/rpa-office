@@ -27,7 +27,7 @@ class PingDingGovSpider(SeleniumSpider):
     name = "ping_ding_gov_tender"
     allowed_domains = ["pingdingshan.hngp.gov.cn"]
     url_format = "http://pingdingshan.hngp.gov.cn/pingdingshan/ggcx?soCode=af4f57d4bc2a4dd2a7ce7f2361275d9a"
-    out_folder = get_temp_folder(des_folder_name="spiders_out", is_clear_folder=True)
+    out_folder = get_temp_folder(des_folder_name="spiders_out/data", is_clear_folder=True)
     out_file = f"{out_folder}/PingDingGov.txt"
     out_finished = f"{out_folder}/PingDingGov_finished.txt"
 

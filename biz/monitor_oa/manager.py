@@ -6,7 +6,7 @@ import random
 import time
 from mytools.general_spider.SpiderManager import run_spiders
 from myutils.GeneralThread import Worker
-from myutils.info_out_manager import ReadWriteConfFile, get_temp_folder, load_json_table
+from myutils.info_out_manager import ReadWriteConfFile, get_temp_folder
 from biz.monitor_oa.zy_email import SeleMail
 from biz.monitor_oa.tx_doc import TXDocument
 from biz.monitor_oa.wc_sendinfo import send_webchat
@@ -20,82 +20,84 @@ class RPAClient:
     # 1、启动信息获取，获取列表信息和详情信息
     def __init__(
         self,
-        scrapy_userID=None,
-        scrapy_passwd=None,
+        scrapy_account=None,
         mail_userID=None,
         mail_passwd=None,
         data_start_date=None,
         data_end_date=None,
     ):
-        self.scrapy_userID = scrapy_userID
-        self.scrapy_passwd = scrapy_passwd
+        self.scrapy_account = scrapy_account
         self.mail_userID = mail_userID
         self.mail_passwd = mail_passwd
         self.data_start_date = data_start_date
         self.data_end_date = data_end_date
         self.out_folder = get_temp_folder(
-            des_folder_name="spiders_out", is_clear_folder=True
+            des_folder_name="spiders_out/data", is_clear_folder=True
         )
-        self.out_file = f"{self.out_folder}/{scrapy_userID}.txt"
-        self.out_finished = self.out_file + "_finished"
 
-    def start_spider(self, spider_name):
-        q = Queue()
-        p = Process(
-            target=run_spiders,
-            args=(
-                q,
-                spider_name,
-                self.scrapy_userID,
-                self.scrapy_passwd,
-                self.data_start_date,
-                self.data_end_date,
-            ),
-            kwargs={
-                "out_file": self.out_file,
-                "down_path": self.out_folder,
-            },
-        )
-        p.start()
-        result = q.get()
-        p.join()
-        if result is not None:
-            raise result
-        else:
-            return True
+    import pysnooper
 
-    # 客户端待办、已办任务处理
-    # 爬取信息
+    @pysnooper.snoop(depth=1)
     def scrapy_info(self):
-        # 1、启动信息获取，获取详情信息，生成台账更新文件（已经是子线程模式了）
-        # self.scraper = SpiderManager(
-        #     self.scrapy_userID,
-        #     self.scrapy_passwd,
-        #     out_file=self.out_file,
-        #     down_path=out_folder,
-        # )
-        # self.scraper.run_spiders(
-        #     "csrc_market_weekly"
-        # )  # csrc_market_weekly OAProAdmitHaveDone
-        # # self.scraper.spider_finished.connect()
-        # 2、由上面的直接调用改成下面的启动进程方式
-        # 从配置文本中获取要执行的爬虫
-        spider_name = ReadWriteConfFile.getSectionValue("General", "spider_name")
-        return self.start_spider(spider_name)
+        spider_names = ReadWriteConfFile.getSectionValue(
+            "Client", "spider_names"
+        ).split("~")
+        processes = []
+        result_queue = Queue()
+        # Create and start multiple worker processes
+        for i, account_passwd in enumerate(self.scrapy_account):
+            scrapy_userID = account_passwd[0]
+            scrapy_passwd = account_passwd[1]
+            spider_name = spider_names[i]
+            out_file = f"{self.out_folder}/{scrapy_userID}.txt"
+            process = Process(
+                target=run_spiders,
+                args=(
+                    result_queue,
+                    spider_name,
+                    scrapy_userID,
+                    scrapy_passwd,
+                    self.data_start_date,
+                    self.data_end_date,
+                ),
+                kwargs={
+                    "out_file": out_file,
+                    "down_path": self.out_folder,
+                    "browser_parameter_name": scrapy_userID,
+                },
+                daemon=True,
+            )
+            process.start()
+            processes.append(process)
+
+        # Wait for all processes to complete
+        for p in processes:
+            p.join()
+        # Get the results from the queue and check if they are all True
+        results = []
+        while not result_queue.empty():
+            result = result_queue.get()
+            results.append(result)
+        if all(results):
+            print("All processes completed successfully.")
+            return True
+        else:
+            print("At least one process failed.")
+            return False
 
     # 上传附件
     def upload_file_to_mail(self):
         # 2、获取台账更新文件并上传到邮件（开启子线程）
-        while not Path(self.out_finished).exists():
+        # 改成判断文件夹下是否有 后缀为'_finished'的文件
+        while not list(Path(self.out_folder).glob("*_finished")):
             time.sleep(0.5)
         self.sm = SeleMail(self.mail_userID, self.mail_passwd, self.out_folder)
-        self.sm.upload_through_draft(get_file=self.out_finished)
+        self.sm.upload_through_draft()
 
     # 把需求说明书发给相关人
     def notify_attache(self):
         self.sm = SeleMail(self.mail_userID, self.mail_passwd, self.out_folder)
-        item_generator = load_json_table(self.out_finished)
-        self.sm.send_mails(item_generator)
+        self.sm.send_mails()
 
     def have_done(self):
         re = self.scrapy_info()
@@ -114,7 +116,7 @@ class RPAServer:
         self.mail_userID = mail_userID
         self.mail_passwd = mail_passwd
         self.out_folder = get_temp_folder(
-            des_folder_name="spiders_out", is_clear_folder=True
+            des_folder_name="spiders_out/data", is_clear_folder=True
         )
 
     # 已办任务处理

@@ -1,15 +1,13 @@
 import os
 import pickle
 import random
-
-# 导入By类
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.common.action_chains import ActionChains
 import time
 from pathlib import Path
-from mytools.general_spider.general_spider.extension.tools import waitForXpath
 from myutils import web_driver_manager
+from myutils.info_out_manager import load_json_table
 
 
 class SeleMail:
@@ -17,9 +15,10 @@ class SeleMail:
         self.cookies_path = Path("D:/temp/db_cookie_1")
         self.userID = userID
         self.passwd = passwd
+        self.upload_path = down_path
         # 下面两个都行 # driver = WebDriverManager().get_driver_Chromeexe()
         self.driver = web_driver_manager.get_driver_ChromeDriver(
-            SetHeadless=False, down_file_save_path=down_path
+            down_file_save_path=down_path
         )
         self.driver.implicitly_wait(15)
         # 最大化窗口
@@ -61,7 +60,7 @@ class SeleMail:
         # 密码
         pass_word = self.driver.find_element(
             by=By.XPATH,
-            value='//*[@class="u-input" and @type="password" and @id="fakePassword"]',
+            value='//input[@class="u-input" and @type="password" and @id="fakePassword"]',
         )
         if not pass_word.get_attribute("value"):
             pass_word.clear()
@@ -69,7 +68,7 @@ class SeleMail:
         # 登录
         time.sleep(random.uniform(2, 4))
         login_button = self.driver.find_element(
-            by=By.XPATH, value='//*[@class="u-btn u-btn-primary submit j-submit"]'
+            by=By.XPATH, value='//button[@class="u-btn u-btn-primary submit j-submit"]'
         )
         login_button.click()
         # time.sleep(random.randint(4, 8))
@@ -77,9 +76,13 @@ class SeleMail:
         try:
             verify_code = self.driver.find_element(
                 by=By.XPATH,
-                value='//*[@class="u-input j-code" and @type="text"]',
+                value='//input[@class="u-input j-code" and @type="text"]',
             )
-            verify_code.send_keys(input())
+            while not verify_code.get_attribute("value"):
+                verify_code.clear()
+                # verify_code.send_keys(input()) 后端输入，没办法打包后使用，改成等待前端输入
+                # 等待前端输入
+                time.sleep(random.uniform(0.5, 1))
             # 重新发送获取验证码按钮，一般不需要
             # again_send_verifycode_button = self.driver.find_element(
             #     by=By.XPATH, value='//*[@class="u-btn u-btn-default send-code-btn j-send"]'
@@ -110,7 +113,7 @@ class SeleMail:
     # 调试库
     # import pysnooper
     # @pysnooper.snoop()
-    def upload_through_draft(self, get_file=None):
+    def upload_through_draft(self):
         # 登录邮箱
         self.login()
         # 等着退出按钮显示出来（webdriver提供的显示等待，元素级别的等待），此处显示等待不启用，使用隐式等待
@@ -129,45 +132,47 @@ class SeleMail:
             by=By.XPATH, value='//span[@class="subject" and @title="虚拟桌面申请表格"]'
         ).click()
         # time.sleep(random.randint(3, 6))
-        # 找下有没有附件
-        element_to_hover_overs = self.driver.find_elements(
-            by=By.XPATH,
-            value='//div[@class="name j-name"]',
-        )
-        # 删除存量相同的文件名的附件
-        print(get_file)
-        get_file_name = Path(get_file).name
-        for element in element_to_hover_overs:
-            # 判断存在的附件名称是否和要上传的附件名称一样
-            if element.text.strip() == get_file_name:
+
+        # 循环文件夹下的特定文件，删除邮箱中相同的文件名的附件，然后上传
+        for infile in Path(self.upload_path).glob("*_finished"):
+            print(infile)
+            get_file_name = Path(infile).name
+            # 找下邮件中存在的附件名称是否和要上传的附件名称一样
+            try:
+                element_del_attach = self.driver.find_element(
+                    by=By.XPATH,
+                    value=f'//div[@class="name j-name" and text()="{get_file_name}"]',
+                )
+            except (TimeoutException, NoSuchElementException) as e:
+                print(e)
+            else:
                 # 附件的删除按钮只有鼠标悬停在相应元素上才能显示
-                hover = ActionChains(self.driver).move_to_element(element)  # 找到元素
+                hover = ActionChains(self.driver).move_to_element(element_del_attach)
                 hover.perform()  # 悬停
                 # 删除一个附件
                 # 这个也可以用，后期根据需要再用
                 # element = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'element_id')))
-                delete_btn = element.find_element(
+                delete_btn = element_del_attach.find_element(
                     by=By.XPATH,
                     value='./following-sibling::div[5]/a[@class="link j-delete" and text()="删除"]',
                 )
                 delete_btn.click()
-                time.sleep(random.randint(1, 3))
-        # 上传附件
-        get_file = os.fspath(get_file).replace("/", "\\")
-        self.driver.find_element(
-            by=By.XPATH,
-            value='//input[@type="file" and @name="attachments" and @id="attachments"]',
-        ).send_keys(get_file)
-        # 等待上传完成,一定要加等待时间，否则可能显示上传成功，实际上传不成功
-        time.sleep(random.uniform(3, 6))
-        # 上传成功绿色对勾出现
-        result = self.driver.find_element(
-            by=By.XPATH, value='//div[@class="info j-info"]'
-        )
-        if result is not None:
-            print("附件上传成功")
-        else:
-            print("附件上传失败")
+                time.sleep(random.uniform(2, 5))
+            # 上传附件
+            self.driver.find_element(
+                by=By.XPATH,
+                value='//input[@type="file" and @name="attachments" and @id="attachments"]',
+            ).send_keys(os.fspath(infile).replace("/", "\\"))
+            # 等待上传完成,一定要加等待时间，否则可能显示上传成功，实际上传不成功
+            time.sleep(random.uniform(2.6, 6))
+            # 上传成功绿色对勾出现
+            result = self.driver.find_element(
+                by=By.XPATH, value='//div[@class="info j-info"]'
+            )
+            if result is not None:
+                print("附件上传成功")
+            else:
+                print("附件上传失败")
         # 保存草稿
         self.driver.find_element(by=By.XPATH, value='//span[text()="存草稿"]').click()
         time.sleep(random.uniform(1, 3))
@@ -260,11 +265,12 @@ class SeleMail:
         )
         title.send_keys(mail_title)
         # 3、上传附件
-        get_file = os.fspath(get_file)
         self.driver.find_element(
             by=By.XPATH,
             value='//input[@type="file" and @name="attachments" and @id="attachments"]',
-        ).send_keys()
+        ).send_keys(os.fspath(get_file).replace("/", "\\"))
+        # 等待上传完成,一定要加等待时间，否则可能显示上传成功，实际上传不成功
+        time.sleep(random.uniform(2.6, 6))
         # 上传成功绿色对勾出现
         self.driver.find_element(by=By.XPATH, value='//div[@class="info j-info"]')
         # 4、邮件内容
@@ -296,15 +302,18 @@ class SeleMail:
         ).click()
 
     # 批量发送文件
-    def send_mails(self, dict_list):
+    def send_mails(self):
         # 登录邮箱
         self.login()
-        for item in dict_list:
-            attach_save_path = item.get("attach_save_path")
-            self.send_mail(
-                "孟天祥", "关于XXX的需求说明文档", "老师，请审核此需求", get_file=attach_save_path
-            )
-            time.sleep(random.uniform(1, 5))
+        # 循环文件夹下的特定文件，删除邮箱中相同的文件名的附件，然后上传
+        for infile in Path(self.upload_path).glob("*_finished"):
+            item_generator = load_json_table(self.out_finished)
+            for item in item_generator:
+                attach_save_path = item.get("attach_save_path")
+                self.send_mail(
+                    "孟天祥", "关于XXX的需求说明文档", "老师，请审核此需求", get_file=attach_save_path
+                )
+                time.sleep(random.uniform(1, 5))
         logout_link = self.driver.find_element(by=By.XPATH, value="//a[text()='退出']")
         logout_link.click()
         self.driver.quit()

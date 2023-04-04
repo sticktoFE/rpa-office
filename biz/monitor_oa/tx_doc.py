@@ -14,7 +14,7 @@ class TXDocument:
     def __init__(self, userID, passwd):
         self.userID = userID
         self.passwd = passwd
-        self.driver = web_driver_manager.get_driver_ChromeDriver(SetHeadless=False)
+        self.driver = web_driver_manager.get_driver_ChromeDriver()
         self.driver.implicitly_wait(15)
         # 最大化窗口
         self.driver.maximize_window()

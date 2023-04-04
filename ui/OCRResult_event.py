@@ -7,7 +7,6 @@ from PySide6.QtWidgets import (
     QTableView,
     QHeaderView,
 )
-from PySide6.QtGui import QImage
 from mytools.video.OCRVideo import OCRVideo
 from myutils.image_convert import cv2pixmap
 from myutils.info_out_manager import get_temp_file, get_temp_folder

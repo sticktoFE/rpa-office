@@ -14,12 +14,13 @@ class SeleniumSpider(scrapy.Spider):
     """
 
     def __init__(self, settings, *args, **kwargs):
-        super(SeleniumSpider, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         # 获取浏览器操控权
         self.timeout = settings.get("SELENIUM_TIMEOUT")
         self.out_file = settings.get("out_file")
         self.down_path = settings.get("down_path")
-        self.browser = self._get_browser()
+        self.browser_parameter_name = settings.get("browser_parameter_name")
+        self.browser = self._get_browser_driver()
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -27,7 +28,7 @@ class SeleniumSpider(scrapy.Spider):
         spider._set_crawler(crawler)
         return spider
 
-    def _get_browser(self):
+    def _get_browser_driver(self):
         """
         返回浏览器实例
         """
@@ -35,11 +36,10 @@ class SeleniumSpider(scrapy.Spider):
         # 如果不加这一步，运行爬虫过程中将会产生一大堆无用输出
         logging.getLogger("selenium").setLevel("ERROR")
         logging.getLogger("urllib3").setLevel("ERROR")
-        return self._use_chrome()
-
-    def _use_chrome(self):
+        # web_driver_manager.get_driver_FireFoxDriver()
         driver = web_driver_manager.get_driver_ChromeDriver(
-            SetHeadless=False, down_file_save_path=self.down_path
+            browser_parameter_name=self.browser_parameter_name,
+            down_file_save_path=self.down_path,
         )
         # 最大化窗口
         driver.maximize_window()
@@ -47,9 +47,6 @@ class SeleniumSpider(scrapy.Spider):
         # self.browser.implicitly_wait(self.timeout)
         driver.set_page_load_timeout(self.timeout)
         return driver
-
-    def _use_firefox(self):
-        return web_driver_manager.get_driver_FireFoxDriver()
 
     def selenium_func(self, request):
         """

@@ -4,23 +4,31 @@ from mytools.general_spider.general_spider.extension.SeleniumSpider import (
     SeleniumSpider,
 )
 from mytools.general_spider.general_spider.extension.tools import waitForXpath
-from myutils.info_out_manager import get_temp_folder
 from pathlib import Path
+from myutils import web_driver_manager
+
+from myutils.info_out_manager import ReadWriteConfFile
 
 
 class CSRCPenaltySpider(SeleniumSpider):
     name = "csrc_penalty"
     # start_urls = ["http://www.csrc.gov.cn/csrc/c101971/zfxxgk_zdgk.shtml"]
     url_format = "http://www.csrc.gov.cn/csrc/c101971/zfxxgk_zdgk.shtml"
+    # 制定专属pipeline
+    custom_settings = {
+        "ITEM_PIPELINES": {
+            "mytools.general_spider.general_spider.pipelines.CSRCPenaltyPipeline": 300
+        }
+    }
 
     def start_requests(self):
-        self.out_file = self.settings.get("out_file")
         """
         开始发起请求，记录页码
         """
         start_url = f"{self.url_format}"
         meta = {
-            "usedSelenium": True,
+            "useSelenium": True,
+            "questCurrentLink": True,
             "dont_redirect": True,
             "purpose": "list",
             "page_num": 1,
@@ -29,44 +37,55 @@ class CSRCPenaltySpider(SeleniumSpider):
         yield scrapy.Request(start_url, meta=meta, callback=self.parse)
 
     def parse(self, response):
-        self.current_url = response.url
         meta = response.meta
-        # 获取当前页面中的文章列表
-        articles = response.xpath('//ul[@class="list_ul"]//tr[position()>1]')
-        for article in articles:
-            # 获取文章的标题和链接
-            title = article.xpath("./td[2]/a/text()").get()
-            link = article.xpath("./td[2]/a/@href").get()
-            text_num = article.xpath("./td[3]/text()").get()
-            date = article.xpath("./td[4]//text()").get()
-            # 2.实例化：
-            item = CSRCItem()
-            # 3.赋值
-            item["pub_date"] = date
-            item["title"] = title
-            item["text_num"] = text_num
-            item["detail_url"] = link
-            # 构造请求，访问文章详情页并传递title参数
-            yield scrapy.Request(
-                url=link,
-                callback=self.parse_article,
-                meta={"data": item},
-            )
+        if meta["page_num"] != -1:  # -1表示没有下一页了
+            self.current_url = response.url
+            # 获取当前页面中的文章列表
+            articles = response.xpath('//ul[@class="list_ul"]//tr[position()>1]')
+            i = 0
+            for article in articles:
+                i = i + 1
+                if i == 3:  # 为了测试 取两个记录即退出
+                    break
+                # 获取文章的标题和链接
+                title = article.xpath("./td[2]/a/text()").get()
+                link = article.xpath("./td[2]/a/@href").get()
+                text_num = article.xpath("./td[3]/text()").get()
+                date = article.xpath("./td[4]//text()").get()
+                # 2.实例化：
+                item = CSRCPenaltyItem()
+                # 3.赋值
+                item["pub_date"] = date
+                item["title"] = title
+                item["text_num"] = text_num
+                item["detail_url"] = link
+                # 构造请求，访问文章详情页并传递title参数
+                yield scrapy.Request(
+                    url=link,
+                    callback=self.parse_article,
+                    meta={"data": item},
+                )
 
-        # 获取下一页的链接
-        if meta["page_num"] < 3:
+            # 获取下一页的链接
             meta["page_num"] += 1
-            meta.update(
-                {
-                    "usedSelenium": True,
-                    "openLinkInSelenium": True,
-                    "dont_redirect": True,
-                    "purpose": "next",
-                }
+            MAX_PAGE = ReadWriteConfFile.getSectionValue(
+                "General", "MAX_PAGE", type="int"
             )
-            yield scrapy.Request(
-                url=self.current_url, meta=meta, callback=self.parse, dont_filter=True
-            )
+            if meta["page_num"] <= MAX_PAGE:
+                meta.update(
+                    {
+                        "useSelenium": True,
+                        "questCurrentLink": True,
+                        "dont_redirect": True,
+                        "purpose": "next",
+                    }
+                )
+                yield scrapy.Request(
+                    url=self.current_url,
+                    meta=meta,
+                    callback=self.parse,
+                    dont_filter=True,
+                )
 
     def parse_article(self, response):
         # 获取文章的正文内容

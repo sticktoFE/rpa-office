@@ -16,6 +16,7 @@ def run_spiders(
     data_end_date,
     out_file=None,
     down_path=None,
+    browser_parameter_name=None,
 ):
     settings_file_path = "mytools.general_spider.general_spider.settings"
     settings_file_path = "mytools.general_spider.general_spider.settings"
@@ -25,6 +26,7 @@ def run_spiders(
     settings.set("passwd", passwd)
     settings.set("out_file", out_file)
     settings.set("down_path", down_path)
+    settings.set("browser_parameter_name", browser_parameter_name)
     settings.set("data_start_date", data_start_date)
     settings.set("data_end_date", data_end_date)
     try:
@@ -36,9 +38,10 @@ def run_spiders(
         process.crawl(spider_name)
         # process.crawl(Spider2)
         process.start(stop_after_crawl=True)  # 这能支持scrapy重复启动？
-        q.put(None)
+        q.put(True)
     except Exception as e:
-        q.put(e)
+        q.put(False)
+        print(e)
 
 
 class SpiderManager(QObject):

@@ -96,12 +96,9 @@ def get_temp_folder(
         des_folder = des_folder / efp.parent.stem / efp.stem
     # files_path = f'{QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)}/rpa-office/{Path(current_file_path).parent.stem}--{Path(current_file_path).stem}'
     # 临时文件统一放到系统文档文件夹里
-    if not des_folder.exists():
-        os.makedirs(des_folder)
     if des_folder_name is not None:
         des_folder = des_folder.joinpath(des_folder_name)
-        if not des_folder.exists():
-            os.makedirs(des_folder)
+    des_folder.mkdir(exist_ok=True)
     if is_clear_folder:  # 清理文件夹内容
         filelist = glob.glob(f"{des_folder.as_posix()}/*")
         for f in filelist:
@@ -173,7 +170,7 @@ class ReadWriteConfFile:
     @staticmethod
     def getConfigParser():
         cf = configparser.ConfigParser()
-        cf.read(ReadWriteConfFile.filepath, encoding="utf-8") #加encoding以支持配置文件中有中文
+        cf.read(ReadWriteConfFile.filepath, encoding="utf-8")  # 加encoding以支持配置文件中有中文
         return cf
 
     @staticmethod
@@ -184,7 +181,12 @@ class ReadWriteConfFile:
     @staticmethod
     def getSectionValue(section, key, type="str"):
         cf = ReadWriteConfFile.getConfigParser()
-        return cf.get(section, key) if type == "str" else cf.getint(section, key)
+        if type == "str":
+            return cf.get(section, key)
+        elif type == "boolean":
+            return cf.getboolean(section, key)
+        else:
+            return cf.getint(section, key)
 
     @staticmethod
     def addSection(section):
