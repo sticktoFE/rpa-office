@@ -11,7 +11,6 @@ from biz.monitor_oa.zy_email import SeleMail
 from biz.monitor_oa.tx_doc import TXDocument
 from biz.monitor_oa.wc_sendinfo import send_webchat
 from PySide6.QtCore import QThreadPool
-from myutils.GeneralThread import Worker
 from multiprocessing import Process, Queue
 
 
@@ -35,9 +34,9 @@ class RPAClient:
             des_folder_name="spiders_out/data", is_clear_folder=True
         )
 
-    import pysnooper
+    # import pysnooper
 
-    @pysnooper.snoop(depth=1)
+    # @pysnooper.snoop(depth=1)
     def scrapy_info(self):
         spider_names = ReadWriteConfFile.getSectionValue(
             "Client", "spider_names"

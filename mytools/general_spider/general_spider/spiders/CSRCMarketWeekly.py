@@ -6,7 +6,6 @@ from mytools.general_spider.general_spider.extension.SeleniumSpider import (
 )
 from mytools.general_spider.general_spider.extension.tools import waitForXpath
 from pathlib import Path
-from myutils import web_driver_manager
 
 from myutils.info_out_manager import ReadWriteConfFile
 
@@ -14,7 +13,7 @@ from myutils.info_out_manager import ReadWriteConfFile
 class CSRCMarketWeeklySpider(SeleniumSpider):
     name = "csrc_market_weekly"
     # start_urls = ["http://www.csrc.gov.cn/csrc/c101971/zfxxgk_zdgk.shtml"]
-    url_format = "http://www.csrc.gov.cn/csrc/c100119/common_list.shtml"
+    start_url = "http://www.csrc.gov.cn/csrc/c100119/common_list.shtml"
     # 制定专属pipeline
     custom_settings = {
         "ITEM_PIPELINES": {
@@ -26,7 +25,6 @@ class CSRCMarketWeeklySpider(SeleniumSpider):
         """
         开始发起请求，记录页码
         """
-        start_url = f"{self.url_format}"
         meta = {
             "useSelenium": True,
             "questCurrentLink": True,
@@ -35,7 +33,7 @@ class CSRCMarketWeeklySpider(SeleniumSpider):
             "page_num": 1,
         }
         # 列表页是动态的，所以需要启用selenium
-        yield scrapy.Request(start_url, meta=meta, callback=self.parse)
+        yield scrapy.Request(self.start_url, meta=meta, callback=self.parse)
 
     def parse(self, response):
         meta = response.meta
@@ -142,6 +140,7 @@ class CSRCMarketWeeklySpider(SeleniumSpider):
             a = waitForXpath(
                 self.browser, '//div[@id="files"]/a[1]', timeout=self.timeout
             )
+            # 暂时注释，不下载附件
             # a.click()
 
     def closed(self, reason):

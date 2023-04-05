@@ -30,20 +30,15 @@ def run_spiders(
     settings.set("data_start_date", data_start_date)
     settings.set("data_end_date", data_end_date)
     try:
-        # runner = CrawlerRunner(settings)
-        # deferred = runner.crawl(spider_name)
-        # deferred.addBoth(lambda _: reactor.stop())
-        # reactor.run() #放到进程中，runner此处无效导致无法启动爬虫
         process = CrawlerProcess(settings)
         process.crawl(spider_name)
-        # process.crawl(Spider2)
         process.start(stop_after_crawl=True)  # 这能支持scrapy重复启动？
         q.put(True)
     except Exception as e:
         q.put(False)
         print(e)
 
-
+# 以下代码被上面代码替代，暂时没用处，但是可以参考
 class SpiderManager(QObject):
     # 定义爬虫结束信号
     spider_finished = Signal()

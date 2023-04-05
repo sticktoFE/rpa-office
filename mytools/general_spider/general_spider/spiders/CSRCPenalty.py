@@ -1,23 +1,23 @@
+import random
+import time
 import scrapy
 from mytools.general_spider.general_spider.items import CSRCPenaltyItem
 from mytools.general_spider.general_spider.extension.SeleniumSpider import (
     SeleniumSpider,
 )
+
 from mytools.general_spider.general_spider.extension.tools import waitForXpath
 from pathlib import Path
-from myutils import web_driver_manager
-
 from myutils.info_out_manager import ReadWriteConfFile
 
 
 class CSRCPenaltySpider(SeleniumSpider):
     name = "csrc_penalty"
-    # start_urls = ["http://www.csrc.gov.cn/csrc/c101971/zfxxgk_zdgk.shtml"]
-    url_format = "http://www.csrc.gov.cn/csrc/c101971/zfxxgk_zdgk.shtml"
+    start_url = "http://www.csrc.gov.cn/csrc/c101971/zfxxgk_zdgk.shtml"
     # 制定专属pipeline
     custom_settings = {
         "ITEM_PIPELINES": {
-            "mytools.general_spider.general_spider.pipelines.CSRCPenaltyPipeline": 300
+            "mytools.general_spider.general_spider.pipelines.CSRCPenaltyPipeline": 301
         }
     }
 
@@ -25,7 +25,6 @@ class CSRCPenaltySpider(SeleniumSpider):
         """
         开始发起请求，记录页码
         """
-        start_url = f"{self.url_format}"
         meta = {
             "useSelenium": True,
             "questCurrentLink": True,
@@ -34,8 +33,11 @@ class CSRCPenaltySpider(SeleniumSpider):
             "page_num": 1,
         }
         # 列表页是动态的，所以需要启用selenium
-        yield scrapy.Request(start_url, meta=meta, callback=self.parse)
+        yield scrapy.Request(self.start_url, meta=meta, callback=self.parse)
 
+    # import pysnooper
+
+    # @pysnooper.snoop()
     def parse(self, response):
         meta = response.meta
         if meta["page_num"] != -1:  # -1表示没有下一页了
@@ -60,12 +62,20 @@ class CSRCPenaltySpider(SeleniumSpider):
                 item["text_num"] = text_num
                 item["detail_url"] = link
                 # 构造请求，访问文章详情页并传递title参数
+                meta.update(
+                    {
+                        "useSelenium": True,
+                        "questCurrentLink": True,
+                        "purpose": "detail",
+                        "data": item,
+                    }
+                )
                 yield scrapy.Request(
                     url=link,
                     callback=self.parse_article,
-                    meta={"data": item},
+                    meta=meta,
+                    dont_filter=True,
                 )
-
             # 获取下一页的链接
             meta["page_num"] += 1
             MAX_PAGE = ReadWriteConfFile.getSectionValue(
@@ -98,11 +108,8 @@ class CSRCPenaltySpider(SeleniumSpider):
 
     def selenium_func(self, request):
         meta = request.meta
-        page = meta["page_num"]
         if meta["purpose"] == "next":
-            # 这个方法会在我们的下载器中间件返回Response之前被调用
-            # 等待content内容加载成功后，再继续
-            # 这样的话，我们就能在parse_content方法里应用选择器扣出#content了
+            page = meta["page_num"]
             # 通过“下一页”按钮翻页
             # a = waitForXpath(
             #     self.browser, "//a[@class='nextbtn' and text()='下一页']")
@@ -113,24 +120,34 @@ class CSRCPenaltySpider(SeleniumSpider):
                 "//div[@class='page_num']//input[@class='zxfinput' and @type='number']",
                 timeout=self.timeout,
             )
-            submit = waitForXpath(
+            input.clear()
+            input.send_keys(page)
+            waitForXpath(
                 self.browser,
                 "//div[@class='page_num']//span[@class='zxfokbtn' and text()='确定']",
                 timeout=self.timeout,
-            )
-            input.clear()
-            input.send_keys(page)
-            submit.click()
+            ).click()
+            # 此处等待翻页完成，显示当前页码已经是正确的页码，但页面内容却没有加载完成
             waitForXpath(
                 self.browser,
                 f"//div[@class='page_num']//span[@class='current' and text()={str(page)}]",
                 timeout=self.timeout,
             )
-            waitForXpath(
+            # 即使上面的等待也不一定能保证页面加载完成，所以这里再等待一下
+            time.sleep(random.uniform(2.6, 4.5))
+        elif meta["purpose"] == "list":
+            search_content = waitForXpath(
                 self.browser,
-                f"//div[@class='rightList']//ul[@class='list_ul']",
+                "//div[@class='search-content']/input[@id='content' and @type='text']",
                 timeout=self.timeout,
             )
+            search_content.clear()
+            search_content.send_keys("行政处罚决定书")
+            waitForXpath(
+                self.browser,
+                "//div[@class='search-content']/a[@class='search-icon']",
+                timeout=self.timeout,
+            ).click()
 
     def closed(self, reason):
         # # 判断文件是否存在

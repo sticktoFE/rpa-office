@@ -22,20 +22,22 @@ from myutils.info_out_manager import ReadWriteConfFile
 
 class OAProAdmitHaveDoneSpider(SeleniumSpider):
     name = "OAProAdmitHaveDone"
-    url_format = "http://oa.zybank.com.cn/#/sd-frame/sd-mytodolist"
+    start_url = "http://oa.zybank.com.cn/#/sd-frame/sd-mytodolist"
     # 制定专属pipeline
     custom_settings = {
         "ITEM_PIPELINES": {
             "mytools.general_spider.general_spider.pipelines.OAProAdmitHaveDonePipeline": 300
         }
     }
+    """
+        start_requests parse parse_detail三个标配方法
+        如果整体需要selenuim，那么就需要重写start_requests方法
+        在parse中，翻页questCurrentLink设为False，始终基于当前页的情况下翻页
+        在打开详情页时，视列表中能否获取详情链接来区别对待，存在的无需selenium
+        不存在则需要调动selenium，并存在切换窗口的情况，类似本模块的实现
+    """
 
     def start_requests(self):
-        # self.out_file = self.settings.get('out_file')
-        """
-        开始发起请求，记录页码
-        """
-        start_url = f"{self.url_format}"
         meta = {
             "useSelenium": True,
             "questCurrentLink": True,
@@ -45,21 +47,21 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
         }
         # 列表页是动态的，所以需要启用selenium
         yield scrapy.Request(
-            start_url, meta=meta, callback=self.parse, dont_filter=True
+            self.start_url, meta=meta, callback=self.parse, dont_filter=True
         )
 
     # 解析列表数据
     def parse(self, response):
         meta = response.meta
-        if meta["page_num"] != -1:  # -1表示没有下一页了
+        # -1表示没有下一页了
+        if meta["page_num"] != -1:
             self.current_url = response.url
             # 获取当前页面中的文章列表
             articles = response.xpath(
                 '//div[@role="tabpanel" and @aria-hidden="false" and @class="ant-tabs-tabpane ant-tabs-tabpane-active"]//tbody[@class="ant-table-tbody"]/tr[@class="ant-table-row ant-table-row-level-0"]'
             )
-            # articles = response.xpath('//*[@id="sd-body"]/section/section/main/section/main/div/div/div/div/div/div/div[3]/div[2]/div/div[2]/div/div/div/div/div/table/tbody')
             for article in articles:
-                time.sleep(random.randint(3, 6))
+                time.sleep(random.uniform(2.6, 5.5))
                 # 获取文章的标题和链接
                 title = article.xpath("./td[1]/@title").get()
                 # 仅针对科技需求任务进行获取
@@ -81,14 +83,13 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
                 except TimeoutException as e:
                     print(e)
                 time.sleep(random.uniform(1.6, 3.8))
-                # 也未涉及到跳转窗口，所以需要切换窗口
+                # 0、切换到打开浏览器新tab窗口
                 all_windows = self.browser.window_handles
                 for window in all_windows:
                     if window != current_window:
                         self.browser.switch_to.window(window)
 
-                # 寻找流程节点中产创办审核时间点
-                # 切换到“流程跟踪”
+                # 1、切换到“流程跟踪” 寻找流程节点中产创办审核时间点
                 submit = waitForXpath(
                     self.browser,
                     "//div[@class=' ant-tabs-tab' and @role='tab' and contains(text(),'流程跟踪')]",  # 2是已办理tab页
@@ -121,8 +122,7 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
                     self.browser.close()
                     self.browser.switch_to.window(current_window)
                     continue
-                # 如果满足时间范围，切换回需求表单获取相关内容
-                # 切换到“基本信息”
+                # 2、切换到“基本信息”，如果满足时间范围，切换回需求表单获取相关内容
                 submit = waitForXpath(
                     self.browser,
                     "//div[@class=' ant-tabs-tab' and @role='tab']/span[contains(text(),'基本信息')]",
@@ -149,7 +149,7 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
                 ):  # or not (item["submit_date"] <= self.settings.get("data_end_date") and item["submit_date"] >= self.settings.get("data_start_date")):
                     continue
                 yield item
-            # 翻页
+            # 翻页(所有爬虫标配)
             meta["page_num"] += 1
             max_page = ReadWriteConfFile.getSectionValue(
                 "General", "max_page", type="int"

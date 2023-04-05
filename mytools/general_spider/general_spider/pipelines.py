@@ -51,7 +51,7 @@ class TwistedPipeline(object):
         try:
             self.delete_item(cursor, item, table_name, primary)
             self.insert_item(cursor, item, table_name)
-        except:
+        except Exception:
             cursor.execute("ROLLBACK")
             raise
         else:

@@ -1,5 +1,4 @@
 import random
-from scrapy.http import HtmlResponse
 import logging
 import time
 from selenium.common.exceptions import TimeoutException
@@ -14,7 +13,6 @@ from fake_useragent import UserAgent
 # 搜索了两天，使用其他方式解决不了，这个方法还可以
 from fake_useragent import data
 from mytools.general_spider.general_spider.extension import IPProxy
-from scrapy.http.response.html import HtmlResponse
 from myutils.web_driver_manager import get_driver_ChromeDriver
 
 

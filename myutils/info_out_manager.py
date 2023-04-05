@@ -45,42 +45,6 @@ def print_var(content):
     return redirObj.content
 
 
-# class RedirectStdout:  #import os, sys, cStringIO
-#     def __init__(self):
-#         self.content = ''
-#         self.savedStdout = sys.stdout
-#         self.memObj, self.fileObj, self.nulObj = None, None, None
-
-#     #外部的print语句将执行本write()方法，并由当前sys.stdout输出
-#     def write(self, outStr):
-#         #self.content.append(outStr)
-#         self.content += outStr
-
-#     def toCons(self):  #标准输出重定向至控制台
-#         sys.stdout = self.savedStdout #sys.__stdout__
-
-#     def toMemo(self):  #标准输出重定向至内存
-#         self.memObj = StringIO()
-#         sys.stdout = self.memObj
-
-#     def toFile(self, file='out.txt'):  #标准输出重定向至文件
-#         self.fileObj = open(file, 'a+', 1) #改为行缓冲
-#         sys.stdout = self.fileObj
-
-#     def toMute(self):  #抑制输出
-#         self.nulObj = open(os.devnull, 'w')
-#         sys.stdout = self.nulObj
-
-
-#     def restore(self):
-#         self.content = ''
-#         if self.memObj.closed != True:
-#             self.memObj.close()
-#         if self.fileObj.closed != True:
-#             self.fileObj.close()
-#         if self.nulObj.closed != True:
-#             self.nulObj.close()
-#         sys.stdout = self.savedStdout #sys.__stdout__
 # 获取输出临时文件夹
 def get_temp_folder(
     execute_file_path=None, des_folder_name=None, is_clear_folder=False
@@ -129,8 +93,14 @@ def dump_json_table(source_dict, purpose_file):
             now_json = []
             now_json.append(source_dict)
     with open(purpose_file, "w", encoding="utf-8") as write_file:
+        # 使用json.dump时需解决中文乱码问题
         json.dump(
-            now_json, write_file, indent=4, separators=(",", ": "), sort_keys=True
+            now_json,
+            write_file,
+            indent=4,
+            separators=(",", ": "),
+            sort_keys=True,
+            ensure_ascii=False,
         )
         # write_file.write('\n')
 

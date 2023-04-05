@@ -1,8 +1,6 @@
 from pathlib import Path
-import random
 import subprocess
 from selenium import webdriver
-
 from myutils.info_out_manager import ReadWriteConfFile, get_temp_folder
 
 # 1、获取driver，用本地浏览器，据说可以有效反反爬
@@ -70,7 +68,8 @@ def get_driver_ChromeDriver(
         "download.default_directory": down_file_save_path.replace(
             "/", "\\"
         ),  # 必须采取 \\xx\\格式，/xx/格式会报错误，下载失败
-        "download.prompt_for_download": False,  # 为True则弹框，选择保存文件路径，False则用down_file_save_path为保存目录
+        # 为True则弹框，选择保存文件路径，False则用down_file_save_path为保存目录
+        "download.prompt_for_download": False,  # 是否显示下载提示框
     }
     options.add_experimental_option("prefs", prefs)
     # 此步骤很重要，设置为开发者模式，防止被各大网站识别出来使用了Selenium#禁止打印日志
@@ -122,7 +121,7 @@ def get_driver_ChromeDriver(
     driver = webdriver.Chrome(
         executable_path=f"{Path(__file__).parent}\\GoogleChromePortable\\chromedriver.exe",
         chrome_options=options,
-        port=random.randint(9000, 9999),
+        # port=random.randint(9000, 9999),
     )
     # driver = webdriver.Chrome(
     #     service=Service(ChromeDriverManager().install()), options=options
