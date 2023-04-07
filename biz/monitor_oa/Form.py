@@ -114,58 +114,12 @@ class Ui_Form(object):
 
         self.verticalLayout_5.addLayout(self.horizontalLayout_4)
 
-        self.horizontalLayout_6 = QHBoxLayout()
-        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
-        self.label_4 = QLabel(self.centralwidget)
-        self.label_4.setObjectName(u"label_4")
-
-        self.horizontalLayout_6.addWidget(self.label_4)
-
-        self.verticalLayout_3 = QVBoxLayout()
-        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
-        self.horizontalLayout_7 = QHBoxLayout()
-        self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
-        self.label_5 = QLabel(self.centralwidget)
-        self.label_5.setObjectName(u"label_5")
-
-        self.horizontalLayout_7.addWidget(self.label_5)
-
-        self.userID_oa = QLineEdit(self.centralwidget)
-        self.userID_oa.setObjectName(u"userID_oa")
-
-        self.horizontalLayout_7.addWidget(self.userID_oa)
-
-
-        self.verticalLayout_3.addLayout(self.horizontalLayout_7)
-
-        self.horizontalLayout_8 = QHBoxLayout()
-        self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
-        self.label_6 = QLabel(self.centralwidget)
-        self.label_6.setObjectName(u"label_6")
-
-        self.horizontalLayout_8.addWidget(self.label_6)
-
-        self.passwd_oa = QLineEdit(self.centralwidget)
-        self.passwd_oa.setObjectName(u"passwd_oa")
-        self.passwd_oa.setEchoMode(QLineEdit.Password)
-
-        self.horizontalLayout_8.addWidget(self.passwd_oa)
-
-
-        self.verticalLayout_3.addLayout(self.horizontalLayout_8)
-
-
-        self.horizontalLayout_6.addLayout(self.verticalLayout_3)
-
-
-        self.verticalLayout_5.addLayout(self.horizontalLayout_6)
-
         self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.taskTableWidget = QTableWidget(self.centralwidget)
-        if (self.taskTableWidget.columnCount() < 4):
-            self.taskTableWidget.setColumnCount(4)
+        if (self.taskTableWidget.columnCount() < 5):
+            self.taskTableWidget.setColumnCount(5)
         __qtablewidgetitem = QTableWidgetItem()
         self.taskTableWidget.setHorizontalHeaderItem(0, __qtablewidgetitem)
         __qtablewidgetitem1 = QTableWidgetItem()
@@ -174,6 +128,8 @@ class Ui_Form(object):
         self.taskTableWidget.setHorizontalHeaderItem(2, __qtablewidgetitem2)
         __qtablewidgetitem3 = QTableWidgetItem()
         self.taskTableWidget.setHorizontalHeaderItem(3, __qtablewidgetitem3)
+        __qtablewidgetitem4 = QTableWidgetItem()
+        self.taskTableWidget.setHorizontalHeaderItem(4, __qtablewidgetitem4)
         self.taskTableWidget.setObjectName(u"taskTableWidget")
         sizePolicy.setHeightForWidth(self.taskTableWidget.sizePolicy().hasHeightForWidth())
         self.taskTableWidget.setSizePolicy(sizePolicy)
@@ -308,9 +264,8 @@ class Ui_Form(object):
         self.verticalLayout_5.addLayout(self.verticalLayout_4)
 
         self.verticalLayout_5.setStretch(0, 1)
-        self.verticalLayout_5.setStretch(1, 1)
-        self.verticalLayout_5.setStretch(2, 6)
-        self.verticalLayout_5.setStretch(3, 2)
+        self.verticalLayout_5.setStretch(1, 6)
+        self.verticalLayout_5.setStretch(2, 2)
 
         self.horizontalLayout_15.addLayout(self.verticalLayout_5)
 
@@ -319,6 +274,8 @@ class Ui_Form(object):
 
         self.horizontalLayout_15.addWidget(self.out_log)
 
+        self.horizontalLayout_15.setStretch(0, 6)
+        self.horizontalLayout_15.setStretch(1, 4)
 
         self.verticalLayout_6.addLayout(self.horizontalLayout_15)
 
@@ -326,17 +283,11 @@ class Ui_Form(object):
 #if QT_CONFIG(shortcut)
         self.label.setBuddy(self.userID)
         self.label_2.setBuddy(self.passwd)
-        self.label_5.setBuddy(self.userID_oa)
-        self.label_6.setBuddy(self.passwd_oa)
         self.label_7.setBuddy(self.interval_edit)
         self.label_11.setBuddy(self.interval_edit)
-        self.label_9.setBuddy(self.userID_oa)
-        self.label_10.setBuddy(self.userID_oa)
 #endif // QT_CONFIG(shortcut)
         QWidget.setTabOrder(self.userID, self.passwd)
-        QWidget.setTabOrder(self.passwd, self.userID_oa)
-        QWidget.setTabOrder(self.userID_oa, self.passwd_oa)
-        QWidget.setTabOrder(self.passwd_oa, self.fileAdd)
+        QWidget.setTabOrder(self.passwd, self.fileAdd)
         QWidget.setTabOrder(self.fileAdd, self.fileRemove)
         QWidget.setTabOrder(self.fileRemove, self.taskTableWidget)
         QWidget.setTabOrder(self.taskTableWidget, self.interval_edit)
@@ -357,9 +308,6 @@ class Ui_Form(object):
         self.label_3.setText(QCoreApplication.translate("Form", u"\u90ae\u7bb1", None))
         self.label.setText(QCoreApplication.translate("Form", u"\u767b\u5f55\u7528\u6237", None))
         self.label_2.setText(QCoreApplication.translate("Form", u"\u767b\u5f55\u5bc6\u7801", None))
-        self.label_4.setText(QCoreApplication.translate("Form", u"OA", None))
-        self.label_5.setText(QCoreApplication.translate("Form", u"\u767b\u5f55\u7528\u6237", None))
-        self.label_6.setText(QCoreApplication.translate("Form", u"\u767b\u5f55\u5bc6\u7801", None))
         ___qtablewidgetitem = self.taskTableWidget.horizontalHeaderItem(0)
         ___qtablewidgetitem.setText(QCoreApplication.translate("Form", u"\u767b\u5f55\u7c7b\u578b", None));
         ___qtablewidgetitem1 = self.taskTableWidget.horizontalHeaderItem(1)
@@ -367,7 +315,9 @@ class Ui_Form(object):
         ___qtablewidgetitem2 = self.taskTableWidget.horizontalHeaderItem(2)
         ___qtablewidgetitem2.setText(QCoreApplication.translate("Form", u"\u7528\u6237\u5bc6\u7801", None));
         ___qtablewidgetitem3 = self.taskTableWidget.horizontalHeaderItem(3)
-        ___qtablewidgetitem3.setText(QCoreApplication.translate("Form", u"\u72b6\u6001", None));
+        ___qtablewidgetitem3.setText(QCoreApplication.translate("Form", u"\u6267\u884c\u722c\u866b\u540d\u79f0", None));
+        ___qtablewidgetitem4 = self.taskTableWidget.horizontalHeaderItem(4)
+        ___qtablewidgetitem4.setText(QCoreApplication.translate("Form", u"\u72b6\u6001", None));
         self.fileAdd.setText(QCoreApplication.translate("Form", u"\u6dfb\u52a0", None))
         self.fileRemove.setText(QCoreApplication.translate("Form", u"\u79fb\u9664", None))
         self.label_7.setText(QCoreApplication.translate("Form", u"\u6267\u884c\u95f4\u9694\uff08\u79d2\uff09\uff1a", None))

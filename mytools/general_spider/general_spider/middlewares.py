@@ -62,10 +62,10 @@ class SeleniumDownloaderMiddleware(object):
         # 那么该Request就认定为需要启用selenium来进行渲染html
         # 依靠meta中的标记，来决定是否需要使用selenium来爬取
         usedSelenium = request.meta.get("useSelenium", False)
-        questCurrentLink = request.meta.get("questCurrentLink", True)
+        loadRequestUrl = request.meta.get("loadRequestUrl", True)
         if usedSelenium:
             # 控制浏览器打开目标链接,针对需要模拟浏览器打开目标连接，就不要使用传进来的连接，如需要翻页的场景
-            if questCurrentLink:
+            if loadRequestUrl:
                 spider.browser.get(request.url)
             # 在构造渲染后的HtmlResponse之前，做一些事情
             # 1.比如等待浏览器页面中的某个元素出现后，再返回渲染后的html；

@@ -6,12 +6,12 @@ import random
 import time
 from mytools.general_spider.SpiderManager import run_spiders
 from myutils.GeneralThread import Worker
-from myutils.info_out_manager import ReadWriteConfFile, get_temp_folder
+from myutils.info_out_manager import get_temp_folder
 from biz.monitor_oa.zy_email import SeleMail
 from biz.monitor_oa.tx_doc import TXDocument
-from biz.monitor_oa.wc_sendinfo import send_webchat
 from PySide6.QtCore import QThreadPool
 from multiprocessing import Process, Queue
+from biz.monitor_oa.wc_sendinfo import send_webchat
 
 
 # 获取数据形成文件
@@ -38,16 +38,13 @@ class RPAClient:
 
     # @pysnooper.snoop(depth=1)
     def scrapy_info(self):
-        spider_names = ReadWriteConfFile.getSectionValue(
-            "Client", "spider_names"
-        ).split("~")
         processes = []
         result_queue = Queue()
         # Create and start multiple worker processes
         for i, account_passwd in enumerate(self.scrapy_account):
             scrapy_userID = account_passwd[0]
             scrapy_passwd = account_passwd[1]
-            spider_name = spider_names[i]
+            spider_name = account_passwd[2]
             out_file = f"{self.out_folder}/{scrapy_userID}.txt"
             process = Process(
                 target=run_spiders,
@@ -68,7 +65,6 @@ class RPAClient:
             )
             process.start()
             processes.append(process)
-
         # Wait for all processes to complete
         for p in processes:
             p.join()

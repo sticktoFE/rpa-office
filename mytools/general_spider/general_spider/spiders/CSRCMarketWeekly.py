@@ -27,7 +27,7 @@ class CSRCMarketWeeklySpider(SeleniumSpider):
         """
         meta = {
             "useSelenium": True,
-            "questCurrentLink": True,
+            "loadRequestUrl": True,
             "dont_redirect": True,
             "purpose": "list",
             "page_num": 1,
@@ -60,7 +60,7 @@ class CSRCMarketWeeklySpider(SeleniumSpider):
                 meta.update(
                     {
                         "useSelenium": True,
-                        "questCurrentLink": True,
+                        "loadRequestUrl": True,
                         "dont_redirect": True,
                         "purpose": "download",
                         "data": item,
@@ -79,7 +79,7 @@ class CSRCMarketWeeklySpider(SeleniumSpider):
                 meta.update(
                     {
                         "useSelenium": True,
-                        "questCurrentLink": True,
+                        "loadRequestUrl": True,
                         "dont_redirect": True,
                         "purpose": "next",
                     }

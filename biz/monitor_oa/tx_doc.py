@@ -35,7 +35,7 @@ class TXDocument:
     def login(self):
         # 启动chrome的地址，需要下载chromedriver文件，下载地址https://registry.npmmirror.com/binary.html?path=chromedriver
         self.driver.get(
-            "https://docs.qq.com/sheet/DVFNudFdYUFpQRnhJ?tab=s93vnj&u=621c3ece0c4042ab96d46a84bf74d1da"
+            "https://docs.qq.com/sheet/DVFNudFdYUFpQRnhJ?tab=s93vnj&_t=1680773031705&u=8924b60228f34d339d4c91fa99605a65"
         )  # 填写表的地址
         # self.driver.switch_to.frame("login_frame")
         try:
@@ -207,7 +207,11 @@ class TXDocument:
                 edit_text.send_keys("" if content is None else content)
                 # ActionChains(self.driver).send_keys(Keys.ALT + Keys.ENTER).perform()
         else:
-            edit_text.send_keys("" if contents is None else contents)
+            if contents is None:
+                contents = ""
+            else:
+                contents = re.sub(r"\t+", " ", contents).strip()
+            edit_text.send_keys(contents)
         # 上面输入完内容，按esc手动操作是可以继续挪动单元格的，但程序中传入却会删除值，所以只能tab一下，并把列指引加1
         edit_text.send_keys(Keys.TAB)
         self.curent_point_col = self.curent_point_col + 1
@@ -215,11 +219,11 @@ class TXDocument:
     # 更新内容到腾讯文档，升级一下，加快速度
     def modify_up(self, infolder):
         self.login()
+        # 根据主键生成主键相关数据
+        self.produce_doc_metadat(key_title="需求编号")
         # 循环文件夹下的特定文件，解析到线上文档
         for infile in Path(infolder).glob("*_finished"):
             list_generator = load_json_table(infile)
-            # 根据主键生成主键相关数据
-            self.produce_doc_metadat(key_title="需求编号")
             # 循环字典形成的列表
             for line_record in list_generator:
                 demand_no = line_record.get("demand_no")

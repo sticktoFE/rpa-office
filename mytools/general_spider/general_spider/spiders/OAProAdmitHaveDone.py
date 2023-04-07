@@ -40,7 +40,7 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
     def start_requests(self):
         meta = {
             "useSelenium": True,
-            "questCurrentLink": True,
+            "loadRequestUrl": True,
             "dont_redirect": False,
             "purpose": "login",
             "page_num": 1,
@@ -158,7 +158,7 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
                 meta.update(
                     {
                         "useSelenium": True,
-                        "questCurrentLink": False,
+                        "loadRequestUrl": False,
                         "dont_redirect": True,
                         "purpose": "next",
                     }

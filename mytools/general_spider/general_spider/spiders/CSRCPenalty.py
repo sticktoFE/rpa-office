@@ -1,11 +1,11 @@
 import random
+import re
 import time
 import scrapy
 from mytools.general_spider.general_spider.items import CSRCPenaltyItem
 from mytools.general_spider.general_spider.extension.SeleniumSpider import (
     SeleniumSpider,
 )
-
 from mytools.general_spider.general_spider.extension.tools import waitForXpath
 from pathlib import Path
 from myutils.info_out_manager import ReadWriteConfFile
@@ -27,7 +27,7 @@ class CSRCPenaltySpider(SeleniumSpider):
         """
         meta = {
             "useSelenium": True,
-            "questCurrentLink": True,
+            "loadRequestUrl": True,
             "dont_redirect": True,
             "purpose": "list",
             "page_num": 1,
@@ -50,7 +50,9 @@ class CSRCPenaltySpider(SeleniumSpider):
                 if i == 3:  # 为了测试 取两个记录即退出
                     break
                 # 获取文章的标题和链接
-                title = article.xpath("./td[2]/a/text()").get()
+                title = article.xpath("./td[2]/a/@title").get()
+                # 把里面的html标签去掉
+                title = re.sub(r"<[/]?.*?>", "", title)
                 link = article.xpath("./td[2]/a/@href").get()
                 text_num = article.xpath("./td[3]/text()").get()
                 date = article.xpath("./td[4]//text()").get()
@@ -64,8 +66,8 @@ class CSRCPenaltySpider(SeleniumSpider):
                 # 构造请求，访问文章详情页并传递title参数
                 meta.update(
                     {
-                        "useSelenium": True,
-                        "questCurrentLink": True,
+                        "useSelenium": False,
+                        "loadRequestUrl": True,
                         "purpose": "detail",
                         "data": item,
                     }
@@ -85,8 +87,7 @@ class CSRCPenaltySpider(SeleniumSpider):
                 meta.update(
                     {
                         "useSelenium": True,
-                        "questCurrentLink": True,
-                        "dont_redirect": True,
+                        "loadRequestUrl": False,
                         "purpose": "next",
                     }
                 )
@@ -106,6 +107,7 @@ class CSRCPenaltySpider(SeleniumSpider):
         item["content"] = content
         yield item
 
+    # 使用selenuim时，各种动作处理
     def selenium_func(self, request):
         meta = request.meta
         if meta["purpose"] == "next":
@@ -133,8 +135,9 @@ class CSRCPenaltySpider(SeleniumSpider):
                 f"//div[@class='page_num']//span[@class='current' and text()={str(page)}]",
                 timeout=self.timeout,
             )
-            # 即使上面的等待也不一定能保证页面加载完成，所以这里再等待一下
-            time.sleep(random.uniform(2.6, 4.5))
+            # 因为换页时是先输入关键字查询再跳转到相应页，比较耗时
+            # 所以即使上面的等待也不一定能保证页面加载完成，所以这里再等待一下
+            time.sleep(random.uniform(5.5, 6.5))
         elif meta["purpose"] == "list":
             search_content = waitForXpath(
                 self.browser,
@@ -148,6 +151,7 @@ class CSRCPenaltySpider(SeleniumSpider):
                 "//div[@class='search-content']/a[@class='search-icon']",
                 timeout=self.timeout,
             ).click()
+            time.sleep(random.uniform(5.5, 6.5))
 
     def closed(self, reason):
         # # 判断文件是否存在

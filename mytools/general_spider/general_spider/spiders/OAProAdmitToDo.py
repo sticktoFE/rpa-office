@@ -38,7 +38,7 @@ class OAProAdmitToDoSpider(SeleniumSpider):
         start_url = f"{self.url_format}"
         meta = {
             "useSelenium": True,
-            "questCurrentLink": True,
+            "loadRequestUrl": True,
             "dont_redirect": False,
             "purpose": "login",
             "page_num": 1,
@@ -119,7 +119,7 @@ class OAProAdmitToDoSpider(SeleniumSpider):
                 meta.update(
                     {
                         "useSelenium": True,
-                        "questCurrentLink": False,
+                        "loadRequestUrl": False,
                         "dont_redirect": True,
                         "purpose": "next",
                     }
