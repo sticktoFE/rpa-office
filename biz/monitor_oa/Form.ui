@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>825</width>
-    <height>772</height>
+    <width>1045</width>
+    <height>726</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -147,6 +147,11 @@
             <column>
              <property name="text">
               <string>用户密码</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>栏目</string>
              </property>
             </column>
             <column>

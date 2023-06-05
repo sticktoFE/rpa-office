@@ -57,14 +57,10 @@ class OCRGeneral(QThread):
         # self.signal.emit((cv2_img,out_info,html_content))
 
 
-"""
-    第二版 实现的划区域截图 独立线程
-    先截图形成长图，再统一分割图片去识别，速度较慢
-    """
-
-
 class OCRScrollOut(QThread):
     """
+    第二版 实现的划区域截图 独立线程
+    先截图形成长图，再统一分割图片去识别，速度较慢
     对图片进行ocr识别，作为识别工具直接展示识别内容
     """
 
@@ -255,10 +251,11 @@ class TasksThread(QThread):
         self.tasks.start()
 
 
-# 定義任務，在這裏主要創建線程
-
-
 class Tasks(QObject):
+    """
+    # 定義任務，在這裏主要創建線程
+    """
+
     def __init__(self, communication, img_package_list, max_thread_number):
         super().__init__()
         # self.pool = QThreadPool.globalInstance() 用这个会导致界面卡死，找不到原因

@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'Form.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.4.2
+## Created by: Qt User Interface Compiler version 6.5.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -24,7 +24,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(825, 772)
+        Form.resize(1045, 726)
         sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -118,8 +118,8 @@ class Ui_Form(object):
         self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.taskTableWidget = QTableWidget(self.centralwidget)
-        if (self.taskTableWidget.columnCount() < 5):
-            self.taskTableWidget.setColumnCount(5)
+        if (self.taskTableWidget.columnCount() < 6):
+            self.taskTableWidget.setColumnCount(6)
         __qtablewidgetitem = QTableWidgetItem()
         self.taskTableWidget.setHorizontalHeaderItem(0, __qtablewidgetitem)
         __qtablewidgetitem1 = QTableWidgetItem()
@@ -130,6 +130,8 @@ class Ui_Form(object):
         self.taskTableWidget.setHorizontalHeaderItem(3, __qtablewidgetitem3)
         __qtablewidgetitem4 = QTableWidgetItem()
         self.taskTableWidget.setHorizontalHeaderItem(4, __qtablewidgetitem4)
+        __qtablewidgetitem5 = QTableWidgetItem()
+        self.taskTableWidget.setHorizontalHeaderItem(5, __qtablewidgetitem5)
         self.taskTableWidget.setObjectName(u"taskTableWidget")
         sizePolicy.setHeightForWidth(self.taskTableWidget.sizePolicy().hasHeightForWidth())
         self.taskTableWidget.setSizePolicy(sizePolicy)
@@ -315,9 +317,11 @@ class Ui_Form(object):
         ___qtablewidgetitem2 = self.taskTableWidget.horizontalHeaderItem(2)
         ___qtablewidgetitem2.setText(QCoreApplication.translate("Form", u"\u7528\u6237\u5bc6\u7801", None));
         ___qtablewidgetitem3 = self.taskTableWidget.horizontalHeaderItem(3)
-        ___qtablewidgetitem3.setText(QCoreApplication.translate("Form", u"\u6267\u884c\u722c\u866b\u540d\u79f0", None));
+        ___qtablewidgetitem3.setText(QCoreApplication.translate("Form", u"\u680f\u76ee", None));
         ___qtablewidgetitem4 = self.taskTableWidget.horizontalHeaderItem(4)
-        ___qtablewidgetitem4.setText(QCoreApplication.translate("Form", u"\u72b6\u6001", None));
+        ___qtablewidgetitem4.setText(QCoreApplication.translate("Form", u"\u6267\u884c\u722c\u866b\u540d\u79f0", None));
+        ___qtablewidgetitem5 = self.taskTableWidget.horizontalHeaderItem(5)
+        ___qtablewidgetitem5.setText(QCoreApplication.translate("Form", u"\u72b6\u6001", None));
         self.fileAdd.setText(QCoreApplication.translate("Form", u"\u6dfb\u52a0", None))
         self.fileRemove.setText(QCoreApplication.translate("Form", u"\u79fb\u9664", None))
         self.label_7.setText(QCoreApplication.translate("Form", u"\u6267\u884c\u95f4\u9694\uff08\u79d2\uff09\uff1a", None))

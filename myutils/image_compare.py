@@ -251,12 +251,12 @@ class PicMatcher:
         # imwrite对路径要求只能是数字和英文，很苛刻--这里保留遗迹，尽量用cv2.imencode
         file_time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
         # 保存各自图片（保存合体划线图即可，所以注释了）
-        # cv2.imencode(".jpg", im1)[1].tofile(
-        #     f"{self.draw_match_output_path}/{file_time}_01.png"
-        # )
-        # cv2.imencode(".jpg", im2)[1].tofile(
-        #     f"{self.draw_match_output_path}/{file_time}_02.png"
-        # )
+        cv2.imencode(".jpg", im1)[1].tofile(
+            f"{self.draw_match_output_path}/{file_time}_01.png"
+        )
+        cv2.imencode(".jpg", im2)[1].tofile(
+            f"{self.draw_match_output_path}/{file_time}_02.png"
+        )
         cv2.imencode(".jpg", img3)[1].tofile(
             f"{self.draw_match_output_path}/{file_time}_match.png"
         )

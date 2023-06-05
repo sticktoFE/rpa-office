@@ -18,8 +18,6 @@ from myutils import image_convert
 import pyautogui as pg
 from ui.component.TipsShower import TipsShower
 
-# pg.PAUSE = 1  # 所有指令间隔1秒
-
 
 # import pyautogui as pg
 class roller_mask(QLabel):  # 滚动截屏遮罩层
@@ -33,7 +31,7 @@ class roller_mask(QLabel):  # 滚动截屏遮罩层
         self.tips = TipsShower("单击自动滚动;\n或手动下滚;", area)
         self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
-        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setPixmap(transparentpix)
         self.showFullScreen()
 
@@ -140,7 +138,7 @@ class Screenshot(QObject):  # 滚动截屏主类
         x, y, w, h = area
         # 拖动的鼠标落脚点选择很重要，最好选择有文字内容，但对于网页可以选中的区域，这样下面才能判断时滚动鼠标还是拖动
         # 下面使用随机数来随机落到下半区域位置
-        mouse_pos_x, mouse_pos_y = x + w / 2, y + h * random.uniform(0.5, 0.99)
+        mouse_pos_x, mouse_pos_y = x + w / 2, y + h * random.uniform(0.4, 0.8)
         mouse_scroll_distance = int(h * 2 / 4)  # 每次滚动的距离
         self.rollermask.tips.setText("正在自动滚动，单击中键停止")
 

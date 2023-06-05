@@ -92,9 +92,10 @@ class MainWindow(QMainWindow, Ui_Form):
                 ):
                     userID_oa_ = keyring.get_password("myapp", f"userID_oa_{one_para}")
                     passwd_oa_ = keyring.get_password("myapp", f"passwd_oa_{one_para}")
+                    which_tab_ = keyring.get_password("myapp", f"which_tab_{one_para}")
                     scrapy_oa_ = keyring.get_password("myapp", f"scrapy_oa_{one_para}")
                     self.insert_row_inTable(
-                        "OA", userID_oa_, passwd_oa_, scrapy_oa_, "有效"
+                        "OA", userID_oa_, passwd_oa_, which_tab_, scrapy_oa_, "有效"
                     )
             except keyring.errors.NoKeyringError:
                 # 如果没有安装任何密钥环后端，使用默认密码
@@ -181,16 +182,24 @@ class MainWindow(QMainWindow, Ui_Form):
                 )
             for row in range(config_parameter_row_count):
                 item_type = self.taskTableWidget.cellWidget(row, 0).currentText()
-                item_status = self.taskTableWidget.cellWidget(row, 4).currentText()
+                item_status = self.taskTableWidget.cellWidget(row, 5).currentText()
                 if item_type is not None and item_type == "OA" and item_status == "有效":
                     # 获取单元格文本
                     item_user = self.taskTableWidget.item(row, 1).text()
                     item_passwd = self.taskTableWidget.item(row, 2).text()
-                    item_scrapy = self.taskTableWidget.cellWidget(row, 3).currentText()
-                    userID_Passwd.append((item_user, item_passwd, item_scrapy))
+                    item_which_tab = self.taskTableWidget.cellWidget(
+                        row, 3
+                    ).currentText()
+                    item_scrapy = self.taskTableWidget.cellWidget(row, 4).currentText()
+                    userID_Passwd.append(
+                        (item_user, item_passwd, item_which_tab, item_scrapy)
+                    )
                     if self.remember_check.isChecked():
                         keyring.set_password("myapp", f"userID_oa_{row}", item_user)
                         keyring.set_password("myapp", f"passwd_oa_{row}", item_passwd)
+                        keyring.set_password(
+                            "myapp", f"whichTab_oa_{row}", item_which_tab
+                        )
                         keyring.set_password("myapp", f"scrapy_oa_{row}", item_scrapy)
             if self.rpa_client.isChecked():
                 # 打开代理
@@ -231,7 +240,7 @@ class MainWindow(QMainWindow, Ui_Form):
         self.out_log.setTextCursor(cursor)
         self.out_log.ensureCursorVisible()
 
-    def insert_row_inTable(self, account_type, user, passwd, scrapy, status):
+    def insert_row_inTable(self, account_type, user, passwd, which_tab, scrapy, status):
         row = self.taskTableWidget.rowCount()
         # 在末尾插入一空行
         self.taskTableWidget.insertRow(row)
@@ -247,24 +256,30 @@ class MainWindow(QMainWindow, Ui_Form):
         item_passwd = QTableWidgetItem(passwd)
         item_passwd.setFlags(item_passwd.flags() | Qt.ItemIsEditable)
         self.taskTableWidget.setItem(row, 2, item_passwd)
-        # 执行的爬虫对象
-        comBox_class_method = QComboBox()
+        # 执行哪一个栏目
+        comBox_which_tab = QComboBox()
         # addItem 参数为text 和 data值，如果两者一样，可以用addItems即可
-        comBox_class_method.addItems(
+        comBox_which_tab.addItems(["已处理", "已办结"])
+        comBox_which_tab.setCurrentText(which_tab)  # 选择哪个值
+        self.taskTableWidget.setCellWidget(row, 3, comBox_which_tab)
+        # 执行的爬虫对象
+        comBox_scrapy_name = QComboBox()
+        # addItem 参数为text 和 data值，如果两者一样，可以用addItems即可
+        comBox_scrapy_name.addItems(
             ["csrc_penalty", "OAProAdmitHaveDone", "csrc_market_weekly"]
         )
-        comBox_class_method.setCurrentText(scrapy)  # 选择哪个值
-        self.taskTableWidget.setCellWidget(row, 3, comBox_class_method)
-
+        comBox_scrapy_name.setCurrentText(scrapy)  # 选择哪个值
+        self.taskTableWidget.setCellWidget(row, 4, comBox_scrapy_name)
+        # 状态
         comBox_class_method = QComboBox()
         comBox_class_method.addItems(["有效", "无效"])
         comBox_class_method.setCurrentText(status)  # 选择哪个值
-        self.taskTableWidget.setCellWidget(row, 4, comBox_class_method)
+        self.taskTableWidget.setCellWidget(row, 5, comBox_class_method)
 
     # 点击添加文件
     @Slot()
     def on_fileAdd_clicked(self):
-        self.insert_row_inTable("OA", "", "", "OAProAdmitHaveDone", "有效")
+        self.insert_row_inTable("OA", "", "", "已处理", "OAProAdmitHaveDone", "有效")
 
     # 点击移除
     @Slot()

@@ -5,6 +5,8 @@ from chains.local_doc_qa import LocalDocQA
 from configs.model_config import *
 import nltk
 
+from myutils.info_out_manager import get_temp_folder
+
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
 
@@ -27,6 +29,7 @@ llm_model_dict_list = list(llm_model_dict.keys())
 
 local_doc_qa = LocalDocQA()
 
+flagged_path = get_temp_folder(__file__)
 flag_csv_logger = gr.CSVLogger()
 
 
@@ -458,7 +461,7 @@ with gr.Blocks(css=block_css) as demo:
                         ],
                         outputs=[vs_path, folder_files, chatbot],
                     )
-                    flag_csv_logger.setup([query, vs_path, chatbot, mode], "flagged")
+                    flag_csv_logger.setup([query, vs_path, chatbot, mode], flagged_path)
                     query.submit(
                         get_answer, [query, vs_path, chatbot, mode], [chatbot, query]
                     )
@@ -618,7 +621,7 @@ with gr.Blocks(css=block_css) as demo:
                         ],
                         outputs=[vs_path, files, chatbot],
                     )
-                    flag_csv_logger.setup([query, vs_path, chatbot, mode], "flagged")
+                    flag_csv_logger.setup([query, vs_path, chatbot, mode], flagged_path)
                     query.submit(
                         get_answer,
                         [

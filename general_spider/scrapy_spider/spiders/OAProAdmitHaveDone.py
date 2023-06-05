@@ -246,7 +246,8 @@ class OAProAdmitHaveDoneSpider(SeleniumSpider):
                 timeout=self.timeout,
             )
             # 切换到已处理或已办结
-            which_tab = ReadWriteConfFile.getSectionValue("Client", "which_tab")
+            # which_tab = ReadWriteConfFile.getSectionValue("Client", "which_tab")
+            which_tab = self.settings.get("which_tab")
             submit = waitForXpath(
                 self.browser,
                 f"//div[@class=' ant-tabs-tab' and @role='tab' and contains(text(),'{which_tab}')]",  # 已处理或已办结tab页

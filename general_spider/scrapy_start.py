@@ -25,6 +25,7 @@ def run_spiders(
     spider_name,
     userID,
     passwd,
+    which_tab,
     data_start_date,
     data_end_date,
     out_file=None,
@@ -36,6 +37,7 @@ def run_spiders(
     settings = get_project_settings()
     settings.set("userID", userID)
     settings.set("passwd", passwd)
+    settings.set("which_tab", which_tab)
     settings.set("out_file", out_file)
     settings.set("down_path", down_path)
     settings.set("browser_parameter_name", browser_parameter_name)

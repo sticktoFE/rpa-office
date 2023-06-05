@@ -41,10 +41,11 @@ class RPAClient:
         processes = []
         result_queue = Queue()
         # Create and start multiple worker processes
-        for i, account_passwd in enumerate(self.scrapy_account):
+        for account_passwd in self.scrapy_account:
             scrapy_userID = account_passwd[0]
             scrapy_passwd = account_passwd[1]
-            spider_name = account_passwd[2]
+            which_tab = account_passwd[2]
+            spider_name = account_passwd[3]
             out_file = f"{self.out_folder}/{scrapy_userID}.txt"
             process = Process(
                 target=run_spiders,
@@ -53,6 +54,7 @@ class RPAClient:
                     spider_name,
                     scrapy_userID,
                     scrapy_passwd,
+                    which_tab,
                     self.data_start_date,
                     self.data_end_date,
                 ),
