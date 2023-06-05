@@ -1,13 +1,17 @@
 from PySide6.QtWidgets import QLabel
 from PySide6.QtCore import QTimer, Qt
-from PySide6.QtGui import QColor,QFont,QGuiApplication,QCursor
+from PySide6.QtGui import QColor, QFont, QGuiApplication, QCursor
+
+
 class TipsShower(QLabel):
-    def __init__(self, text, targetarea=(0, 0, 0, 0), parent=None, fontsize=60, timeout=1000):
+    def __init__(
+        self, text, targetarea=(0, 0, 0, 0), parent=None, fontsize=60, timeout=1000
+    ):
         super().__init__(parent)
         self.parent = parent
         self.area = targetarea
         self.timeout = timeout
-        self.rfont = QFont('微软雅黑', fontsize)
+        self.rfont = QFont("微软雅黑", fontsize)
         self.setFont(self.rfont)
         self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
@@ -17,8 +21,10 @@ class TipsShower(QLabel):
         self.setText(text)
         self.show()
         self.setStyleSheet("color:red;background-color:rgb(200,200,100);")
-        
-    def setText(self, text, autoclose=True, font: QFont = None, color: QColor = None) -> None:
+
+    def setText(
+        self, text, autoclose=True, font: QFont = None, color: QColor = None
+    ) -> None:
         super(TipsShower, self).setText(text)
         self.adjustSize()
         x, y, w, h = self.area
@@ -39,7 +45,7 @@ class TipsShower(QLabel):
             self.setStyleSheet(f"color:{color.name()}")
 
     def hide(self) -> None:
-        super(TipsShower, self).hide()
+        super().hide()
         self.timer.stop()
         # self.setFont(self.rfont)
         # self.setStyleSheet("color:red")

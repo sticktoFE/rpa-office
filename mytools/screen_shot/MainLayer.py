@@ -1,4 +1,4 @@
-from myutils.GeneralThread import Worker
+from myutils.GeneralQThread import Worker
 from myutils import image_convert, globalvar
 from ui.component.TipsShower import TipsShower
 from .SFreezer import Freezer
@@ -11,13 +11,12 @@ from PySide6.QtGui import (
     QPainter,
     QIcon,
     QFont,
-    QColor,
 )
 from PySide6.QtWidgets import QApplication, QLabel, QPushButton, QFileDialog, QGroupBox
 from .SInfoWindow import FramelessEnterSendQTextEdit
 from .MaskLayer import MaskLayer
 from .SAIFinder import Finder
-from .RollScreenshot import RollScreenshot
+from .Screenshot import Screenshot
 from pynput.mouse import Controller
 
 # 导入图片资源以便使用
@@ -59,33 +58,10 @@ class MainLayer(QLabel):  # 区域截图功能
         self.backup_pic_list = []  # 备份页面的数组,用于前进/后退
         self.on_init = False
         # 滚动截屏操作
-        self.rollSS = RollScreenshot(draw=True)
+        self.rollSS = Screenshot(draw=True)
         self.rollSS.showm_signal.connect(self.in_roll_shot)
         self.rollSS.finish_signal.connect(self.after_roll_shot)
         # self.rollSS.progress_signal.connect(self.progress_signal.emit)
-
-    # 初始化参数
-    def init_parameters(self):
-        # 智能选区开关
-        # self.smartcursor_on = True
-        # 正在自动寻找选取的控制变量,就进入截屏之后会根据鼠标移动到的位置自动选取,
-        self.finding_rect = True
-        self.NpainterNmoveFlag = (
-            self.choicing
-        ) = (
-            self.move_rect
-        ) = (
-            self.move_y0
-        ) = self.move_x0 = self.move_x1 = self.change_alpha = self.move_y1 = False
-        self.x0 = (
-            self.y0
-        ) = (
-            self.rx0
-        ) = self.ry0 = self.x1 = self.y1 = self.mouse_posx = self.mouse_posy = -50
-        self.bx = self.by = 0
-        self.alpha = 255  # 透明度值
-        self.tool_width = 5
-        self.roller_area = (0, 0, 1, 1)
 
     # 初始化界面的参数
     def init_slabel_ui(self):
@@ -144,11 +120,34 @@ class MainLayer(QLabel):  # 区域截图功能
         # tipsfont.setBold(True)
         self.Tipsshower.setFont(tipsfont)
 
+    # 初始化参数
+    def init_parameters(self):
+        # 智能选区开关
+        # self.smartcursor_on = True
+        # 正在自动寻找选取的控制变量,就进入截屏之后会根据鼠标移动到的位置自动选取,
+        self.finding_rect = True
+        self.NpainterNmoveFlag = (
+            self.choicing
+        ) = (
+            self.move_rect
+        ) = (
+            self.move_y0
+        ) = self.move_x0 = self.move_x1 = self.change_alpha = self.move_y1 = False
+        self.x0 = (
+            self.y0
+        ) = (
+            self.rx0
+        ) = self.ry0 = self.x1 = self.y1 = self.mouse_posx = self.mouse_posy = -50
+        self.bx = self.by = 0
+        self.alpha = 255  # 透明度值
+        self.tool_width = 5
+        self.roller_area = (0, 0, 1, 1)
+
     def search_in_which_screen(self):
         mousepos = Controller().position
         screens = QApplication.screens()
         # 默认是主屏幕，屏幕坐标原点是 0，0
-        getscreen = (QApplication.primaryScreen(),0,0)
+        getscreen = (QApplication.primaryScreen(), 0, 0)
         for screen in screens:
             rect = screen.geometry().getRect()
             screen_x_begin = rect[0]
@@ -161,7 +160,7 @@ class MainLayer(QLabel):  # 区域截图功能
             if mouse_x in range(screen_x_begin, screen_x_end) and mouse_y in range(
                 screen_y_begin, screen_y_end
             ):
-                getscreen = (screen,screen_x_begin,screen_y_begin)
+                getscreen = (screen, screen_x_begin, screen_y_begin)
                 break
         return getscreen
 
@@ -425,6 +424,21 @@ class MainLayer(QLabel):  # 区域截图功能
             # self.confirm_botton.show()
             self.update()
 
+    # 后台初始化截屏线程,用于寻找所有智能选区
+    def init_ss_thread_fun(self, get_pix):
+        self.x0 = self.y0 = 0
+        self.x1 = globalvar.get_var("SCREEN_WIDTH")
+        self.y1 = globalvar.get_var("SCREEN_HEIGHT")
+        self.mouse_posx = self.mouse_posy = -150
+        self.qimg = get_pix.toImage()
+        temp_shape = (self.qimg.height(), self.qimg.width(), 4)
+        ptr = self.qimg.bits()
+        # ptr.setsize(self.qimg.byteCount())
+        result = np.array(ptr, dtype=np.uint8).reshape(temp_shape)[..., :3]
+        self.finder.img = result
+        self.finder.find_contours_setup()
+        QApplication.processEvents()
+
     # 1、截屏函数,功能有二:当有传入pix时直接显示pix中的图片作为截屏背景,否则截取当前屏幕作为背景;前者用于重置所有修改
     def screen_shot(self, pix=None):
         self.finding_rect = True
@@ -433,8 +447,8 @@ class MainLayer(QLabel):  # 区域截图功能
             get_pix = pix
         else:
             if len(QGuiApplication.screens()) > 1:
-                sscreen,s_coordi_x,scoordi_y = self.search_in_which_screen()
-                self.move(s_coordi_x,scoordi_y)
+                sscreen, s_coordi_x, scoordi_y = self.search_in_which_screen()
+                self.move(s_coordi_x, scoordi_y)
             else:
                 sscreen = QApplication.primaryScreen()
             get_pix = sscreen.grabWindow(0)  # 截取屏幕
@@ -545,8 +559,7 @@ class MainLayer(QLabel):  # 区域截图功能
                 QThreadPool.globalInstance().start(worker)
         self.manage_data()
 
-    """8、点击滚动截屏"""
-
+    # """8、点击滚动截屏"""
     def roll_shot(self):
         x0 = min(self.x0, self.x1)
         y0 = min(self.y0, self.y1)
@@ -621,18 +634,3 @@ class MainLayer(QLabel):  # 区域截图功能
         #     self.save_data_thread.wait()
         # except Exception:
         #     print(sys.exc_info(), 2300)
-
-    # 后台初始化截屏线程,用于寻找所有智能选区
-    def init_ss_thread_fun(self, get_pix):
-        self.x0 = self.y0 = 0
-        self.x1 = globalvar.get_var("SCREEN_WIDTH")
-        self.y1 = globalvar.get_var("SCREEN_HEIGHT")
-        self.mouse_posx = self.mouse_posy = -150
-        self.qimg = get_pix.toImage()
-        temp_shape = (self.qimg.height(), self.qimg.width(), 4)
-        ptr = self.qimg.bits()
-        # ptr.setsize(self.qimg.byteCount())
-        result = np.array(ptr, dtype=np.uint8).reshape(temp_shape)[..., :3]
-        self.finder.img = result
-        self.finder.find_contours_setup()
-        QApplication.processEvents()

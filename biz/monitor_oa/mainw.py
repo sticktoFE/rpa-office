@@ -20,16 +20,15 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QStyle,
 )
-
-import keyring
 from biz.monitor_oa.manager import RPAClient, RPAServer
-from myutils.DateAndTime import get_date
-from myutils.GeneralThread import Worker
+from myutils.DateAndTime import get_date, get_weeks_current_date
+from myutils.GeneralQThread import Worker
 from Form import Ui_Form
 import schedule
 
 # import win32timezone
 from keyring.backends import Windows
+import keyring
 
 keyring.set_keyring(Windows.WinVaultKeyring())
 
@@ -104,8 +103,8 @@ class MainWindow(QMainWindow, Ui_Form):
             self.userID.setText(userID)
             self.passwd.setText(passwd)
 
-        today_str = get_date()
-        yesterday_str = get_date(-1)
+        yesterday_str = get_weeks_current_date()[0]
+        today_str = get_weeks_current_date()[1]
         self.data_start_date.setText(yesterday_str)
         self.data_end_date.setText(today_str)
         self.scheduled_jobs = []

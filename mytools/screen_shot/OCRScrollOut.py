@@ -19,8 +19,8 @@ from urllib.parse import quote
 
 # 使用文字转语音功能，发出问候音：xx,你好！
 from myutils.DateAndTime import clock
-from myutils.GeneralThread import Worker, WorkerSignals
-from myutils.image_merge import merge
+from myutils.GeneralQThread import Worker, WorkerSignals
+from myutils.image_merge import ImageMergeWithDetect
 from myutils.info_out_manager import get_temp_folder
 from myutils.ScreenShot import ScreenShot
 from myutils import globalvar, image_split
@@ -59,7 +59,7 @@ class OCRGeneral(QThread):
 
 """
     第二版 实现的划区域截图 独立线程
-    先截图形成长图，再统一分割图片去识别，速度减慢
+    先截图形成长图，再统一分割图片去识别，速度较慢
     """
 
 
@@ -239,8 +239,6 @@ def ocr_split_long_pic(img_cv2):
 
 
 # 支持子线程再开孙子线程
-
-
 class TasksThread(QThread):
     communication = None
 
@@ -274,53 +272,19 @@ class Tasks(QObject):
         self.final_file_path = get_temp_folder(
             execute_file_path=__file__, is_clear_folder=True
         )
-        self.final_merge_file_path = get_temp_folder(
-            execute_file_path=__file__,
-            des_folder_name="final_merge_pic",
-            is_clear_folder=True,
+        self.ImageMergeWithDetect = ImageMergeWithDetect(
+            drop_head_tail=False,
+            draw_match_output_path=self.final_file_path,
         )
 
     def thread_stop(self):
         self.in_rolling = False
 
     def start(self):
-        package_result = []
-        print("merge_and_ocr thread name: ", QThread.currentThread())
-        # 拼接一个包内的图片为长图片，并对长图片进行OCR识别
-
-        def merge_and_ocr_package(img_list):
-            print("merge_and_ocr_package thread name: ", QThread.currentThread())
-            merge_result_img = merge(img_list[1], self.final_file_path)
-            # final_cv2,final_info,final_html_content = ocr_request.ocr_structure(merge_result_img)
-            package_result.append((img_list[0], merge_result_img))
-            # progress_signal.emit(100*img_list[0]/500) 试图搞一个进度条，但因为 总的处理数未知，同时在一个进程中循环开多个进程不知道怎么获取每个进程的参数，所以暂时未实现
-
-        # 对多个线程处理的长图片再合并成最终的长图片
-        def merge_result():
-            print("对多个线程处理的长图片再合并成最终的长图片")
-            finalimg = None
-            final_cv2_draw = None
-            final_info = []
-            final_html_content = []
-            # 按照先后顺序排序，然后再拼接
-            package_result_sorted = sorted(package_result, key=lambda item: item[0])
-            finalimg = merge(
-                [item[1] for item in package_result_sorted],
-                self.final_merge_file_path,
-                drop_head_tail=False,
-            )
-            final_cv2_draw, final_info, final_html_content = ocr_split_long_pic(
-                finalimg
-            )
-            self.communication.finished.emit(1)
-            self.communication.result.emit(
-                (finalimg, final_cv2_draw, final_info, final_html_content)
-            )
-
         while self.in_rolling or len(self.img_package_list):
             if len(self.img_package_list):  # 如果有图片
                 img_list = self.img_package_list.pop(0)
-                worker = Worker(merge_and_ocr_package, img_list)
+                worker = Worker(self.ImageMergeWithDetect.merge, img_list)
                 worker.setAutoDelete(True)  # 是否自動刪除
                 # worker.signals.progress.connect(self.update_progress)
                 # worker.signals.finished.connect(partial(self.readyOcr,1))
@@ -333,4 +297,9 @@ class Tasks(QObject):
                 QThread.msleep(1)
                 # print("等待图片包到来")
         self.pool.waitForDone()  # 等待任務執行完畢
-        merge_result()
+        finalimg = self.ImageMergeWithDetect.merge_result()
+        final_cv2_draw, final_info, final_html_content = ocr_split_long_pic(finalimg)
+        self.communication.finished.emit(1)
+        self.communication.result.emit(
+            (finalimg, final_cv2_draw, final_info, final_html_content)
+        )

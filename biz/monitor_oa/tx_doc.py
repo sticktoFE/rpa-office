@@ -5,7 +5,8 @@ import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
-from myutils import web_driver_manager
+
+from general_spider.utils import web_driver_manager
 from myutils import office_tools
 from myutils.info_out_manager import load_json_table
 
@@ -62,7 +63,7 @@ class TXDocument:
             # time.sleep(5)
             # # 转换frame
             # self.driver.switch_to.parent_frame()
-            print("登录成功过了")
+            print("登录成功过！")
         # 登入账号,用快速登入的功能,前提,已经电脑qq登入了
         # self.driver.switch_to.parent_frame()
         time.sleep(1)

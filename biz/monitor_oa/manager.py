@@ -4,8 +4,8 @@
 from pathlib import Path
 import random
 import time
-from mytools.general_spider.SpiderManager import run_spiders
-from myutils.GeneralThread import Worker
+from general_spider.scrapy_start import run_spiders
+from myutils.GeneralQThread import Worker
 from myutils.info_out_manager import get_temp_folder
 from biz.monitor_oa.zy_email import SeleMail
 from biz.monitor_oa.tx_doc import TXDocument
@@ -63,18 +63,22 @@ class RPAClient:
                 },
                 daemon=True,
             )
-            process.start()
             processes.append(process)
+            process.start()
         # Wait for all processes to complete
         for p in processes:
             p.join()
         # Get the results from the queue and check if they are all True
         results = []
         while not result_queue.empty():
-            result = result_queue.get()
-            results.append(result)
-        if all(results):
-            print("All processes completed successfully.")
+            spider_name, reason = result_queue.get()
+            print(f"Spider {spider_name} finished with reason: {reason}")
+            if reason == "finished":
+                results.append(True)
+            else:
+                results.append(False)
+        if len(results) > 0 and all(results):
+            print("所有爬虫全部执行完毕")
             return True
         else:
             print("At least one process failed.")
@@ -129,11 +133,11 @@ class RPAServer:
 
 
 def start_ip_proxy():
-    worker_schedule = Worker("schedule", module="mytools.proxy_pool.proxyPool")
+    worker_schedule = Worker("schedule", module="general_spider.proxy_pool.proxyPool")
     QThreadPool.globalInstance().start(worker_schedule)
     # 等一下再启动服务
     time.sleep(random.randint(1, 3))
-    worker_server = Worker("server", module="mytools.proxy_pool.proxyPool")
+    worker_server = Worker("server", module="general_spider.proxy_pool.proxyPool")
     QThreadPool.globalInstance().start(worker_server)
     time.sleep(random.randint(1, 3))
 

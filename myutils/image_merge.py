@@ -1,77 +1,93 @@
 from functools import reduce
-from pathlib import Path
 import cv2
 from numpy import vstack
-from .image_compare import PicMatcher
+from .image_compare import PicMatcher, real_content_imgs
 from PIL import Image
-# 针对图像列表寻找拼接点，后面的图片去掉与前面图片重复区域
-def drop_repeat(src_img_list,draw_match_output=None,drop_head_tail = True):
-    picMatcher = PicMatcher(nfeatures=500,draw=True,draw_match_output=draw_match_output)
-    # 只有迭代器才有 next方法 ，生成器是一个迭代器
-    img_gen = iter(src_img_list)
-    if drop_head_tail:
-        img_gen = picMatcher.drop_head_tail(src_img_list)
-    rgbimg1 = next(img_gen)
-    drop_result_list = []
-    # 如果正在滚动状态或self.img_list还有图片没有处理完就一直处理
-    for rgbimg2 in img_gen: 
-        # 调用picMatcher的match方法获取拼接匹配信息
-        y_distance, m1, m2 = picMatcher.match(rgbimg1, rgbimg2)
-        if y_distance == 0:
-            continue
-        elif y_distance == -1:
-            drop_result_list.append(rgbimg1)
-        else:
-            # 逻辑是，每次循环用前一个compare_img1和后一个compare_img2作比较，
-            # compare_img1重复区域最下面的边界点对应的compare_img2的的点就是compare_img2的切割点，要下面的即可
-            rgbimg1 = rgbimg1[:int(m1),:,:]
-            drop_result_list.append(rgbimg1)
-            rgbimg2 = rgbimg2[int(m2):, :, :]
-        rgbimg1 = rgbimg2
-    return drop_result_list
-# 图像寻找拼接点并拼接的主函数,运行于后台线程,从self.img_list中取数据进行拼接
-def merge_1(src_img_list,draw_match_output=None,drop_head_tail = True):
-    drop_repeat_list = drop_repeat(src_img_list,draw_match_output,drop_head_tail)
-    print("image_merge.match_and_merge-sucess merge a img")
-    return reduce(lambda x, y:vstack((x,y)),drop_repeat_list)
 
-# 图像寻找拼接点并拼接的主函数,运行于后台线程,从self.img_list中取数据进行拼接
-def merge(src_img_list,draw_match_output=None,drop_head_tail = True):
-    picMatcher = PicMatcher(nfeatures=500,draw=True,draw_match_output=draw_match_output)
-    # 只有迭代器才有 next方法 ，生成器是一个迭代器
-    img_gen = iter(src_img_list)
-    if drop_head_tail:
-        img_gen = picMatcher.drop_head_tail(src_img_list)
-    finalimg = next(img_gen)
-    rgbimg1 = finalimg 
-    # 如果正在滚动状态或self.img_list还有图片没有处理完就一直处理
-    for rgbimg2 in img_gen:
+
+# 使用对图像的侦测算法来合并图片
+class ImageMergeWithDetect:
+    def __init__(self, draw_match_output_path=None, drop_head_tail=False):
+        self.draw_match_output_path = draw_match_output_path
+        self.picMatcher = PicMatcher(
+            nfeatures=500, draw=True, draw_match_output_path=draw_match_output_path
+        )
+        self.drop_head_tail = drop_head_tail
+        self.package_result = []
+        self.one_src_img = None
+
+    # 针对图像列表寻找拼接点，后面的图片去掉与前面图片重复区域
+    def merg_two(self, sum_img, img1, img2):
         # 调用picMatcher的match方法获取拼接匹配信息
-        y_distance, m1, m2 = picMatcher.match(rgbimg1, rgbimg2)
+        y_distance, m1, m2 = self.picMatcher.match(img1, img2)
         if y_distance == 0:
-            continue
+            return sum_img, img1
         # 裁剪拼接图片
-        #两个图片没有相似特征
+        # 两个图片没有相似特征
         elif y_distance == -1:
-            i1 = finalimg
-            i2 = rgbimg2
+            i1 = sum_img
+            i2 = img2
         else:
             # 已拼接的图片finalimg必然包括compare_img1内容，每次循环 用compare_img1和compare_img2作比较
             # 然后把finalimg中已拼接compare_img1的内容和compare_img2进行融合
-            #当前已拼接图片的裁剪
-            finalheightforcutting = finalimg.shape[0] - rgbimg1.shape[0] + int(m1)  
-            i1 = finalimg[:finalheightforcutting, :, :]
-            #新图片的裁剪
-            i2 = rgbimg2[int(m2):, :, :]
+            # 当前已拼接图片的裁剪
+            finalheightforcutting = sum_img.shape[0] - img1.shape[0] + int(m1)
+            i1 = sum_img[:finalheightforcutting, :, :]
+            # 新图片的裁剪
+            i2 = img2[int(m2) :, :, :]
         # 当前已拼接图片和新图片拼接
-        finalimg = vstack((i1, i2))
-        rgbimg1 = rgbimg2
-    return finalimg
+        return vstack((i1, i2)), img2
 
+    # 很纯粹，把列表中的图片去重后合并成长图
+    def merge_list(self, img_list):
+        merg_result = None
+        for i, img in enumerate(img_list):
+            if i == 0:
+                merg_result = img
+                recent_img = img
+            else:
+                merg_result, recent_img = self.merg_two(merg_result, recent_img, img)
+        return merg_result
+
+    # 合并图片列表时，考虑每张图片头尾都一样的情况
+    def merge(self, src_img_list):
+        if len(src_img_list) == 1:
+            return src_img_list[0]
+        drop_list_gen, self.content_pos_start, self.content_pos_end = real_content_imgs(
+            src_img_list
+        )
+        if self.one_src_img is None:
+            self.one_src_img = src_img_list[0]
+        merg_result = self.merge_list(drop_list_gen)
+        self.package_result.append(merg_result)
+        cv2.imencode(".jpg", merg_result)[1].tofile(
+            f"{self.draw_match_output_path}/{len(self.package_result)}_match.png"
+        )
+
+    # 对多个线程处理的长图片再合并成最终的长图片
+    def merge_result(self):
+        print("对多个线程处理的长图片再合并成最终的长图片")
+        # 按照先后顺序排序，然后再拼接
+        # package_result_sorted = sorted(self.package_result, key=lambda item: item[0])
+        finalimg = self.merge_list(self.package_result)
+        if not self.drop_head_tail:
+            if self.content_pos_start > 0:
+                head_seg = self.one_src_img[: self.content_pos_start]
+                finalimg = vstack((head_seg, finalimg))
+            if self.content_pos_end > 0 and self.content_pos_end < len(
+                self.one_src_img
+            ):
+                tail_seg = self.one_src_img[self.content_pos_end :]
+                finalimg = vstack((finalimg, tail_seg))
+        return finalimg
+
+
+# 此方法用于网页拼接，因为网页可以计算滚动条高度
 class ImageMerge:
     root_path = None
     save_path = None
     im_list = []
+
     def __init__(self, save_path=None):
         print("ImageMerge->__init__")
         self.save_path = save_path
@@ -116,4 +132,3 @@ class ImageMerge:
             new_img.paste(region, box)
         new_img.save(file_path)
         return file_path, new_img
-    

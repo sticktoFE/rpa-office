@@ -6,7 +6,7 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.common.action_chains import ActionChains
 import time
 from pathlib import Path
-from myutils import web_driver_manager
+from general_spider.utils import web_driver_manager
 from myutils.info_out_manager import load_json_table
 
 
@@ -16,13 +16,10 @@ class SeleMail:
         self.userID = userID
         self.passwd = passwd
         self.upload_path = down_path
-        # 下面两个都行 # driver = WebDriverManager().get_driver_Chromeexe()
         self.driver = web_driver_manager.get_driver_ChromeDriver(
             down_file_save_path=down_path
         )
-        self.driver.implicitly_wait(15)
-        # 最大化窗口
-        self.driver.maximize_window()
+        self.driver.implicitly_wait(20)
 
     # 保存cookies
     def save_cookies(self, driver):
@@ -174,13 +171,11 @@ class SeleMail:
             else:
                 print("附件上传失败")
         # 保存草稿
+        time.sleep(random.uniform(1, 3))
         self.driver.find_element(by=By.XPATH, value='//span[text()="存草稿"]').click()
         time.sleep(random.uniform(1, 3))
-        # assert "保存草稿成功" in self.driver.page_source
-        # time.sleep(10)
-        logout_link = self.driver.find_element(by=By.XPATH, value="//a[text()='退出']")
-        logout_link.click()
-        time.sleep(random.uniform(2, 5))
+        assert "保存草稿成功" in self.driver.page_source
+        self.driver.find_element(by=By.XPATH, value="//a[text()='退出']").click()
         # assert "登录" in self.driver.page_source
         self.driver.quit()
 

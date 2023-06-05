@@ -45,17 +45,29 @@ def clock(func):
 #     week_num += 1
 
 
-# 获取日期所在的周数
-def get_weeks_current_date(current_date_str=None):
+def get_weeks_current_date(date_str=None, week_start_delt_days=-3, week_days=7):
+    """
+    获取传入日期所在本年度中的周数，及起始和结束日
+    """
     current_date = None
-    if current_date_str is None:
+    if date_str is None:
         current_date = datetime.today()
     else:
-        current_date = datetime.strptime(current_date_str, "%Y-%m-%d")
+        current_date = datetime.strptime(date_str, "%Y-%m-%d")
     week_num = current_date.isocalendar()[1]
-    start_date = current_date - timedelta(days=current_date.weekday())
-    end_date = start_date + timedelta(days=4)
-    return f'{start_date.strftime("%m%d")}-{end_date.strftime("%m%d")}({week_num})'
+    # 默认一周的开始为周一，如果自定义周的起始日，如果周二，就+1，如果上周日就-1，上周五开始的话就-3
+    start_date = (
+        current_date - timedelta(days=current_date.weekday()) + timedelta(days=-3)
+    )
+    end_date = start_date + timedelta(days=week_days - 1)
+    format_week = (
+        f'{start_date.strftime("%m%d")}-{end_date.strftime("%m%d")}({week_num})'
+    )
+    return (
+        start_date.strftime("%Y-%m-%d"),
+        end_date.strftime("%Y-%m-%d"),
+        format_week,
+    )
 
 
 # 获取时间字符串，type为0表示今天，昨天是-1 明天是1 以此类推
@@ -69,4 +81,4 @@ def get_date(type=0, format="%Y-%m-%d"):
 
 
 if __name__ == "__main__":
-    print(get_weeks_current_date("2023-03-23"))
+    print(get_weeks_current_date())

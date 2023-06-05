@@ -1,5 +1,5 @@
 from functools import partial
-from myutils.GeneralThread import Worker
+from myutils.GeneralQThread import Worker
 from ui.mainwindow_event import MainWindow
 from PySide6.QtWidgets import QApplication, QMessageBox
 from PySide6.QtGui import QGuiApplication

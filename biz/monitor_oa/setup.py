@@ -1,6 +1,7 @@
 import re
 import subprocess
 from pathlib import Path
+import shutil
 
 curr_dir = Path(__file__).parent
 root_dir = curr_dir.parent.parent
@@ -13,17 +14,16 @@ def nuitka_export():
     # 最终使用版 加上--windows-disable-console，去掉控制台输出
     cmd = (
         f"{python_path} -m nuitka --standalone --mingw64 --show-progress "
-        "--windows-disable-console "
+        # "--windows-disable-console "
         "--include-qt-plugins=sensible,styles --plugin-enable=pyside6 "
-        "--follow-import-to=biz.monitor_oa,myutils "
-        "--include-package=mytools.general_spider.general_spider,"
-        "mytools.general_spider.general_spider.spiders,scrapy "
         "--nofollow-import-to=tkinter,pil,numpy,scipy,matplotlib,pandas,"
         "openpyxl,pyautogui,email,requests,docx,openssl,paddle,paddleocr,schedule,"
         "fitz,pyput,unittest,Ipython,jedi,win32gui,win32con,pygments,pip,mss,asyncio,"
         "blib2to3,lib2to3,idna,cryptography,hyperlink,attr,wrapt,selenium,click,jinja2,"
         "configparser "
-        "--output-dir=./biz/monitor_oa/output --remove-output --windows-icon-from-ico=./biz/monitor_oa/rpa.ico --jobs=8 "
+        "--follow-import-to=biz.monitor_oa,myutils "
+        "--include-package=scrapy,general_spider "
+        "--output-dir=./biz/monitor_oa/output --jobs=10 --remove-output --windows-icon-from-ico=./biz/monitor_oa/rpa.ico  "
         "./biz/monitor_oa/mainw.py"
     )
     completedProcess = subprocess.Popen(
@@ -61,8 +61,6 @@ def nuitka_export():
 
 
 def copyfile():
-    import shutil
-
     # 拷贝源文件夹中的所有文件和子文件夹到目标文件夹
     src_folder = rf"{curr_dir}\output\packages"
     dst_folder = rf"{curr_dir}\output\mainw.dist"

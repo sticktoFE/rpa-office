@@ -2,7 +2,7 @@ from PySide6.QtCore import (
     QThreadPool,
     QSettings,
 )
-from myutils.GeneralThread import Worker
+from myutils.GeneralQThread import Worker
 import argparse
 
 # import sys

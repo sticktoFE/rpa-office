@@ -6,6 +6,7 @@ from pathlib import Path
 import time
 import json
 import configparser
+from types import GeneratorType
 
 """
     目前还没找到用处
@@ -62,7 +63,7 @@ def get_temp_folder(
     # 临时文件统一放到系统文档文件夹里
     if des_folder_name is not None:
         des_folder = des_folder.joinpath(des_folder_name)
-    des_folder.mkdir(exist_ok=True)
+    des_folder.mkdir(parents=True, exist_ok=True)
     if is_clear_folder:  # 清理文件夹内容
         filelist = glob.glob(f"{des_folder.as_posix()}/*")
         for f in filelist:
@@ -81,17 +82,23 @@ def get_temp_file(des_folder=None, save_file_name=None, save_file_type="xlsx"):
 
 
 # 多次输出到文件，以列表中多个字典的形式，类似数据库表数据
-def dump_json_table(source_dict, purpose_file):
+def dump_json_table(content: dict | list, purpose_file):
+    # 把字典装到列表中，再转换成json格式
     now_json = None
     with open(purpose_file, "a+", encoding="utf-8") as write_file:
-        write_file.seek(0)  # 挪动文件中的指针位置，读取都是从指针后面开始，要注意
+        # 挪动文件中的指针位置，读取都是从指针后面开始，要注意
+        write_file.seek(0)
         if len(write_file.readlines()) != 0:
             write_file.seek(0)
             now_json = json.load(write_file)
-            now_json.append(source_dict)
         else:
             now_json = []
-            now_json.append(source_dict)
+        if isinstance(content, dict):
+            now_json.append(content)
+        elif isinstance(content, list):
+            now_json.extend(content)
+        elif isinstance(content, GeneratorType):
+            now_json.extend(list(content))
     with open(purpose_file, "w", encoding="utf-8") as write_file:
         # 使用json.dump时需解决中文乱码问题
         json.dump(

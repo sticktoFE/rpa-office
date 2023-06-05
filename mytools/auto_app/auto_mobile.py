@@ -3,9 +3,8 @@ import subprocess
 import sys
 import time
 import cv2
-
 import pyautogui
-from mytools.auto_app.OCRSearchClick import OCRSearchClick
+from mytools.auto_app.AppActionExecThread import AppExec
 from myutils.ScreenShot import ScreenShot
 from pynput.mouse import Button, Controller
 from PySide6.QtCore import Slot
@@ -18,15 +17,11 @@ from PySide6.QtWidgets import (
     QTreeWidgetItem,
 )
 from ui.OCRResult_event import TotalMessage
-
-from ActionManage import ActionManage
-from mytools.auto_app.MobileActionExecThread import MobileActionExecThread
 from Form import Ui_Form
 from myutils import image_convert
 
 
 class MainWindow(QMainWindow):
-    am = ActionManage()
     t_temp = time.perf_counter()
     delay_time = 500
 
@@ -118,37 +113,6 @@ class MainWindow(QMainWindow):
         self.mouse.position = (self.old_pos[0] + x2 - x1, self.old_pos[1] + y2 - y1)
         self.on_getScreenShotPushButton_clicked()
 
-    # 发送返回键
-    @Slot()
-    def on_returnPushButton_clicked(self):
-        subprocess.run("adb shell input keyevent 4")
-        self.on_getScreenShotPushButton_clicked()
-
-    # 发送回到home
-    @Slot()
-    def on_returnHomePushButton_clicked(self):
-        subprocess.run("adb shell input keyevent 3")
-        self.on_getScreenShotPushButton_clicked()
-
-    # 录制动作
-    @Slot()
-    def on_recordActionPushButton_clicked(self):
-        if self.ui.recordActionPushButton.isChecked():
-            self.ui.recordActionPushButton.setText("开始录制")
-            print("checked")
-            self.am.recordActionSetFinish()
-        else:
-            print("unchecked")
-            filename, ok = QInputDialog.getText(self, "", "输入文件名")
-            if ok:
-                self.ui.recordActionPushButton.setText("停止录制")
-                print(filename)
-                # 开始录制动作
-                self.am.recordActionSetStart(filename)
-                self.t_temp = time.perf_counter()
-            else:
-                self.ui.recordActionPushButton.setChecked(True)
-
     # 点击添加文件
     @Slot()
     def on_fileAddPushButton_clicked(self):
@@ -166,27 +130,6 @@ class MainWindow(QMainWindow):
         root = self.ui.taskTreeWidget.invisibleRootItem()
         for item in self.ui.taskTreeWidget.selectedItems():
             (item.parent() or root).removeChild(item)
-
-    # 点击开始
-    @Slot()
-    def on_actionStartPushButton_clicked(self):
-        name_list = []
-        for item in self.ui.taskTreeWidget.findItems("", Qt.MatchFlag.MatchStartsWith):
-            name_list.append(item.text(0))
-        self.mt = MobileActionExecThread()
-        self.mt.setFileNames(name_list)
-        self.mt.run()
-
-    # 点击任务终止
-    @Slot()
-    def on_taskStopPushButton_clicked(self):
-        self.mt.terminate()
-
-    # 记录两次动作时，把动作间的时间也记录进去
-    def addDelayRecord(self):
-        t = int((time.perf_counter() - self.t_temp) * 1000)
-        self.t_temp = time.perf_counter()
-        self.am.addDelayAction(t)
 
     # 执行动作组，输入是文件名的list，不包含扩展名
     def mobile_action_exec(self, name):
@@ -218,7 +161,7 @@ class MainWindow(QMainWindow):
             "utils/AppCrawler/image/import_notice.png",
             "utils/AppCrawler/image/all_news.png",
         ]
-        self.OCR = OCRSearchClick(window_name="多屏协同", for_pics=for_pics)
+        self.OCR = AppExec(window_name="多屏协同", for_pics=for_pics)
         self.OCR.signal.connect(self.ocrResult)
         self.OCR.start()
 
