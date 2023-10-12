@@ -1,5 +1,5 @@
 import re
-from mytools.general_infor_extractor.utils import config
+from general_spider.general_infor_extractor.utils import config
 from collections import deque
 from lxml.html import HtmlElement
 

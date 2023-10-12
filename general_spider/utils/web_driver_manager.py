@@ -2,6 +2,7 @@ from pathlib import Path
 import subprocess
 from selenium import webdriver
 from myutils.info_out_manager import ReadWriteConfFile, get_temp_folder
+from selenium.webdriver.chrome.service import Service
 
 
 # 1、获取driver，用本地浏览器，据说可以有效反反爬
@@ -42,8 +43,9 @@ def get_driver_Chromeexe():
 
 
 # 2、获取driver，通过驱动程序
+# 发现不写 driver.quit(),只要代码执行完，浏览器也会退出
 def get_driver_ChromeDriver(
-    browser_parameter_name=None, down_file_save_path="D:\\downloads", timeout=15
+    browser_parameter_file_name=None, down_file_save_path="D:\\downloads", timeout=15
 ):
     options = webdriver.ChromeOptions()
     # 切换成便携版chrome，避免跨平台时，所在平台没有安装chrome或chrome和chromedriver版本不一致
@@ -58,7 +60,7 @@ def get_driver_ChromeDriver(
         is_clear_folder=False,
     ).replace("/", "\\")
     options.add_argument(
-        f"user-data-dir={chrome_parameter_path}\\AutomationProfile_{'default' if browser_parameter_name is None else browser_parameter_name}"
+        f"user-data-dir={chrome_parameter_path}\\AutomationProfile_{'default' if browser_parameter_file_name is None else browser_parameter_file_name}"
     )
     # 配置下载文件的保存目录
     prefs = {
@@ -116,14 +118,16 @@ def get_driver_ChromeDriver(
         f"{Path(__file__).parent}\\GoogleChromePortable\\adblock_v5.4.1.crx"
     )
     # options.add_argument(f"--remote-debugging-port={random.randint(9000, 9999)}")
-    driver = webdriver.Chrome(
-        executable_path=f"{Path(__file__).parent}\\GoogleChromePortable\\chromedriver.exe",
-        chrome_options=options,
-        # port=random.randint(9000, 9999),
+    chrome_driver_path = (
+        f"{Path(__file__).parent}\\GoogleChromePortable\\chromedriver.exe"
     )
     # driver = webdriver.Chrome(
-    #     service=Service(ChromeDriverManager().install()), options=options
+    #     executable_path=chrome_driver_path,
+    #     chrome_options=options,
+    #     # port=random.randint(9000, 9999),
     # )
+    # selenium新版使用下面的
+    driver = webdriver.Chrome(service=Service(chrome_driver_path), options=options)
     # 修改 webdriver 值，为了反反爬
     driver.execute_cdp_cmd(
         "Page.addScriptToEvaluateOnNewDocument",

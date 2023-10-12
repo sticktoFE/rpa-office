@@ -21,7 +21,7 @@ class WorkerSignals(QObject):
         int indicating % progress
     """
 
-    finished = Signal(int)
+    finished = Signal()
     error = Signal(tuple)
     fn_result = Signal(tuple)
     # 这是线程处理结果，其实也是执行的fn结果，暂时先留着，后面都用fn_result
@@ -55,7 +55,7 @@ class Worker(QRunnable):
         super().__init__()
         # Store constructor arguments (re-used for processing)
         # print(f'init {fn} thread name: {QThread.currentThread()}')
-        self.fn = fnOrClass
+        self.fnOrClass = fnOrClass
         self.class_method = classMethod
         self.classMethodArgs = classMethodArgs
         self.classSignal = classSignal
@@ -73,18 +73,18 @@ class Worker(QRunnable):
         """
         Initialise the runner function with passed args, kwargs.
         """
-        # print(f'run {self.fn} thread name: {QThread.currentThread()}')
-        if isinstance(self.fn, str):
-            self.fn = lazy_import.getRes(self.module, self.fn)
+        # print(f'run {self.fnOrClass} thread name: {QThread.currentThread()}')
+        if isinstance(self.fnOrClass, str):
+            self.fnOrClass = lazy_import.getRes(self.module, self.fnOrClass)
         fn_result = None
         try:
             # 直接传进 函数或类方法对象
-            if isfunction(self.fn) or ismethod(self.fn):
-                fn_result = self.fn(*self.args, **self.kwargs)
+            if isfunction(self.fnOrClass) or ismethod(self.fnOrClass):
+                fn_result = self.fnOrClass(*self.args, **self.kwargs)
             # 传进class，如果有方法传进字符串形式的方法名，适用于引进类，然后直接调用类方法
             # 实例化类
-            elif isclass(self.fn):
-                fn_result = self.fn(*self.args, **self.kwargs)
+            elif isclass(self.fnOrClass):
+                fn_result = self.fnOrClass(*self.args, **self.kwargs)
                 if self.class_method is not None:
                     cm = getattr(fn_result, self.class_method)
                     if self.classSignal is not None:
@@ -106,7 +106,7 @@ class Worker(QRunnable):
             if self.classSignal is None:
                 self.communication.result.emit(fn_result)
         finally:
-            self.communication.finished.emit(1)  # Done
+            self.communication.finished.emit()  # Done
 
 
 class MainWindow(QMainWindow):

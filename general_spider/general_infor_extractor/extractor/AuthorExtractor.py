@@ -1,7 +1,7 @@
 import re
-from mytools.general_infor_extractor.utils import config
+from general_spider.general_infor_extractor.utils import config
 from lxml.html import HtmlElement
-from mytools.general_infor_extractor.defaults import AUTHOR_PATTERN
+from general_spider.general_infor_extractor.defaults import AUTHOR_PATTERN
 
 
 class AuthorExtractor:

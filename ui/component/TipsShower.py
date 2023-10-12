@@ -5,44 +5,50 @@ from PySide6.QtGui import QColor, QFont, QGuiApplication, QCursor
 
 class TipsShower(QLabel):
     def __init__(
-        self, text, targetarea=(0, 0, 0, 0), parent=None, fontsize=60, timeout=1000
+        self, text, targetarea=(0, 0, 50, 30), parent=None, fontsize=18, timeout=1000
     ):
         super().__init__(parent)
         self.parent = parent
         self.area = targetarea
         self.timeout = timeout
-        self.rfont = QFont("微软雅黑", fontsize)
-        self.setFont(self.rfont)
         self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool | Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(
+            Qt.WindowType.FramelessWindowHint
+            | Qt.WindowType.Tool
+            | Qt.WindowType.WindowStaysOnTopHint
+        )
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.hide)
-        self.setText(text)
+        self.setWordWrap(True)  # 启用自动换行
+        # 设置大小区域 (x, y, width, height)
+        self.setGeometry(*self.area)
+        self.setText(
+            text,
+            stylesheet=f"background-color:rgb(200,200,100);font: {fontsize}pt;color:red;font-family: '微软雅黑';",
+        )
         self.show()
-        self.setStyleSheet("color:red;background-color:rgb(200,200,100);")
 
     def setText(
-        self, text, autoclose=True, font: QFont = None, color: QColor = None
+        self,
+        text,
+        stylesheet=None,
+        pos=None,
+        autoclose=True,
     ) -> None:
         super(TipsShower, self).setText(text)
         self.adjustSize()
-        x, y, w, h = self.area
-        if x < QGuiApplication.primaryScreen().availableGeometry().width() - x - w:
-            self.move(x + w + 5, y)
-        else:
-            self.move(x - self.width() - 5, y)
-        # print(self.parent.x(),self.parent.y())
-        # self.move(self.parent.pos().x(),self.parent.pos().y())
-        # 也可以把提示信息放在鼠标附近
-        # self.move(QCursor.pos().x(),QCursor.pos().y())
-        self.show()
+        if pos is not None:
+            # if x < QGuiApplication.primaryScreen().availableGeometry().width() - x - w:
+            #     self.move(x + w + 5, y)
+            # else:
+            # 设置大小区域 (x, y, width, height)
+            self.move(*pos)
         if autoclose:
             self.timer.start(self.timeout)
-        if font is not None:
-            self.setFont(font)
-        if color is not None:
-            self.setStyleSheet(f"color:{color.name()}")
+        if stylesheet is not None:
+            self.setStyleSheet(stylesheet)
+        self.show()
 
     def hide(self) -> None:
         super().hide()

@@ -5,13 +5,17 @@ from PySide6.QtWidgets import QMainWindow
 from myutils import globalvar
 from biz.monitor_work_flow.OCRAndCompare import OCRAndCompare
 from .mainwindow import Ui_MainWindow
+
+
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
         # self.adjustSize()
         self.setupUi(self)
         # 这一行就是来设置窗口始终在顶端的。
-        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)  # 保持界面在最上层且无边框（去掉窗口标题）
+        self.setWindowFlags(
+            Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.FramelessWindowHint
+        )  # 保持界面在最上层且无边框（去掉窗口标题）
         # 设置窗口背景透明
         self.setAttribute(Qt.WA_TranslucentBackground, True)
         # 为窗口安装事件过滤器，所有事件在eventFilter里面统一处理
@@ -23,14 +27,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.ready = False
         self.readyNum = 0
         self.sayHello()
+
     # 初始化后台对象
-    def init_all_object(self,progress_signal):
+    def init_all_object(self, progress_signal):
         # 后台自动识别全屏并作规则识别提醒服务
-        self.PO = OCRAndCompare(box=(0, 0, globalvar.get_var("SCREEN_WIDTH"),  globalvar.get_var("SCREEN_HEIGHT")))
-        progress_signal.emit(100*1/2)
+        self.PO = OCRAndCompare(
+            box=(
+                0,
+                0,
+                globalvar.get_var("SCREEN_WIDTH"),
+                globalvar.get_var("SCREEN_HEIGHT"),
+            )
+        )
+        progress_signal.emit(100 * 1 / 2)
         self.PO.start()
         self.PO.signal.connect(self.displayInfo)
-        progress_signal.emit(100*2/2)
+        progress_signal.emit(100 * 2 / 2)
+
     # 初始化窗口
     def init_all_gui(self):
         # 启动定时器检测记事本的位置大小和是否关闭
@@ -40,20 +53,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.leaveTimer.setSingleShot(True)  # **重要** 保证只执行一次计时
         # 初始化信息展示窗口（列表）
         from ui.infoframe_event import InfoFrame
+
         self.infoFrame = InfoFrame()
         self.infoFrame.label_3.ready_signal.connect(self.anchorClicked)
         self.infoFrame.resize(self.GSS.size())
         # 初始化信息展示窗口（详情）
         from biz.monitor_work_flow.ui.flow_remind_retail import FlowRemindRetail
+
         self.retail_info_window = FlowRemindRetail()
         self.retail_info_window.close_signal.connect(self.anchorClickedClose)
+
     def sayHello(self):
-        self.GSS.setMovie("ui/icon/hello.gif", None, None,play_once=True)
+        self.GSS.setMovie("ui/icon/hello.gif", None, None, play_once=True)
         self.GSS.play_signal.connect(self.sayWelcome)
         # 直接在上面控制只轮播一次不成熟，还用下面的
         # self.canhello = GifPlay(gifplaywidget=self.GSS)
         # self.canhello.start()
         # self.canhello.signal.connect(self.sayWelcome)
+
     def sayWelcome(self):
         myString = """
                     <p>
@@ -65,6 +82,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     """
         self.GSS.setMovie("ui/icon/background.gif", myString, "f")
         QTimer.singleShot(1000, self.scanning)
+
     def scanning(self):
         myString = """
                     <p>
@@ -73,10 +91,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     """
         self.GSS.setMovie("ui/icon/scanning12.gif", myString, "v")
         # 主线程发送准备好标识
-        self.readyOcr(1)
+        self.readyOcr()
+
     # 这是多个线程的汇合处，只有两个线程都准备好了，才会往下执行，是通过readyNum计数来识别是不是准备好了
-    def readyOcr(self, result):
-        self.readyNum = self.readyNum+result
+    def readyOcr(self):
+        self.readyNum = self.readyNum + 1
         if self.readyNum == 2:
             self.ready = True
             self.autoNotice = True
@@ -104,7 +123,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.retail_info_window.displayData(flow_id, page_id)
         # 点击查看内容了，就不要再扫描了
         self.anchorHasClicked = True
-        
+
     def anchorClickedClose(self):
         self.anchorHasClicked = False
 
@@ -114,7 +133,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # 正在播放启动动画，不需要后面的操作
         if not self.ready:
             return
-        
+
         # 手工还是自动触发窗口显示的表示
         self.autoNotice = False
         # 显示窗口
@@ -174,13 +193,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.move(self.x(), -self.yleave)
 
     def hideApp(self):
-        cx, cy = (QCursor.pos().x(),QCursor.pos().y())  # QCursor.pos()效果等同于event.globalPos()
-        if (cx >= self.x() and cx <= self.x() + self.width() and cy >= self.y() and cy <= self.geometry().y()):
+        cx, cy = (
+            QCursor.pos().x(),
+            QCursor.pos().y(),
+        )  # QCursor.pos()效果等同于event.globalPos()
+        if (
+            cx >= self.x()
+            and cx <= self.x() + self.width()
+            and cy >= self.y()
+            and cy <= self.geometry().y()
+        ):
             return  # title bar
         elif self.x() < 0 and QCursor.pos().x() > 0:
             self.move(self.xleave - self.width(), self.y())
         elif self.y() < 0 and QCursor.pos().y() > 0:
-            self.move(self.x(),self.yleave - self.height() + self.y() - self.geometry().y())
+            self.move(
+                self.x(), self.yleave - self.height() + self.y() - self.geometry().y()
+            )
 
     def mousePressEvent(self, e: QMouseEvent):
         if e.button() == Qt.LeftButton:
@@ -197,8 +226,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.setCursor(QCursor(Qt.ArrowCursor))
             # 下面这个和 accept ignore之类有啥用，带深入研究事件模型，此处都不用好像也没关系
             # return super().mousePressEvent(e)
+
     def mouseMoveEvent(self, e: QMouseEvent):
-        if hasattr(self,"m_drag") and self.m_drag:
+        if hasattr(self, "m_drag") and self.m_drag:
             # 获得鼠标移动的距离
             move_distance = e.globalPosition() - self.mouse_start_point_
             window_x = self.window_start_point_.x() + move_distance.x()
@@ -206,5 +236,4 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # //改变窗口的位置,
             # self.move(window_purpose_point)
             # 有的说下面这个能避免拖动时抖动，但感觉差不多
-            self.setGeometry(window_x,window_y,self.width(),self.height())
-    
+            self.setGeometry(window_x, window_y, self.width(), self.height())

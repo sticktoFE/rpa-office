@@ -30,7 +30,7 @@ def run_spiders(
     data_end_date,
     out_file=None,
     down_path=None,
-    browser_parameter_name=None,
+    browser_parameter_file_name=None,
 ):
     settings_file_path = "general_spider.scrapy_spider.settings"
     os.environ.setdefault("SCRAPY_SETTINGS_MODULE", settings_file_path)
@@ -40,7 +40,7 @@ def run_spiders(
     settings.set("which_tab", which_tab)
     settings.set("out_file", out_file)
     settings.set("down_path", down_path)
-    settings.set("browser_parameter_name", browser_parameter_name)
+    settings.set("browser_parameter_file_name", browser_parameter_file_name)
     settings.set("data_start_date", data_start_date)
     settings.set("data_end_date", data_end_date)
     try:

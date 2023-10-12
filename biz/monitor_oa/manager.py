@@ -41,12 +41,8 @@ class RPAClient:
         processes = []
         result_queue = Queue()
         # Create and start multiple worker processes
-        for account_passwd in self.scrapy_account:
-            scrapy_userID = account_passwd[0]
-            scrapy_passwd = account_passwd[1]
-            which_tab = account_passwd[2]
-            spider_name = account_passwd[3]
-            out_file = f"{self.out_folder}/{scrapy_userID}.txt"
+        for scrapy_userID, scrapy_passwd, which_tab, spider_name in self.scrapy_account:
+            out_file = f"{self.out_folder}/{scrapy_userID}_{which_tab}.txt"
             process = Process(
                 target=run_spiders,
                 args=(
@@ -61,7 +57,7 @@ class RPAClient:
                 kwargs={
                     "out_file": out_file,
                     "down_path": self.out_folder,
-                    "browser_parameter_name": scrapy_userID,
+                    "browser_parameter_file_name": f"{scrapy_userID}_{which_tab}",
                 },
                 daemon=True,
             )
@@ -79,7 +75,7 @@ class RPAClient:
                 results.append(True)
             else:
                 results.append(False)
-        if len(results) > 0 and all(results):
+        if len(results) == len(self.scrapy_account) and all(results):
             print("所有爬虫全部执行完毕")
             return True
         else:
@@ -147,6 +143,5 @@ def start_ip_proxy():
 if __name__ == "__main__":
     # client = RPAClient(mail_userID="", mail_passwd="")
     # client.have_done()
-
     client = RPAServer("", "")
     client.start()

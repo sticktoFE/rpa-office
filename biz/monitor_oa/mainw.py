@@ -92,7 +92,9 @@ class MainWindow(QMainWindow, Ui_Form):
                 ):
                     userID_oa_ = keyring.get_password("myapp", f"userID_oa_{one_para}")
                     passwd_oa_ = keyring.get_password("myapp", f"passwd_oa_{one_para}")
-                    which_tab_ = keyring.get_password("myapp", f"which_tab_{one_para}")
+                    which_tab_ = keyring.get_password(
+                        "myapp", f"which_tab_oa_{one_para}"
+                    )
                     scrapy_oa_ = keyring.get_password("myapp", f"scrapy_oa_{one_para}")
                     self.insert_row_inTable(
                         "OA", userID_oa_, passwd_oa_, which_tab_, scrapy_oa_, "有效"
@@ -198,7 +200,7 @@ class MainWindow(QMainWindow, Ui_Form):
                         keyring.set_password("myapp", f"userID_oa_{row}", item_user)
                         keyring.set_password("myapp", f"passwd_oa_{row}", item_passwd)
                         keyring.set_password(
-                            "myapp", f"whichTab_oa_{row}", item_which_tab
+                            "myapp", f"which_tab_oa_{row}", item_which_tab
                         )
                         keyring.set_password("myapp", f"scrapy_oa_{row}", item_scrapy)
             if self.rpa_client.isChecked():

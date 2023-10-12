@@ -1,5 +1,5 @@
-from functools import partial
 from myutils.GeneralQThread import Worker
+from route.OCRRequest import startup_ocrserver
 from ui.mainwindow_event import MainWindow
 from PySide6.QtWidgets import QApplication, QMessageBox
 from PySide6.QtGui import QGuiApplication
@@ -44,12 +44,6 @@ class Main(MainWindow):
         self.context_menu.show_signal.connect(self.menu_choice)
         # self.context_menu.moveToThread(self.menuthread)
         # self.menuthread.start()
-        # 综合截屏界面
-        from mytools.screen_shot.MainLayer import MainLayer
-
-        self.screenshot = MainLayer()
-        self.screenshot.screen_shot_pic_signal.connect(self.ocrResult)
-        # self.screenshot.progress_signal.connect(self.update_progress)
 
     def update_progress(self, n):
         self.progressBar.setVisible(True)
@@ -86,12 +80,14 @@ class Main(MainWindow):
         self.PO.resume()
 
     def screen_shot_info(self):
-        self.screenshot.screen_shot()
+        # self.screenshot.screen_shot()
+        self.ocrmg = lazy_import("ui.OCRResult_event").TotalMessage()
+        self.ocrmg.show()
 
     # 识别内容展示
-    def ocrResult(self, result):
-        self.ocrmg = lazy_import("ui.OCRResult_event").TotalMessage(result)
-        self.ocrmg.show()
+    # def ocrResult(self, result):
+    #     self.ocrmg = lazy_import("ui.OCRResult_event").TotalMessage()
+    #     self.ocrmg.show()
 
     # 手工画范围截图
     def drawExtract(self):
@@ -110,9 +106,7 @@ class Main(MainWindow):
         if not self.isMinimized():
             self.show()  # 截图完成显示窗口
         if box[0] != "esc":
-            self.OCR = lazy_import("mytools.screen_shot.OCRScrollOut").OCRGeneral(
-                box=box
-            )
+            self.OCR = lazy_import("mytools.screen_shot.OCRThread").OCRGeneral(box=box)
             self.OCR.signal.connect(self.ocrResult)
             self.OCR.start()
 
@@ -156,16 +150,6 @@ class Main(MainWindow):
                 self.PO.stop()
 
 
-# ocr服务较慢，程序一开始就运行起来
-def startup_ocrserver():
-    # 实例化 OCRRequestProcess，并存储为全局变量，全局可调用进行OCR，并在实例化时启动模型服务
-    worker_ocr_server = Worker("OCRRequestProcess", module="route.OCRRequestProcess")
-    worker_ocr_server.communication.result.connect(
-        partial(globalvar.set_var, "ocrserver")
-    )
-    QThreadPool.globalInstance().start(worker_ocr_server)
-
-
 if __name__ == "__main__":
     QThreadPool.globalInstance().setMaxThreadCount(3)
     # 最先启动ocr服务，比较慢，尽量早启动
@@ -181,4 +165,5 @@ if __name__ == "__main__":
     globalvar.set_var("SCREEN_HEIGHT", SCREEN_HEIGHT)
     window = Main()
     window.show()
+    window.pauseScan()
     sys.exit(app.exec())

@@ -1,7 +1,10 @@
 import re
-from mytools.general_infor_extractor.utils import config, get_longest_common_sub_string
+from general_spider.general_infor_extractor.utils import (
+    config,
+    get_longest_common_sub_string,
+)
 from lxml.html import HtmlElement
-from mytools.general_infor_extractor.defaults import (
+from general_spider.general_infor_extractor.defaults import (
     TITLE_HTAG_XPATH,
     TITLE_SPLIT_CHAR_PATTERN,
 )

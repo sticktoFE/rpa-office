@@ -82,27 +82,31 @@ def get_temp_file(des_folder=None, save_file_name=None, save_file_type="xlsx"):
 
 
 # 多次输出到文件，以列表中多个字典的形式，类似数据库表数据
-def dump_json_table(content: dict | list, purpose_file):
-    # 把字典装到列表中，再转换成json格式
-    now_json = None
+def dump_json_table(content: dict | list, purpose_file, deleteDuplicate=False):
+    # 把此次字典或者字典列表连同历史文件中的字典列表统一汇总到列表中，再转换成json格式
+    all_json = None
     with open(purpose_file, "a+", encoding="utf-8") as write_file:
         # 挪动文件中的指针位置，读取都是从指针后面开始，要注意
         write_file.seek(0)
         if len(write_file.readlines()) != 0:
             write_file.seek(0)
-            now_json = json.load(write_file)
+            all_json = json.load(write_file)
         else:
-            now_json = []
+            all_json = []
         if isinstance(content, dict):
-            now_json.append(content)
+            all_json.append(content)
         elif isinstance(content, list):
-            now_json.extend(content)
+            all_json.extend(content)
         elif isinstance(content, GeneratorType):
-            now_json.extend(list(content))
+            all_json.extend(list(content))
+
+    # 对于all_json [{xx:yy,zz:dd},{xx:yy,zz:dd}],去重，里面字典全员一样才会去重，仅仅key一样不行
+    if deleteDuplicate:
+        all_json = [dict(t) for t in set([tuple(d.items()) for d in all_json])]
     with open(purpose_file, "w", encoding="utf-8") as write_file:
         # 使用json.dump时需解决中文乱码问题
         json.dump(
-            now_json,
+            all_json,
             write_file,
             indent=4,
             separators=(",", ": "),
@@ -112,11 +116,11 @@ def dump_json_table(content: dict | list, purpose_file):
         # write_file.write('\n')
 
 
-# 读取json文件并返回一条记录
+# 读取json文件并可迭代返回每一条记录
 def load_json_table(purpose_file):
     with open(purpose_file, "r", encoding="utf-8") as write_file:
-        now_json = json.load(write_file)
-        for onedict in now_json:
+        all_json = json.load(write_file)
+        for onedict in all_json:
             yield onedict
 
 

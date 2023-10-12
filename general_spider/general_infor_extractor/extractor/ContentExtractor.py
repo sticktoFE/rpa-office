@@ -3,7 +3,7 @@ import json
 import numpy as np
 from lxml.html import etree
 from html import unescape
-from mytools.general_infor_extractor.utils import (
+from general_spider.general_infor_extractor.utils import (
     iter_node,
     pad_host_for_images,
     config,

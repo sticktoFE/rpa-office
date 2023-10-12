@@ -1,5 +1,6 @@
 # 装饰器，用于测量阻塞计时
 import functools
+import re
 import time
 
 # 设置获取数据的日期
@@ -71,14 +72,27 @@ def get_weeks_current_date(date_str=None, week_start_delt_days=-3, week_days=7):
 
 
 # 获取时间字符串，type为0表示今天，昨天是-1 明天是1 以此类推
-def get_date(type=0, format="%Y-%m-%d"):
-    today = date.today()
-    if type >= 0:
-        reurn_date = today + timedelta(days=type)
-    else:
-        reurn_date = today - timedelta(days=-type)
+def get_date(type="0 days ago", format="%Y-%m-%d"):
+    now = datetime.now()
+    se_re = re.search(r"(\d+)\s*(\w+)\s*(\w+)", type)
+    delta = se_re.group(1)
+    unit = se_re.group(2)
+    direct = se_re.group(3)
+    # print(delta)
+    # print(unit)
+    # print(direct)
+    if direct == "ago":
+        delta = -int(delta)
+    if unit in "days":
+        reurn_date = now + timedelta(days=delta)
+    elif unit in "hours":
+        reurn_date = now + timedelta(hours=delta)
+    elif unit in "minutes":
+        reurn_date = now + timedelta(minutes=delta)
+    elif unit in "seconds":
+        reurn_date = now + timedelta(seconds=delta)
     return datetime.strftime(reurn_date, format)
 
 
 if __name__ == "__main__":
-    print(get_weeks_current_date())
+    print(get_date(type="1 hours ago", format="%Y-%m-%d %H:%M:%S"))

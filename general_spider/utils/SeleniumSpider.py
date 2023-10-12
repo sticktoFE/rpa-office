@@ -19,7 +19,7 @@ class SeleniumSpider(scrapy.Spider):
         self.timeout = settings.get("SELENIUM_TIMEOUT")
         self.out_file = settings.get("out_file")
         self.down_path = settings.get("down_path")
-        self.browser_parameter_name = settings.get("browser_parameter_name")
+        self.browser_parameter_file_name = settings.get("browser_parameter_file_name")
         """
         返回浏览器实例
         """
@@ -29,7 +29,7 @@ class SeleniumSpider(scrapy.Spider):
         logging.getLogger("urllib3").setLevel("ERROR")
         # web_driver_manager.get_driver_FireFoxDriver()
         self.browser = web_driver_manager.get_driver_ChromeDriver(
-            browser_parameter_name=self.browser_parameter_name,
+            browser_parameter_file_name=self.browser_parameter_file_name,
             down_file_save_path=self.down_path,
             timeout=self.timeout,
         )

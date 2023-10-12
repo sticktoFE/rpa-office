@@ -9,24 +9,27 @@ LOG_FORMAT = "%(levelname) -5s %(asctime)s" "-1d: %(message)s"
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logging.basicConfig(format=LOG_FORMAT)
-cwd_path = Path(__file__).parent.parent.absolute()
+project_path = Path(__file__).parent.parent.parent.absolute()
 
 # 知识文档及向量化后的知识库存储路径
 UPLOAD_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "content")
 VS_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "vector_store")
 
 
-embedding_model_path = str(cwd_path.joinpath("models"))
+embedding_model_path = str(project_path.joinpath("model"))
 embedding_model_dict = {
     "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
     "ernie-base": "nghuyong/ernie-3.0-base-zh",
-    "text2vec-base": "shibing624/text2vec-base-chinese",
-    "text2vec": r"D:\leichui\workspace\rpa-ocr_dev\ai_assistant\models\GanymedeNil_text2vec-large-chinese",
+    "text2vec-base": str(
+        project_path.joinpath("model", "llm", "text2vec-base-chinese-paraphrase")
+    ),
+    "text2vec": str(
+        project_path.joinpath("model", "llm", "text2vec-large-chinese")
+    ),
 }
 
 # Embedding model name
 EMBEDDING_MODEL = "text2vec"
-
 # Embedding running device
 EMBEDDING_DEVICE = (
     "cuda"
@@ -36,18 +39,19 @@ EMBEDDING_DEVICE = (
     else "cpu"
 )
 # supported LLM models
-llm_model_path = cwd_path.joinpath("models", "chatglm", "chatglm-6b")
 llm_model_dict = {
     "chatyuan": "ClueAI/ChatYuan-large-v2",
     "chatglm-6b-int4-qe": "THUDM/chatglm-6b-int4-qe",
     "chatglm-6b-int4": "THUDM/chatglm-6b-int4",
     "chatglm-6b-int8": "THUDM/chatglm-6b-int8",
-    "chatglm-6b": llm_model_path,  # "THUDM/chatglm-6b",
+    "chatglm2-6b": str(
+        project_path.joinpath("model", "llm", "chatglm", "chatglm2-6b")
+    ),  # "THUDM/chatglm-6b",
     "moss": "fnlp/moss-moon-003-sft",
 }
 
 # LLM model name
-LLM_MODEL = "chatglm-6b"
+LLM_MODEL = "chatglm2-6b"
 
 # LLM lora path，默认为空，如果有请直接指定文件夹路径
 LLM_LORA_PATH = ""

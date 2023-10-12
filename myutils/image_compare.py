@@ -1,6 +1,9 @@
 # 利用python实现多种方法来实现图像识别
 import datetime
+from functools import reduce
 import itertools
+import math
+import operator
 import cv2
 import numpy as np
 from numpy import zeros, uint8
@@ -176,60 +179,56 @@ class PicMatcher:
     def match(self, im1, im2):
         im1 = cv2.cvtColor(im1, cv2.COLOR_BGR2GRAY)
         im2 = cv2.cvtColor(im2, cv2.COLOR_BGR2GRAY)
+        # 保存各自图片（保存合体划线图即可，所以注释了）
+        file_time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
+        cv2.imencode(".jpg", im1)[1].tofile(
+            f"{self.draw_match_output_path}/{file_time}_01.png"
+        )
+        cv2.imencode(".jpg", im2)[1].tofile(
+            f"{self.draw_match_output_path}/{file_time}_02.png"
+        )
         kps1, des1 = self.SIFT.detectAndCompute(im1, None)
         kps2, des2 = self.SIFT.detectAndCompute(im2, None)
         matches = self.bf.knnMatch(des1, des2, k=2)
         good = []
         tempgoods = []
-        y_distances = {}
+        y_gaps = {}
         for m, n in matches:
             # m.distance == 0:  这个特征判断是完全相似，太苛刻，采用第一个相似度小于次相似度的50%就行
-            if m.distance < n.distance * 0.5:
+            if m.distance < n.distance * 0.75:
                 pos0 = kps1[m.queryIdx].pt
                 pos1 = kps2[m.trainIdx].pt
                 # 滑动截图的图片，前后两张重叠部分，相似的特征必然在x方向上一样，y方向上不一样，
                 # 即数组坐标 x1,y1和x2,y2
                 # 要求x1和x2相同，只是y1和y2在不同位置，如果也相同，两张截图可以认为是一样的
-                if pos1[0] == pos0[0] and pos0[1] > pos1[1]:  # 筛选拼接点
+                if pos0[0] == pos1[0] and pos0[1] > pos1[1]:  # 筛选拼接点
                     d = int(pos0[1] - pos1[1])
-                    if d in y_distances:
-                        y_distances[d] += 1
+                    if d in y_gaps:
+                        y_gaps[d] += 1
                     else:
-                        y_distances[d] = 0
+                        y_gaps[d] = 0
                     tempgoods.append(m)
         # 为空说明两张没有相似特征
-        if not y_distances:
-            print("rt -1 0 0")
+        # 4为特征点数,当大于4时才认为特征明显
+        if not y_gaps:
+            print("rt -1 0 0：两张图找不到相似特征1")
             return -1, 0, 0
-        # 出现最多的特征为典型特征或代表特征，所以先倒排序
-        sorted_y_distance = sorted(
-            y_distances.items(), key=lambda kv: kv[1], reverse=True
-        )
-        # 寻找出现次数最多的特征，纵向距离为0，代表两张图一样
-        if sorted_y_distance[0][1] < 4:  # 4为特征点数,当大于4时才认为特征明显
-            print("rt 0 0 0")
+        best_y_gaps = max(y_gaps, key=lambda key: y_gaps[key])
+        if y_gaps[best_y_gaps] < 2:
+            print("rt -1 0 0：两张图找不到相似特征2")
             return -1, 0, 0
-        # 寻找典型特征最靠下面的坐标位置，其实是寻找两个图片重复区域各自最下方的边界，为拼接做准备
-        best_y_distances = sorted_y_distance[0][0]
-        max1y = 0
-        max2y = 0
+        max1y = max2y = 0
         for match in tempgoods:
             pos0 = kps1[match.queryIdx].pt
             pos1 = kps2[match.trainIdx].pt
-            # and list(im1[int(pos0[1])]) == list(im2[int(pos1[1])]):
-            if int(pos0[1] - pos1[1]) == best_y_distances:
+            if int(pos0[1] - pos1[1]) == best_y_gaps:
                 if pos0[1] > max1y:
                     max1y = pos0[1]
-                    # if pos1[1] > max2y:
                     max2y = pos1[1]
                 good.append(match)
-        # 为空说明两张没有相似特征
-        if not good:
-            print("rt -1 0 0")
-            return -1, 0, 0
         if self.draw:
             self.draw_join_line(im1, im2, kps1, kps2, good)
-        return best_y_distances, max1y, max2y
+        return best_y_gaps, max1y, max2y
 
     def draw_join_line(self, im1, im2, kps1, kps2, good):
         img3 = cv2.drawMatches(im1, kps1, im2, kps2, good, None, flags=2)
@@ -239,28 +238,23 @@ class PicMatcher:
         # 绘制特征点
         cv2.drawKeypoints(im1, kps1, img_sift1)
         cv2.drawKeypoints(im2, kps2, img_sift2)
-        # 展示
-        # cv2.namedWindow("im1", cv2.WINDOW_NORMAL)
-        # cv2.namedWindow("im2", cv2.WINDOW_NORMAL)
-        # cv2.resizeWindow("im1", im2.shape[1], im2.shape[0])
-        # cv2.resizeWindow("im2", im2.shape[1], im2.shape[0])
-        # cv2.imshow("im1", img_sift1)
-        # cv2.imshow("im2", img_sift2)
-        # cv2.imshow("match{}".format(random.randint(0, 8888)), img3)
-        # cv2.waitKey(1 )
         # imwrite对路径要求只能是数字和英文，很苛刻--这里保留遗迹，尽量用cv2.imencode
         file_time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
-        # 保存各自图片（保存合体划线图即可，所以注释了）
-        cv2.imencode(".jpg", im1)[1].tofile(
-            f"{self.draw_match_output_path}/{file_time}_01.png"
-        )
-        cv2.imencode(".jpg", im2)[1].tofile(
-            f"{self.draw_match_output_path}/{file_time}_02.png"
-        )
+
         cv2.imencode(".jpg", img3)[1].tofile(
             f"{self.draw_match_output_path}/{file_time}_match.png"
         )
         # cv2.imwrite(f"{self.draw_match_output_path}/{file_time}_match.png", img3)
+
+
+def is_same(img1, img2):  # 判断两张图片的相似度,用于判断结束条件
+    h1 = img1.histogram()
+    h2 = img2.histogram()
+    # 求所有像素点的协方差，似乎也是一种测量图片差异度的方式
+    result = math.sqrt(
+        reduce(operator.add, list(map(lambda a, b: (a - b) ** 2, h1, h2))) / len(h1)
+    )
+    return result <= 5
 
 
 # 计算同样高度的图片，相同的头部和尾部部分
@@ -276,7 +270,7 @@ def real_content_imgs(img_list):
     data = np.array(data).transpose()
     # 然后继续横向计算方差，看下图片横向的差异度
     var = data.var(1)
-    # where返回的是满足条件的的形式为 ([index1...],dtype=int64)
+    # where返回的是满足条件的的形式为 ([index1,index2..],dtype=int64)
     where = np.where(var > var.mean())[0]
     img_sart_pos = where.min()
     img_end_pos = where.max() + 1

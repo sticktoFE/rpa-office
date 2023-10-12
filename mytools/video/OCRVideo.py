@@ -54,7 +54,7 @@ def face_ocr(frame_img):
     # 2、解析pdf
     # 3、摄像头拍照
     # 4、桌面截图
-  # 以下实现3   
+# 以下实现3   
 """
 
 
@@ -90,14 +90,15 @@ class OCRVideo(QThread):
             ocr_request = globalvar.get_var("ocrserver")
         if self.cap is None or not self.cap.isOpened():
             # 1、调用笔记本摄像头摄像头
-            self.cap = cv2.VideoCapture(1)
+            # self.cap = cv2.VideoCapture(1)
             # 2、调用手机摄像头
             # http://admin:lbllei@192.168.1.7:8099/video 这个连接速度快
             # http://admin:lbllei@a2322ogcplzqf.local:8099/video
-            # self.cap = cv2.VideoCapture(
-            #     # "http://admin:admin@172.15.39.33:4747/mjpegfeed?640x480"
-            #     "http://admin:admin@172.15.39.33:4747/video"
-            # )  # @前为账号密码，@后为ip地址
+            self.cap = cv2.VideoCapture(
+                # "http://admin:admin@172.15.39.33:4747/mjpegfeed?640x480"
+                # "http://admin:admin@172.15.39.33:4747/video"
+                "http://172.15.38.66:5555/video"
+            )  # @前为账号密码，@后为ip地址
         # print("CAM0 分辨率 %d x %d" % (cap.get(cv2.CAP_PROP_FRAME_WIDTH),cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
         # self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         # self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 360)

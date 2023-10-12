@@ -1,107 +1,17 @@
 from pathlib import Path
-from langchain.utilities import BingSearchAPIWrapper
+import random
 from ai_assistant.agent.browser import search_not
-from ai_assistant.configs.model_config import BING_SEARCH_URL, BING_SUBSCRIPTION_KEY
-import requests, re, json, io, base64, os, time
+import requests, re, json, time
 from urllib.parse import quote
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from PIL import Image, PngImagePlugin
-from langchain.docstore.document import Document
+from lxml import etree
 
 from general_spider.utils import web_driver_manager
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
 
-
-# 抽取每天新闻的信息并结构化
-def extract_news_info(news):
-    news_info = {}
-    news_info["date"] = news["date"]
-    news_info["title"] = news["title"]
-    news_info["content_fragment"] = news["body"]
-    # content = self.get_news_content(news["url"])["content"]
-    # content = re.sub("[^a-zA-Z\u4e00-\u9fa5]", " ", content)
-    # news_info["content"] = content
-    news_info["url"] = news["url"]
-    news_info["source"] = news["source"]
-    return news_info
-
-
-def duckduck_go_search(keyword, result_len=3):
-    driver = web_driver_manager.get_driver_ChromeDriver()
-    driver.get(
-        quote(
-            f"https://duckduckgo.com/?q={str(keyword)}&va=v&t=ha&df=w&iar=news&ia=news",
-            safe="/:?=.",
-        )
-    )
-    for i in range(0, 20000, 350):
-        time.sleep(0.1)
-        driver.execute_script("window.scrollTo(0, %s)" % i)
-    html = driver.execute_script("return document.documentElement.outerHTML")
-    soup = BeautifulSoup(html, "html.parser")
-    item_list = soup.find_all(class_="b_algo")
-    relist = []
-    for items in item_list:
-        item_prelist = items.find("h2")
-        item_title = re.sub(r"(<[^>]+>|\s)", "", str(item_prelist))
-        href_s = item_prelist.find("a", href=True)
-        href = href_s["href"]
-        relist.append([item_title, href])
-    item_list = soup.find_all(class_="ans_nws ans_nws_fdbk")
-    for items in item_list:
-        for i in range(1, 10):
-            item_prelist = items.find(
-                class_=f"nws_cwrp nws_itm_cjk item{i}", url=True, titletext=True
-            )
-            if item_prelist is not None:
-                url = item_prelist["url"].replace("\ue000", "").replace("\ue001", "")
-                title = item_prelist["titletext"]
-                relist.append([title, url])
-    return relist
-    ddgs_news_gen = ddgs.news(text, safesearch="off", timelimit="w", region="zh-cn")
-    n = 0
-    for onenew in ddgs_news_gen:
-        n = n + 1
-        if n <= result_len:
-            yield Document(
-                page_content=onenew["body"] if "body" in onenew.keys() else "",
-                metadata={
-                    "url": onenew["url"] if "url" in onenew.keys() else "",
-                    "title": onenew["title"] if "title" in onenew.keys() else "",
-                    "source": onenew["source"] if "source" in onenew.keys() else "",
-                },
-            )
-        else:
-            break
-
-
-def search_web(keyword):
-    driver = web_driver_manager.get_driver_ChromeDriver()
-    driver.get(quote("https://cn.bing.com/search?q=" + str(keyword), safe="/:?=."))
-    for i in range(0, 20000, 350):
-        time.sleep(0.1)
-        driver.execute_script("window.scrollTo(0, %s)" % i)
-    html = driver.execute_script("return document.documentElement.outerHTML")
-    soup = BeautifulSoup(html, "html.parser")
-    item_list = soup.find_all(class_="b_algo")
-    relist = []
-    for items in item_list:
-        item_prelist = items.find("h2")
-        item_title = re.sub(r"(<[^>]+>|\s)", "", str(item_prelist))
-        href_s = item_prelist.find("a", href=True)
-        href = href_s["href"]
-        relist.append([item_title, href])
-    item_list = soup.find_all(class_="ans_nws ans_nws_fdbk")
-    for items in item_list:
-        for i in range(1, 10):
-            item_prelist = items.find(
-                class_=f"nws_cwrp nws_itm_cjk item{i}", url=True, titletext=True
-            )
-            if item_prelist is not None:
-                url = item_prelist["url"].replace("\ue000", "").replace("\ue001", "")
-                title = item_prelist["titletext"]
-                relist.append([title, url])
-    return relist
+from myutils.DateAndTime import get_date
 
 
 def ext_zhihu(url):
@@ -350,6 +260,109 @@ def search_main(item, feature):
     return [flist, return_list]
 
 
+def search_web(keyword):
+    driver = web_driver_manager.get_driver_ChromeDriver()
+    driver.get(quote("https://cn.bing.com/search?q=" + str(keyword), safe="/:?=."))
+    for i in range(0, 20000, 350):
+        time.sleep(0.1)
+        driver.execute_script("window.scrollTo(0, %s)" % i)
+    html = driver.execute_script("return document.documentElement.outerHTML")
+    soup = BeautifulSoup(html, "html.parser")
+    item_list = soup.find_all(class_="b_algo")
+    relist = []
+    for items in item_list:
+        item_prelist = items.find("h2")
+        item_title = re.sub(r"(<[^>]+>|\s)", "", str(item_prelist))
+        href_s = item_prelist.find("a", href=True)
+        href = href_s["href"]
+        relist.append([item_title, href])
+    item_list = soup.find_all(class_="ans_nws ans_nws_fdbk")
+    for items in item_list:
+        for i in range(1, 10):
+            item_prelist = items.find(
+                class_=f"nws_cwrp nws_itm_cjk item{i}", url=True, titletext=True
+            )
+            if item_prelist is not None:
+                url = item_prelist["url"].replace("\ue000", "").replace("\ue001", "")
+                title = item_prelist["titletext"]
+                relist.append([title, url])
+    return relist
+
+
+def duckduck_go_search(driver, keyword, result_len=2):
+    driver.get(
+        quote(
+            f"https://duckduckgo.com/?q={str(keyword)}&t=h_&df=w&iar=news&ia=news",
+            safe="/:?=.&",
+        )
+    )
+    time.sleep(random.uniform(1.1, 2.5))
+    # 往下滚动以加载
+    while True:
+        # driver.execute_script("window.scrollTo(0, %s)" % i)
+        go_load_ele = driver.find_elements(
+            by=By.XPATH,
+            value="//div[@class='result result--more js-result-more']/a[@class='result--more__btn btn btn--full' and text()='继续载入']",
+        )
+        if len(go_load_ele) > 0:
+            go_load_ele[0].click()
+            time.sleep(random.uniform(1.2, 1.5))
+        else:
+            break
+    # 等加载完毕
+    time.sleep(random.uniform(1.2, 2))
+    res = etree.HTML(driver.page_source)
+    item_list = res.xpath(
+        '//div[contains(@class,"result result--news") and contains(@class,"result--url-above-snippet")]'
+    )
+    n = 0
+    for items in item_list:
+        n = n + 1
+        if n > result_len:
+            break
+        # 标题
+        item_title = items.xpath(
+            './/h2[@class="result__title"]/a[@class="result__a"]/text()'
+        )[0]
+        item_url = items.xpath(
+            './/div[@class="result__extras"]//a[@class="result__url"]/@href'
+        )[0]
+        item_source = items.xpath(
+            './/div[@class="result__extras"]//a[@class="result__url"]/text()'
+        )[0]
+        item_date = items.xpath(
+            './/div[@class="result__extras"]//span[@class="result__timestamp"]/text()'
+        )[0]
+        item_date = get_date(type=item_date, format="%Y-%m-%d %H:%M:%S")
+        # 片段
+        item_snippet = items.xpath('.//div[@class="result__snippet"]/text()')[0]
+
+        # 抽取每天新闻的信息并结构化
+        # item_page_content = self.get_news_content(item_url)["content"]
+        # item_page_content = re.sub("[^a-zA-Z\u4e00-\u9fa5]", " ", item_page_content)
+        yield {
+            "url": item_url,
+            "title": item_title,
+            "source": item_source,
+            "date": item_date,
+            "snippet": item_snippet,
+            "page_content": "",
+        }
+
+
+def duckduck_go_searchs(keywords, result_len=10):
+    driver = web_driver_manager.get_driver_ChromeDriver()
+    for search_term in keywords:
+        yield duckduck_go_search(driver, search_term, result_len)
+    # 不关闭浏览器,没用
+    # ActionChains(driver).key_down(Keys.CONTROL).send_keys("t").key_up(
+    #     Keys.CONTROL
+    # ).perform()
+
+
 if __name__ == "__main__":
-    results = search_web("银行产品")
-    print(results)
+    keys_results = duckduck_go_searchs(["银行 -产品", "银行 服务"])
+    for key_results in keys_results:
+        for oneresult in key_results:
+            print("=====")
+            print(oneresult)

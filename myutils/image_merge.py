@@ -1,4 +1,6 @@
+import datetime
 from functools import reduce
+import random
 import cv2
 from numpy import vstack
 from .image_compare import PicMatcher, real_content_imgs
@@ -13,8 +15,8 @@ class ImageMergeWithDetect:
             nfeatures=500, draw=True, draw_match_output_path=draw_match_output_path
         )
         self.drop_head_tail = drop_head_tail
-        self.package_result = []
-        self.one_src_img = None
+        self.module_result = []
+        self.head_seg, self.tail_seg = None, None
 
     # 针对图像列表寻找拼接点，后面的图片去掉与前面图片重复区域
     def merg_two(self, sum_img, img1, img2):
@@ -50,35 +52,45 @@ class ImageMergeWithDetect:
         return merg_result
 
     # 合并图片列表时，考虑每张图片头尾都一样的情况
-    def merge(self, src_img_list):
-        if len(src_img_list) == 1:
-            return src_img_list[0]
-        drop_list_gen, self.content_pos_start, self.content_pos_end = real_content_imgs(
-            src_img_list
-        )
-        if self.one_src_img is None:
-            self.one_src_img = src_img_list[0]
+    def chunk_merge(self, img_chunk, chunk_index):
+        if len(img_chunk) == 1:
+            self.module_result.append((chunk_index, img_chunk[0]))
+            return
+        drop_list_gen, content_pos_start, content_pos_end = real_content_imgs(img_chunk)
+        if not self.drop_head_tail:
+            if self.head_seg is None and content_pos_start > 0:
+                self.head_seg = img_chunk[0][:content_pos_start]
+            if (
+                self.tail_seg is None
+                and content_pos_end > 0
+                and content_pos_end < len(img_chunk[0])
+            ):
+                self.tail_seg = img_chunk[0][content_pos_end:]
         merg_result = self.merge_list(drop_list_gen)
-        self.package_result.append(merg_result)
+        self.module_result.append((chunk_index, merg_result))
+        file_time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
         cv2.imencode(".jpg", merg_result)[1].tofile(
-            f"{self.draw_match_output_path}/{len(self.package_result)}_match.png"
+            f"{self.draw_match_output_path}/{chunk_index}—{file_time}_match.png"
         )
 
     # 对多个线程处理的长图片再合并成最终的长图片
-    def merge_result(self):
+    def module_merge(self):
         print("对多个线程处理的长图片再合并成最终的长图片")
-        # 按照先后顺序排序，然后再拼接
-        # package_result_sorted = sorted(self.package_result, key=lambda item: item[0])
-        finalimg = self.merge_list(self.package_result)
-        if not self.drop_head_tail:
-            if self.content_pos_start > 0:
-                head_seg = self.one_src_img[: self.content_pos_start]
-                finalimg = vstack((head_seg, finalimg))
-            if self.content_pos_end > 0 and self.content_pos_end < len(
-                self.one_src_img
-            ):
-                tail_seg = self.one_src_img[self.content_pos_end :]
-                finalimg = vstack((finalimg, tail_seg))
+        # 按照先后顺序排序，然后再拼接,否者由于线程执行时间的不确定，导致截图顺序会乱
+        module_result_sorted = sorted(self.module_result, key=lambda item: item[0])
+        finalimg = self.merge_list([item[1] for item in module_result_sorted])
+
+        if self.head_seg is not None:
+            finalimg = vstack((self.head_seg, finalimg))
+            self.head_seg = None
+        if self.tail_seg is not None:
+            finalimg = vstack((finalimg, self.tail_seg))
+            self.tail_seg = None
+        self.module_result.clear()
+        file_time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
+        cv2.imencode(".jpg", finalimg)[1].tofile(
+            f"{self.draw_match_output_path}/module_{file_time}_match.png"
+        )
         return finalimg
 
 

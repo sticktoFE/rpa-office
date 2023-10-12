@@ -1,7 +1,10 @@
 import re
-from mytools.general_infor_extractor.utils import config
+from general_spider.general_infor_extractor.utils import config
 from lxml.html import HtmlElement
-from mytools.general_infor_extractor.defaults import DATETIME_PATTERN, PUBLISH_TIME_META
+from general_spider.general_infor_extractor.defaults import (
+    DATETIME_PATTERN,
+    PUBLISH_TIME_META,
+)
 
 
 class TimeExtractor:

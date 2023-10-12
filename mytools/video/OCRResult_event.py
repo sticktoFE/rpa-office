@@ -22,7 +22,7 @@ class TotalMessage(QDialog, Ui_OCRResult):
         super().__init__()
         self.setupUi(self)
         # self.adjustSize()
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
         # self.setWindowFlag(Qt.FramelessWindowHint)  # 没有窗口栏
         self.setAttribute(Qt.WA_TranslucentBackground)  # 设置背景透明
         self.select_btn_pic.clicked.connect(self.ocr_pdf)

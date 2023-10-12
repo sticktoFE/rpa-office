@@ -1,7 +1,7 @@
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.document_loaders import UnstructuredFileLoader, TextLoader
-from ai_assistant.agent.search import duckduck_go_search
+from ai_assistant.agent.search import duckduck_go_searchs
 from configs.model_config import *
 import datetime
 from content.textsplitter import ChineseTextSplitter
@@ -12,7 +12,6 @@ from utils import torch_gc
 from tqdm import tqdm
 from pypinyin import lazy_pinyin
 from content.loader import UnstructuredPaddleImageLoader, UnstructuredPaddlePDFLoader
-from langchain.docstore.document import Document
 
 DEVICE_ = EMBEDDING_DEVICE
 DEVICE_ID = "0" if torch.cuda.is_available() else None
@@ -144,7 +143,17 @@ def similarity_search_with_score_by_vector(
         docs.append(doc)
     torch_gc()
     return docs
-
+def search_result2docs(keywords_search_results):
+    docs = []
+    for keyword_search_results in keywords_search_results:
+        for search_result in keyword_search_results:
+            doc = Document(page_content=search_result["snippet"] if "snippet" in search_result.keys() else "",
+                        metadata={"date": search_result["date"] if "date" in search_result.keys() else "",
+                                    "source": search_result["source"] if "source" in search_result.keys() else "",
+                                    "url": search_result["url"] if "url" in search_result.keys() else "",
+                                    "title": search_result["title"] if "title" in search_result.keys() else ""})
+            docs.append(doc)
+    return docs
 
 class LocalDocQA:
     llm: object = None
@@ -166,11 +175,11 @@ class LocalDocQA:
         use_lora: bool = USE_LORA,
     ):
         if llm_model.startswith("moss"):
-            from models.moss_llm import MOSS
+            from model.moss_llm import MOSS
 
             self.llm = MOSS()
         else:
-            from models.chatglm_llm import ChatGLM
+            from model.chatglm_llm import ChatGLM
 
             self.llm = ChatGLM()
         self.llm.load_model(
@@ -353,7 +362,8 @@ class LocalDocQA:
     def get_search_result_based_answer(
         self, query, chat_history=[], streaming: bool = STREAMING
     ):
-        result_docs = duckduck_go_search(query)
+        results = duckduck_go_searchs(query.split(',')) #多个关键字用,分开
+        result_docs = search_result2docs(results)
         prompt = generate_prompt(result_docs, query)
 
         for result, history in self.llm._call(

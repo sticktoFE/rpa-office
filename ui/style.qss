@@ -382,12 +382,6 @@ QTableWidget::item::selected {
     background: #2d2f33;
 }
 
-QToolTip {
-    border: 0px solid;
-    background: red;
-    color: #ffffff;
-}
-
 QProgressBar {
     border: none;
     height: 6px;

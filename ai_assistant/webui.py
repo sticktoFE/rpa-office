@@ -367,9 +367,9 @@ with gr.Blocks(css=block_css) as demo:
                 ).style(container=False)
             with gr.Column(scale=5):
                 mode = gr.Radio(
-                    ["LLM 对话", "知识库问答", "Bing搜索问答"],
+                    ["LLM 对话", "知识库问答", "WEB搜索问答"],
                     label="请选择使用模式",
-                    value="知识库问答",
+                    value="LLM 对话",
                 )
                 knowledge_set = gr.Accordion("知识库设定", visible=False)
                 vs_setting = gr.Accordion("配置知识库")

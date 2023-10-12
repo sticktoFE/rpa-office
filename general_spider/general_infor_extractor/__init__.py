@@ -1,6 +1,6 @@
 from .exceptions import NoContentException
 from .utils import pre_parse, remove_noise_node, config, html2element, normalize_text
-from mytools.general_infor_extractor.extractor import (
+from general_spider.general_infor_extractor.extractor import (
     ContentExtractor,
     TitleExtractor,
     TimeExtractor,
