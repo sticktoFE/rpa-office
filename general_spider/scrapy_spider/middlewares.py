@@ -11,9 +11,9 @@ from fake_useragent import UserAgent
 
 # 为了解决使用nuitka导出exe后，报fake_useragent.data找不到的问题
 # 搜索了两天，使用其他方式解决不了，这个方法还可以
-from fake_useragent import data
+from fake_useragent import data  # 不能删
 from general_spider.proxy_pool import get_ip_proxy
-from general_spider.utils.web_driver_manager import get_driver_ChromeDriver
+from general_spider.utils.web_driver_manager import WebDriverManager
 
 
 # 随机IP
@@ -43,7 +43,7 @@ class RandomUserAgentMiddleware(object):
     # 更换用户代理逻辑在此方法中
     def process_request(self, request, spider):
         # location = "browsers.json"
-        ua = UserAgent(verify_ssl=False)  # ,cache_path=data.brow)
+        ua = UserAgent()  # ,cache_path=data.brow)
         request.headers["User-Agent"] = ua.random
 
 
@@ -54,18 +54,14 @@ class RandomUserAgentMiddleware(object):
 
 class SeleniumDownloaderMiddleware(object):
     """
-    Selenium下载器中间件
+    Selenium加入进来自动操作页面动作
     """
 
     def process_request(self, request, spider):
-        # 如果spider为SeleniumSpider的实例，并且request为SeleniumRequest的实例
-        # 那么该Request就认定为需要启用selenium来进行渲染html
-        # 依靠meta中的标记，来决定是否需要使用selenium来爬取
         usedSelenium = request.meta.get("useSelenium", False)
-        loadRequestUrl = request.meta.get("loadRequestUrl", True)
         if usedSelenium:
-            # 控制浏览器打开目标链接,针对需要模拟浏览器打开目标连接，就不要使用传进来的连接，如需要翻页的场景
-            if loadRequestUrl:
+            # 是在当前已打开的页面还是打开新的链接后进行selenium操作
+            if request.meta.get("loadRequestUrl", True):
                 spider.browser.get(request.url)
             # 在构造渲染后的HtmlResponse之前，做一些事情
             # 1.比如等待浏览器页面中的某个元素出现后，再返回渲染后的html；
@@ -74,9 +70,6 @@ class SeleniumDownloaderMiddleware(object):
             # 获取浏览器渲染后的html
             body = spider.browser.page_source
             url = spider.browser.current_url
-            # spider.browser.close()
-            # spider.browser.switch_to.window(current_window)
-            # url = request.respons
             # 构造Response
             # 这个Response将会被你的爬虫进一步处理
             return HtmlResponse(
@@ -84,6 +77,7 @@ class SeleniumDownloaderMiddleware(object):
                 body=body,
                 encoding="utf-8",
                 status=200,
+                request=request,
             )
 
 
@@ -92,13 +86,14 @@ class TaobaoSeleniumMiddleware:
     def __init__(self, timeout=None, service_args=[]):
         self.logger = getLogger(__name__)
         self.timeout = timeout
-        self.browser = get_driver_ChromeDriver()
+        self.wd = WebDriverManager()
+        self.browser = self.wd.get_driver()
         self.browser.set_window_size(1400, 700)
         self.browser.set_page_load_timeout(self.timeout)
         self.wait = WebDriverWait(self.browser, self.timeout)
 
     def __del__(self):
-        self.browser.close()
+        self.wd.quit_driver()
 
     def process_request(self, request, spider):
         if spider.name == "taobao":

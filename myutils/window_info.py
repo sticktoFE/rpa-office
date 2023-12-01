@@ -1,4 +1,3 @@
-
 import functools
 import re
 import subprocess
@@ -8,6 +7,8 @@ from win32 import win32api, win32gui, win32print
 from win32.lib import win32con
 from win32.win32api import GetSystemMetrics
 from pathlib import Path
+
+
 # '获取手机屏幕大小'
 def get_src_screen_size(self):
     completedProcess = subprocess.run(
@@ -24,6 +25,7 @@ def get_src_screen_size(self):
     else:
         print(f"{completedProcess.stderr}")
         return None
+
 
 # 截图展示区缩放比例，这个数字和分辨率，DIP等都有关系，还没摸清规律
 # 3*3/4 #通过直接屏幕截屏时 dip 240调整成320时，写成3/4# 缩放比例
@@ -43,7 +45,8 @@ def get_src_screen_density(self):
     else:
         print(f"{completedProcess.stderr}")
         sys.exit()
-        
+
+
 # 本来想寻找一个公式来识别两个屏幕的对一张图片的缩放比例，无奈没找到，此处暂时存档
 def get_resize_ratio(self, img):
     # 当前主机屏显示密度
@@ -52,12 +55,13 @@ def get_resize_ratio(self, img):
     src_density = self.get_src_screen_density()
     print(f"源系统显示密度{src_density}")
     # 为了让显示图像和源屏大小一致，做相应缩放
-    self.scaleRatio = curent_density / (src_density)  
+    self.scaleRatio = curent_density / (src_density)
     src_width, src_heigth = self.get_src_screen_size()
     width = src_width * self.scaleRatio / self.resizeRatio
     height = src_heigth * self.scaleRatio / self.resizeRatio
     print(img.width(), img.height())
     return img.scaled(width, height)
+
 
 # 在屏幕上截屏相应程序窗口时，计算其宽和高 单位像素，显然的
 def get_pic_size(self):
@@ -82,6 +86,7 @@ def get_pic_size(self):
         self.childRec[3] - self.childRec[1],
     )
 
+
 def get_real_resolution():
     """获取真实的分辨率"""
     hDC = win32gui.GetDC(0)
@@ -92,6 +97,7 @@ def get_real_resolution():
     print(f"物理分辨率={w,h}")
     return w, h
 
+
 def get_screen_size():
     """获取缩放后的分辨率"""
     w = GetSystemMetrics(win32con.SM_CXSCREEN)
@@ -99,13 +105,15 @@ def get_screen_size():
     print(f"缩放后分辨率={w,h}")
     return w, h
 
+
 def getdpi():
     real_resolution = get_real_resolution()
     screen_size = get_screen_size()
     screen_scale_rate = round(real_resolution[0] / screen_size[0], 2)
     screen_scale_rate = screen_scale_rate * 100
     print(f"缩放倍数={screen_scale_rate}%")
-    return screen_scale_rate 
+    return screen_scale_rate
+
 
 # 装饰器，用于调整系统缩放比例
 def handle_screen(func):
@@ -113,22 +121,23 @@ def handle_screen(func):
     @functools.wraps(func)
     def adjust_dpi():
         userdpi = getdpi()
-        print(f'当前系统缩放率为:{userdpi}')
-        if userdpi == 100 :
-            print(' 程序直接运行')
+        print(f"当前系统缩放率为:{userdpi}")
+        if userdpi == 100:
+            print(" 程序直接运行")
             func()
         else:
-            print('正在调整为100%缩放率')
-            location = f'{Path(__file__).parent}/SetDpi.exe'
-            win32api.ShellExecute(0, 'open', location,' 100', '', win32con.SW_HIDE)
-            print('运行中 请等待')
+            print("正在调整为100%缩放率")
+            location = f"{Path(__file__).parent}/SetDpi.exe"
+            win32api.ShellExecute(0, "open", location, " 100", "", win32con.SW_HIDE)
+            print("运行中 请等待")
             func()
-            print('运行完成 缩放自动调回初始')
+            print("运行完成 缩放自动调回初始")
             userdpi = str(userdpi)
-            win32api.ShellExecute(0, 'open', location, userdpi, '', win32con.SW_HIDE)
+            win32api.ShellExecute(0, "open", location, userdpi, "", win32con.SW_HIDE)
+
     return adjust_dpi
-    
-    
+
+
 # screen_scale_rate = getdpi()
 # print(screen_scale_rate)
 getdpi()

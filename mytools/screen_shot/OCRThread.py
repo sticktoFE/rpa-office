@@ -5,8 +5,6 @@ from PySide6.QtCore import (
     QThread,
     QThreadPool,
     Signal,
-    QThread,
-    Signal,
 )
 
 # 使用文字转语音功能，发出问候音：xx,你好！
@@ -141,7 +139,7 @@ class ScreenShotTasks(QThread):
         self.img_chunk_size = single_img_module_size
 
         self.final_file_path = get_temp_folder(
-            execute_file_path=__file__, is_clear_folder=True
+            des_folder_path=__file__, is_clear_folder=True
         )
         self.ImageMergeWithDetect = ImageMergeWithDetect(
             drop_head_tail=False,

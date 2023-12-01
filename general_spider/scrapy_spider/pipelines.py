@@ -231,3 +231,9 @@ class OAProAdmitHaveDonePipeline(TwistedPipeline):
         # 2、接着导出为json
         dump_json_table(dict(item), spider.out_file)
         return item
+
+
+class GNWlyPipeline(object):
+    def process_item(self, item, spider):
+        dump_json_table(item["item_list"], spider.out_file)
+        return item

@@ -1,17 +1,19 @@
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.document_loaders import UnstructuredFileLoader, TextLoader
-from ai_assistant.agent.search import duckduck_go_searchs
+import torch
+from ai_assistant.agent.loader.image_loader import UnstructuredPaddleImageLoader
+from ai_assistant.agent.loader.pdf_loader import UnstructuredPaddlePDFLoader
+from ai_assistant.agent.textsplitter.chinese_text_splitter import ChineseTextSplitter
 from configs.model_config import *
 import datetime
-from content.textsplitter import ChineseTextSplitter
 from typing import List, Tuple, Dict
 from langchain.docstore.document import Document
 import numpy as np
-from utils import torch_gc
 from tqdm import tqdm
 from pypinyin import lazy_pinyin
-from content.loader import UnstructuredPaddleImageLoader, UnstructuredPaddlePDFLoader
+
+from model.similarity import torch_gc
 
 DEVICE_ = EMBEDDING_DEVICE
 DEVICE_ID = "0" if torch.cuda.is_available() else None
@@ -143,17 +145,29 @@ def similarity_search_with_score_by_vector(
         docs.append(doc)
     torch_gc()
     return docs
+
+
 def search_result2docs(keywords_search_results):
     docs = []
-    for keyword_search_results in keywords_search_results:
-        for search_result in keyword_search_results:
-            doc = Document(page_content=search_result["snippet"] if "snippet" in search_result.keys() else "",
-                        metadata={"date": search_result["date"] if "date" in search_result.keys() else "",
-                                    "source": search_result["source"] if "source" in search_result.keys() else "",
-                                    "url": search_result["url"] if "url" in search_result.keys() else "",
-                                    "title": search_result["title"] if "title" in search_result.keys() else ""})
-            docs.append(doc)
+    for search_result in keywords_search_results:
+        doc = Document(
+            page_content=search_result["snippet"]
+            if "snippet" in search_result.keys()
+            else "",
+            metadata={
+                "date": search_result["date"] if "date" in search_result.keys() else "",
+                "source": search_result["source"]
+                if "source" in search_result.keys()
+                else "",
+                "url": search_result["url"] if "url" in search_result.keys() else "",
+                "title": search_result["title"]
+                if "title" in search_result.keys()
+                else "",
+            },
+        )
+        docs.append(doc)
     return docs
+
 
 class LocalDocQA:
     llm: object = None
@@ -362,7 +376,7 @@ class LocalDocQA:
     def get_search_result_based_answer(
         self, query, chat_history=[], streaming: bool = STREAMING
     ):
-        results = duckduck_go_searchs(query.split(',')) #多个关键字用,分开
+        results = duckduck_go_search_keys_parallel(query.split(","))  # 多个关键字用,分开
         result_docs = search_result2docs(results)
         prompt = generate_prompt(result_docs, query)
 

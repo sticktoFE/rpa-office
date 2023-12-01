@@ -97,11 +97,9 @@ class OAProAdmitToDoSpider(SeleniumSpider):
                     '//div[@class="ant-tabs-content ant-tabs-content-no-animated ant-tabs-top-content"]/div[@class="ant-tabs-tabpane ant-tabs-tabpane-active"]',
                     timeout=self.timeout,
                 )
-                detail_body = self.browser.page_source
-                detail_url = self.browser.current_url
                 response = HtmlResponse(
-                    url=detail_url,
-                    body=detail_body,
+                    url=self.browser.current_url,
+                    body=self.browser.page_source,
                     encoding="utf-8",
                     status=200,
                 )

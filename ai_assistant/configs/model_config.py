@@ -1,6 +1,4 @@
 from pathlib import Path
-import torch.cuda
-import torch.backends
 import os
 import logging
 import uuid
@@ -23,21 +21,14 @@ embedding_model_dict = {
     "text2vec-base": str(
         project_path.joinpath("model", "llm", "text2vec-base-chinese-paraphrase")
     ),
-    "text2vec": str(
-        project_path.joinpath("model", "llm", "text2vec-large-chinese")
-    ),
+    "text2vec": str(project_path.joinpath("model", "llm", "text2vec-large-chinese")),
 }
 
 # Embedding model name
 EMBEDDING_MODEL = "text2vec"
 # Embedding running device
-EMBEDDING_DEVICE = (
-    "cuda"
-    if torch.cuda.is_available()
-    else "mps"
-    if torch.backends.mps.is_available()
-    else "cpu"
-)
+# Embedding 模型运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
+EMBEDDING_DEVICE = "auto"
 # supported LLM models
 llm_model_dict = {
     "chatyuan": "ClueAI/ChatYuan-large-v2",
@@ -63,14 +54,8 @@ STREAMING = True
 # Use p-tuning-v2 PrefixEncoder
 USE_PTUNING_V2 = False
 
-# LLM running device
-LLM_DEVICE = (
-    "cuda"
-    if torch.cuda.is_available()
-    else "mps"
-    if torch.backends.mps.is_available()
-    else "cpu"
-)
+# LLM 运行设备。设为"auto"会自动检测，也可手动设定为"cuda","mps","cpu"其中之一。
+LLM_DEVICE = "auto"
 
 # MOSS load in 8bit
 LOAD_IN_8BIT = True
@@ -103,12 +88,11 @@ FLAG_USER_NAME = uuid.uuid4().hex
 
 logger.info(
     f"""
-loading model config
-llm device: {LLM_DEVICE}
-embedding device: {EMBEDDING_DEVICE}
-dir: {os.path.dirname(os.path.dirname(__file__))}
-flagging username: {FLAG_USER_NAME}
-"""
+        loading model config
+        llm device: {LLM_DEVICE}
+        embedding device: {EMBEDDING_DEVICE}
+        dir: {os.path.dirname(os.path.dirname(__file__))}
+        flagging username: {FLAG_USER_NAME}"""
 )
 
 # 是否开启跨域，默认为False，如果需要开启，请设置为True

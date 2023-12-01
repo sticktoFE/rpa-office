@@ -2,7 +2,7 @@ import random
 import re
 import time
 
-from general_spider.utils import web_driver_manager
+from general_spider.utils.web_driver_manager import WebDriverManager
 from myutils.info_out_manager import load_json_table
 from general_spider.utils.tools import waitForXpath
 from selenium.webdriver.common.action_chains import ActionChains
@@ -13,7 +13,8 @@ class ProductChildModify:
     def __init__(self, userID, passwd):
         self.userID = userID
         self.passwd = passwd
-        self.browser = web_driver_manager.get_driver_ChromeDriver()
+        self.wd = WebDriverManager()
+        self.browser = self.wd.get_driver()
         self.timeout = 20
         # self.browser.implicitly_wait(15)
 
@@ -68,10 +69,10 @@ class ProductChildModify:
         )
         return [title_ele.get_attribute("title") for title_ele in title_eles]
 
-    def search_products(self, product_info:dict):
+    def search_products(self, product_info: dict):
         product_names = []
         # 1、产品名称搜索
-        product_name = product_info['子产品名称']
+        product_name = product_info["子产品名称"]
         if len(product_name) > 0:
             search_content = waitForXpath(
                 self.browser,
@@ -82,7 +83,7 @@ class ProductChildModify:
             search_content.send_keys(product_name)
         # 1、产品分类搜索
         # 点击下拉菜单
-        main_product_classes = product_info['产品分类']
+        main_product_classes = product_info["产品分类"]
         if len(main_product_classes) > 0:
             product_departer_ele = waitForXpath(
                 self.browser,
@@ -137,10 +138,10 @@ class ProductChildModify:
         product_names.sort()
         return product_names
 
-    def update_product(self,product_info:dict):
+    def update_product(self, product_info: dict):
         # 一、查询子产品是否存在
         # 1、先产品名称搜索
-        product_name = product_info['子产品名称']
+        product_name = product_info["子产品名称"]
         if product_name is None or len(product_name) == 0:
             print("产品名称必须填写")
             return -1
@@ -153,7 +154,7 @@ class ProductChildModify:
         search_content.send_keys(product_name)
         # 2、产品分类搜索
         # 点击下拉菜单
-        main_product_classes = product_info['产品分类']
+        main_product_classes = product_info["产品分类"]
         if len(main_product_classes) > 0:
             product_departer_ele = waitForXpath(
                 self.browser,
@@ -182,8 +183,8 @@ class ProductChildModify:
         ActionChains(self.browser).move_to_element(query_ele).click(query_ele).perform()
         time.sleep(random.uniform(0.5, 1.5))
         title_eles = self.browser.find_elements(
-                by=By.XPATH,
-                value=f'//li[@class="listV2_row pointer"]/span[@class="listV2_cell ellipsis" and @name="productName" and @title="{product_name}"]',
+            by=By.XPATH,
+            value=f'//li[@class="listV2_row pointer"]/span[@class="listV2_cell ellipsis" and @name="productName" and @title="{product_name}"]',
         )
         # 没查到记录，所以不更新
         if len(title_eles) == 0:
@@ -195,14 +196,14 @@ class ProductChildModify:
         title_eles[0].click()
         time.sleep(random.uniform(0.5, 1.5))
         # 二、打开详情并更新信息
-        for key,value in product_info.items():
+        for key, value in product_info.items():
             key = key.strip()
             value = value.strip()
             # 0)无需更新项
-            if key in ('产品分类','产品名称','子产品名称'):
+            if key in ("产品分类", "产品名称", "子产品名称"):
                 continue
             # 1）特殊更新项
-            elif key == '新子产品名称':
+            elif key == "新子产品名称":
                 product_name_ele = waitForXpath(
                     self.browser,
                     '//div[contains(@class,"font12 textRight mr8") and @style="white-space: nowrap; width: 130px;" and contains(text(),"产品名称")]/following-sibling::div[1]//input[@type="text" and @autocomplete="off" and @class="el-input__inner"]',
@@ -263,7 +264,7 @@ class ProductChildModify:
         return 1
 
     # 增加产品信息
-    def add_product(self,product_info:dict):
+    def add_product(self, product_info: dict):
         # 主产品增加
         waitForXpath(
             self.browser,
@@ -272,7 +273,7 @@ class ProductChildModify:
         ).click()
         # 0、选择产品分类
         # 点击下拉菜单
-        main_product_classes = product_info['产品分类']
+        main_product_classes = product_info["产品分类"]
         waitForXpath(
             self.browser,
             f'//label[@class="el-form-item__label" and contains(text(),"产品分类")]/following-sibling::div[1]//input[@type="text" and @readonly="readonly" and @autocomplete="off" and @placeholder="请选择" and @class="el-input__inner"]',
@@ -288,7 +289,7 @@ class ProductChildModify:
             drop_select_radio.click()
             # ActionChains(self.browser).move_to_element(drop_select_radio).click(drop_select_radio).perform()
         # 1、输入产品名称
-        main_product_name = product_info['产品名称']
+        main_product_name = product_info["产品名称"]
         waitForXpath(
             self.browser,
             '//div[@class="el-form-item el-form-item--mini"]/label[contains(text(),"产品名称")]/following-sibling::div[1]//input[@type="text" and @valuekey="productName" and @autocomplete="off" and @class="el-input__inner" and @placeholder="请输入内容"]',
@@ -296,10 +297,10 @@ class ProductChildModify:
         ).click()
         time.sleep(random.uniform(0.1, 0.5))
         waitForXpath(
-                self.browser,
-                f'//div[@class="el-autocomplete-suggestion el-popper" and @x-placement="bottom-start"]//ul[@class="el-scrollbar__view el-autocomplete-suggestion__list" and @role="listbox"]/li[contains(@id,"el-autocomplete") and @role="option" and normalize-space(text())="{main_product_name.strip()}"]',
-                timeout=self.timeout,
-            ).click()
+            self.browser,
+            f'//div[@class="el-autocomplete-suggestion el-popper" and @x-placement="bottom-start"]//ul[@class="el-scrollbar__view el-autocomplete-suggestion__list" and @role="listbox"]/li[contains(@id,"el-autocomplete") and @role="option" and normalize-space(text())="{main_product_name.strip()}"]',
+            timeout=self.timeout,
+        ).click()
         # self.browser.switch_to.active_element.send_keys(Keys.ENTER)
         # 点击下一步
         waitForXpath(
@@ -308,14 +309,14 @@ class ProductChildModify:
             timeout=self.timeout,
         ).click()
         # 循环更新子产品信息
-        for key,value in product_info.items():
+        for key, value in product_info.items():
             key = key.strip()
             value = value.strip()
             # 0)无需更新项
-            if key in ('产品分类','产品名称'):
+            if key in ("产品分类", "产品名称"):
                 continue
             # 1）特殊更新项
-            elif key == '子产品名称':
+            elif key == "子产品名称":
                 product_name_ele = waitForXpath(
                     self.browser,
                     '//div[contains(@class,"font12 textRight mr8") and @style="white-space: nowrap; width: 130px;" and contains(text(),"产品名称")]/following-sibling::div[1]//input[@type="text" and @autocomplete="off" and @class="el-input__inner"]',
@@ -362,19 +363,20 @@ class ProductChildModify:
         ).click()
 
     # 通过产品分类和名称(模糊)查询 批量修改产品信息
-    def batch_update_product_info(self,file_path):
+    def batch_update_product_info(self, file_path):
         self.login()
         pro_items = load_json_table(file_path)
         for pro_item in pro_items:
             product_names = self.search_products(pro_item)
             for product_name in product_names:
-                pro_item['子产品名称'] = product_name
+                pro_item["子产品名称"] = product_name
                 self.update_product(pro_item)
+        self.wd.quit_driver()
 
     # # 根据json表中的子产品名称和分类搜索，修改完全匹配到的产品，如果不存在就添加
     # 要求产品名称完整，存在的话理论上只能搜索一条结果，不存在就新增，如果搜到多个，就打印出来做出提醒进行人工干预
     # 由于新增需要谨慎些，所以增加一个控制，即使搜索不到也不要新增
-    def update_add_product_info(self,file_path, to_add=False):
+    def update_add_product_info(self, file_path, to_add=False):
         self.login()
         pro_items = load_json_table(file_path)
         for pro_item in pro_items:
@@ -384,11 +386,14 @@ class ProductChildModify:
                 print(f"{pro_item}--产品不存在，将新增处理")
                 self.add_product(pro_item)
             elif update_result == 2:
-                print(f"{pro_item}--产品已存在多个，请核实什么情况！") 
+                print(f"{pro_item}--产品已存在多个，请核实什么情况！")
+        self.wd.quit_driver()
 
 
 if __name__ == "__main__":
     # 添加子产品信息
     sm_child = ProductChildModify(userID="000216", passwd="abcd@1234")
-    sm_child.update_add_product_info(file_path=r"D:\temp\retail_yinhangka_child_product_list.txt",to_add=True) 
+    sm_child.update_add_product_info(
+        file_path=r"D:\temp\retail_yinhangka_child_product_list.txt", to_add=True
+    )
     # sm_child.batch_update_product_info()  # ProductChildModify  ProductMainModify

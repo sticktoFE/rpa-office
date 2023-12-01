@@ -93,13 +93,13 @@ class Ui_OCRResult(object):
 
         self.horizontalLayout.addWidget(self.start_btn_video_stop)
 
-        self.start_scan_btn = QPushButton(self.layoutWidget)
-        self.start_scan_btn.setObjectName(u"start_scan_btn")
-        sizePolicy.setHeightForWidth(self.start_scan_btn.sizePolicy().hasHeightForWidth())
-        self.start_scan_btn.setSizePolicy(sizePolicy)
-        self.start_scan_btn.setFocusPolicy(Qt.NoFocus)
+        self.start_screenshot_btn = QPushButton(self.layoutWidget)
+        self.start_screenshot_btn.setObjectName(u"start_screenshot_btn")
+        sizePolicy.setHeightForWidth(self.start_screenshot_btn.sizePolicy().hasHeightForWidth())
+        self.start_screenshot_btn.setSizePolicy(sizePolicy)
+        self.start_screenshot_btn.setFocusPolicy(Qt.NoFocus)
 
-        self.horizontalLayout.addWidget(self.start_scan_btn)
+        self.horizontalLayout.addWidget(self.start_screenshot_btn)
 
         self.slider = QSlider(self.layoutWidget)
         self.slider.setObjectName(u"slider")
@@ -282,7 +282,7 @@ class Ui_OCRResult(object):
         self.start_btn_video_screenshot.setText(QCoreApplication.translate("OCRResult", u"\u62cd\u7167", None))
         self.start_btn_video_monitor.setText(QCoreApplication.translate("OCRResult", u"\u7ee7\u7eed\u76d1\u63a7", None))
         self.start_btn_video_stop.setText(QCoreApplication.translate("OCRResult", u"\u505c\u6b62\u76d1\u63a7", None))
-        self.start_scan_btn.setText(QCoreApplication.translate("OCRResult", u"\u622a\u5c4f", None))
+        self.start_screenshot_btn.setText(QCoreApplication.translate("OCRResult", u"\u622a\u5c4f", None))
         self.re_screen_shot.setText(QCoreApplication.translate("OCRResult", u"\u91cd\u65b0\u622a\u5c4f", None))
         self.find_button.setText(QCoreApplication.translate("OCRResult", u"\u67e5\u627e", None))
         self.replace_button.setText(QCoreApplication.translate("OCRResult", u"\u66ff\u6362", None))

@@ -67,7 +67,7 @@ class MMenu(QMenu):
     def displayInfoFetch(self):
         from ui.OCRResult_event import TotalMessage
 
-        self.ocrmg = TotalMessage("")
+        self.ocrmg = TotalMessage()
         rect = self.frameGeometry().getRect()
         self.ocrmg.move(rect[0] + rect[2], rect[1])
         self.ocrmg.show()

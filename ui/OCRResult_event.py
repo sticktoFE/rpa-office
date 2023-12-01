@@ -19,7 +19,6 @@ from PySide6.QtGui import (
     QTextCharFormat,
     QColor,
     QTextCursor,
-    QFont,
 )
 from PySide6.QtWidgets import (
     QApplication,
@@ -64,9 +63,9 @@ class TotalMessage(QDialog, Ui_OCRResult):
         )  # Qt.WindowStaysOnTopHint|
         # self.setWindowFlag(Qt.FramelessWindowHint)  # 没有窗口栏
         # self.setWindowFlag(Qt.Tool)  # 不然exec_执行退出后整个程序退出
-        self.setAttribute(Qt.WA_TranslucentBackground)  # 设置背景透明
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)  # 设置背景透明
         self.select_file_btn.clicked.connect(self.select_files)
-        self.start_scan_btn.clicked.connect(self.screen_shot_info)
+        self.start_screenshot_btn.clicked.connect(self.screen_shot_info)
         self.start_btn_video.clicked.connect(self.start_ocr_video)
         self.start_btn_video_screenshot.clicked.connect(self.ocr_video_screenshot)
         self.start_btn_video_monitor.clicked.connect(self.ocr_video_monitor)
@@ -191,7 +190,7 @@ class TotalMessage(QDialog, Ui_OCRResult):
         # self.hide()
 
     def save_data_excel(self):
-        temp_path = get_temp_folder(execute_file_path=__file__)
+        temp_path = get_temp_folder(des_folder_path=__file__)
         file_path = get_temp_file(des_folder=temp_path)
         i = 0
         for content_sec in self.content_list:

@@ -2,9 +2,8 @@ from myutils.GeneralQThread import Worker
 from myutils import image_convert, globalvar
 from route.OCRRequest import get_ocr_result
 from ui.component.TipsShower import TipsShower
-from .SFreezer import Freezer
 import numpy as np
-from PySide6.QtCore import Qt, Signal, QStandardPaths, QSettings, QThreadPool, QThread
+from PySide6.QtCore import Qt, Signal, QStandardPaths, QThreadPool
 from PySide6.QtGui import (
     QCursor,
     QGuiApplication,
@@ -19,7 +18,7 @@ from .SAIFinder import Finder
 from .Screenshot import Screenshot
 from pynput.mouse import Controller
 
-# 导入图片资源以便使用
+# 导入图片资源以便使用,不能删除
 import mytools.screen_shot.imagefiles.jamresourse_rc
 
 
@@ -70,7 +69,7 @@ class MainLayer(QLabel):  # 区域截图功能
         self.save_botton.setToolTip("另存为文件")
         self.save_botton.setGeometry(0, 0, 40, 35)
         self.save_botton.setIcon(QIcon(":/saveicon.png"))
-        self.save_botton.clicked.connect(lambda: self.cutpic(1))
+        self.save_botton.clicked.connect(self.save_pic)
 
         self.rollshot_botton = QPushButton(self.botton_box)
         self.rollshot_botton.setToolTip("滚动截屏")
@@ -86,7 +85,7 @@ class MainLayer(QLabel):  # 区域截图功能
             self.rollshot_botton.x() + self.rollshot_botton.width(), 0, 60, 35
         )
         self.confirm_botton.setIcon(QIcon(":/screenshot.png"))
-        self.confirm_botton.clicked.connect(lambda: self.cutpic(3))
+        self.confirm_botton.clicked.connect(self.screen_shot_ocr)
         self.botton_box.resize(
             +self.save_botton.width()
             + self.rollshot_botton.width()
@@ -101,51 +100,21 @@ class MainLayer(QLabel):  # 区域截图功能
         # self.smartcursor_on = True
         # 正在自动寻找选取的控制变量,就进入截屏之后会根据鼠标移动到的位置自动选取,
         self.finding_rect = True
-        self.NpainterNmoveFlag = (
+        self.drawing_rect = (
             self.choicing
         ) = (
             self.move_rect
-        ) = (
-            self.move_y0
-        ) = self.move_x0 = self.move_x1 = self.change_alpha = self.move_y1 = False
+        ) = self.move_y0 = self.move_x0 = self.move_x1 = self.move_y1 = False
         self.x0 = (
             self.y0
         ) = (
             self.rx0
         ) = self.ry0 = self.x1 = self.y1 = self.mouse_posx = self.mouse_posy = -50
         self.bx = self.by = 0
-        self.alpha = 255  # 透明度值
         self.tool_width = 5
-        self.roller_area = (0, 0, 1, 1)
-
-        self.counter = 0
-
-    def search_in_which_screen(self):
-        mousepos = Controller().position
-        screens = QApplication.screens()
-        # 默认是主屏幕，屏幕坐标原点是 0，0
-        getscreen = (QApplication.primaryScreen(), 0, 0)
-        for screen in screens:
-            rect = screen.geometry().getRect()
-            screen_x_begin = rect[0]
-            screen_x_end = rect[0] + rect[2]
-            mouse_x = mousepos[0]
-            screen_y_begin = rect[1]
-            screen_y_end = rect[1] + rect[3]
-            mouse_y = mousepos[1]
-            print(f"窗口位置：{self.x(),self.y()}；一个窗口位置及大小：{rect}；鼠标的位置：{mousepos}")
-            if mouse_x in range(screen_x_begin, screen_x_end) and mouse_y in range(
-                screen_y_begin, screen_y_end
-            ):
-                getscreen = (screen, screen_x_begin, screen_y_begin)
-                break
-        return getscreen
 
     # 后台初始化截屏线程,用于寻找所有智能选区
     def init_ss_thread_fun(self, get_pix):
-        self.x0 = self.y0 = 0
-        self.x1 = globalvar.get_var("SCREEN_WIDTH")
-        self.y1 = globalvar.get_var("SCREEN_HEIGHT")
         self.mouse_posx = self.mouse_posy = -150
         self.qimg = get_pix.toImage()
         temp_shape = (self.qimg.height(), self.qimg.width(), 4)
@@ -157,17 +126,44 @@ class MainLayer(QLabel):  # 区域截图功能
         QApplication.processEvents()
 
     # 1、截屏函数,功能有二:当有传入pix时直接显示pix中的图片作为截屏背景,否则截取当前屏幕作为背景;前者用于重置所有修改
-    def screen_shot(self, pix=None):
+    def screen_shot(self):
         self.finding_rect = True
-        if type(pix) is QPixmap:
-            get_pix = pix
-        else:
-            if len(QGuiApplication.screens()) > 1:
-                sscreen, s_coordi_x, scoordi_y = self.search_in_which_screen()
-                self.move(s_coordi_x, scoordi_y)
-            else:
-                sscreen = QApplication.primaryScreen()
-            get_pix = sscreen.grabWindow(0)  # 截取屏幕
+
+        # 寻找合适屏幕
+        def search_in_which_screen():
+            mousepos = Controller().position
+            screens = QApplication.screens()
+            # 默认是主屏幕，屏幕坐标原点是 0，0
+            getscreen = None, None, None, None, None
+            # 识别多少个屏幕，并选择当前鼠标所在的屏幕来截屏
+            for screen in screens:
+                rect = screen.geometry().getRect()
+                screen_x_begin, screen_x_end = rect[0], rect[0] + rect[2]
+                screen_y_begin, screen_y_end = rect[1], rect[1] + rect[3]
+                # print(f"窗口位置：{self.x(),self.y()}；屏幕位置及大小：{rect}；鼠标的位置：{mousepos}")
+                mouse_x, mouse_y = mousepos[0], mousepos[1]
+                if mouse_x in range(screen_x_begin, screen_x_end) and mouse_y in range(
+                    screen_y_begin, screen_y_end
+                ):
+                    getscreen = (
+                        screen,
+                        screen_x_begin,
+                        screen_y_begin,
+                        screen_x_end,
+                        screen_y_end,
+                    )
+                    break
+            return getscreen
+
+        (
+            self.purpose_screen,
+            self.x0,
+            self.y0,
+            self.x1,
+            self.y1,
+        ) = search_in_which_screen()
+        self.move(self.x0, self.y0)
+        get_pix = self.purpose_screen.grabWindow(0)  # 截取屏幕
         # 1、画一个图片
         pixmap = QPixmap(get_pix.width(), get_pix.height())
         pixmap.fill(Qt.GlobalColor.transparent)  # 填充透明色,不然没有透明通道
@@ -198,36 +194,36 @@ class MainLayer(QLabel):  # 区域截图功能
         self.raise_()
         self.update()
 
-    # 6、划完截图区域后，显示选择按钮的函数
+    # 6、划完截图区域后，显示动作按钮
     def choice(self):
         self.choicing = True
-        botton_boxw = self.x1 + 5
-        botton_boxh = self.y1 + 5
+        botton_box_x = self.x1 + 5
+        botton_box_y = self.y1 + 5
         dx = abs(self.x1 - self.x0)
         dy = abs(self.y1 - self.y0)
         x = globalvar.get_var("SCREEN_WIDTH")
         y = globalvar.get_var("SCREEN_HEIGHT")
         if dx < self.botton_box.width() + 10:
-            botton_boxw = (
+            botton_box_x = (
                 min(self.x0, self.x1) - self.botton_box.width() - 5
                 if max(self.x1, self.x0) + self.botton_box.width() > x
                 else max(self.x1, self.x0) + 5
             )
         elif self.x1 > self.x0:
-            botton_boxw = self.x1 - self.botton_box.width() - 5
+            botton_box_x = self.x1 - self.botton_box.width() - 5
         if dy < self.botton_box.height() + 105:
-            botton_boxh = (
+            botton_box_y = (
                 min(self.y0, self.y1) - self.botton_box.height() - 5
                 if max(self.y1, self.y0) + self.botton_box.height() + 20 > y
                 else max(self.y0, self.y1) + 5
             )
         elif self.y1 > self.y0:
-            botton_boxh = self.y1 - self.botton_box.height() - 5
-        self.botton_box.move(botton_boxw, botton_boxh)
+            botton_box_y = self.y1 - self.botton_box.height() - 5
+        self.botton_box.move(botton_box_x, botton_box_y)
         self.botton_box.show()
 
-    # 7、划完截图区域后，点击确定获取裁剪图片
-    def cutpic(self, save_as=0):
+    # 仅仅保存图片
+    def save_pic(self):
         backupgroud_big_pix = self.pixmap().copy()
         x0 = min(self.x0, self.x1)
         y0 = min(self.y0, self.y1)
@@ -239,28 +235,41 @@ class MainLayer(QLabel):  # 区域截图功能
             self.Tipsshower.setText("范围过小<1")
             return
         self.final_get_img = backupgroud_big_pix.copy(x0, y0, w, h)
-        if save_as:
-            if save_as == 1:
-                self.counter += 1
-                path, l = QFileDialog.getSaveFileName(
-                    self,
-                    "保存为",
-                    QStandardPaths.writableLocation(
-                        QStandardPaths.StandardLocation.PicturesLocation
-                    )
-                    + f"/{self.counter}",
-                    "img Files (*.PNG *.jpg *.JPG *.JPEG *.BMP *.ICO);;all files(*.*)",
-                )
-                if path:
-                    backupgroud_big_pix.save(path)
-                else:
-                    return
-            elif save_as == 3:
-                get_ocr_result(
-                    image_convert.pixmap2cv(self.final_get_img),
-                    self.after_roll_shot,
-                    ocr_method="ocr",
-                )
+
+        path, l = QFileDialog.getSaveFileName(
+            self,
+            "保存为",
+            QStandardPaths.writableLocation(
+                QStandardPaths.StandardLocation.PicturesLocation
+            )
+            + "/未命名",
+            "img Files (*.PNG *.jpg *.JPG *.JPEG *.BMP *.ICO);;all files(*.*)",
+        )
+        if path:
+            backupgroud_big_pix.save(path)
+        else:
+            return
+        self.manage_data()
+
+    # 7、划完截图区域后，截图识别内容
+    def screen_shot_ocr(self):
+        backupgroud_big_pix = self.pixmap().copy()
+        x0 = min(self.x0, self.x1)
+        y0 = min(self.y0, self.y1)
+        x1 = max(self.x0, self.x1)
+        y1 = max(self.y0, self.y1)
+        w = x1 - x0
+        h = y1 - y0
+        if x1 - x0 < 1 or y1 - y0 < 1:
+            self.Tipsshower.setText("范围过小<1")
+            return
+        self.final_get_img = backupgroud_big_pix.copy(x0, y0, w, h)
+
+        get_ocr_result(
+            image_convert.pixmap2cv(self.final_get_img),
+            self.after_roll_shot,
+            ocr_method="ocr",
+        )
         self.manage_data()
 
     # """8、点击滚动截屏"""
@@ -269,13 +278,14 @@ class MainLayer(QLabel):  # 区域截图功能
         y0 = min(self.y0, self.y1)
         x1 = max(self.x0, self.x1)
         y1 = max(self.y0, self.y1)
+        print(x0, y0, x1, y1)
         if x1 - x0 < 50 or y1 - y0 < 50:
             self.showm_signal.emit("过小!")
-            self.Tipsshower.setText("滚动面积过小!")
+            self.Tipsshower.setText("划定滚动区域面积过小!")
             return
         self.botton_box.hide()
         print("roller begin")
-        self.rollSS.auto_roll((x0, y0, x1 - x0, y1 - y0))
+        self.rollSS.auto_roll(self.purpose_screen, (x0, y0, x1 - x0, y1 - y0))
 
     # 在滚动截屏时，隐藏覆盖层及弹出相应信息
     def in_roll_shot(self, x):
@@ -320,7 +330,8 @@ class MainLayer(QLabel):  # 区域截图功能
         # 先储存起鼠标位置,用于画笔等的绘图计算
         mouse_posx = event.position().x()
         mouse_posy = event.position().y()
-        if event.button() == Qt.LeftButton:  # 按下了左键
+        if event.button() == Qt.MouseButton.LeftButton:
+            # 按下了左键，说明正在选区或移动选区
             r = 0
             x0 = min(self.x0, self.x1)
             x1 = max(self.x0, self.x1)
@@ -334,8 +345,8 @@ class MainLayer(QLabel):  # 区域截图功能
                 and (self.x0 - 8 < mouse_posx < self.x0 + 8)
                 and (
                     my - 8 < mouse_posy < my + 8
-                    or y0 - 8 < mouse_posy < y0 + 8
                     or y1 - 8 < mouse_posy < y1 + 8
+                    or y0 - 8 < mouse_posy < y0 + 8
                 )
             ):
                 self.move_x0 = True
@@ -377,42 +388,25 @@ class MainLayer(QLabel):  # 区域截图功能
                 and (y0 + 8 < mouse_posy < y1 - 8)
             ):
                 self.move_rect = True
-                self.setCursor(Qt.SizeAllCursor)
+                self.setCursor(Qt.CursorShape.SizeAllCursor)
                 self.bx = abs(max(self.x1, self.x0) - mouse_posx)
                 self.by = abs(max(self.y1, self.y0) - mouse_posy)
             else:
-                # 没有绘图没有移动还按下了左键,说明正在选区,标志变量
-                self.NpainterNmoveFlag = True
-                self.rx0 = mouse_posx  # 记录下点击位置
+                # 要开始拖动鼠标选区
+                self.drawing_rect = True
+                # 记录下点击位置
+                self.rx0 = mouse_posx
                 self.ry0 = mouse_posy
                 if self.x1 == -50:
                     self.x1 = mouse_posx
                     self.y1 = mouse_posy
-                if r:  # 判断是否点击在了对角线上
-                    if (self.y0 - 8 < mouse_posy < self.y0 + 8) and (
-                        x0 - 8 < mouse_posx < x1 + 8
-                    ):
-                        self.move_y0 = True
-                        # print('y0')
-                    elif self.y1 - 8 < mouse_posy < self.y1 + 8 and (
-                        x0 - 8 < mouse_posx < x1 + 8
-                    ):
-                        self.move_y1 = True
-                        # print('y1')
-            if self.finding_rect:
-                self.finding_rect = False
-                # self.finding_rectde = True
+            if r and x0 - 8 < mouse_posx < x1 + 8:  # 判断是否点击四个角上
+                if self.y0 - 8 < mouse_posy < self.y0 + 8:
+                    self.move_y0 = True
+                elif self.y1 - 8 < mouse_posy < self.y1 + 8:
+                    self.move_y1 = True
+            self.finding_rect = False
             self.botton_box.hide()
-            self.update()
-        elif event.button() == Qt.RightButton:  # 右键
-            self.setCursor(Qt.ArrowCursor)
-            if self.choicing:  # 退出选定的选区
-                self.botton_box.hide()
-                self.choicing = False
-                self.finding_rect = True
-                self.x0 = self.y0 = self.x1 = self.y1 = -50
-            else:  # 退出截屏
-                self.clear_and_hide()
             self.update()
 
     # 鼠标移动事件
@@ -422,19 +416,21 @@ class MainLayer(QLabel):  # 区域截图功能
         # 先储存起鼠标位置,用于画笔等的绘图计算
         self.mouse_posx = event.position().x()
         self.mouse_posy = event.position().y()
-        # 如果允许智能选取并且在选选区步骤
+        # 处在划定目标区域状态，鼠标形状为十字架
         if self.finding_rect:
             self.x0, self.y0, self.x1, self.y1 = self.finder.find_targetrect(
                 (self.mouse_posx, self.mouse_posy)
             )
             self.setCursor(
                 QCursor(
-                    QPixmap(":/smartcursor.png").scaled(32, 32, Qt.KeepAspectRatio),
+                    QPixmap(":/smartcursor.png").scaled(
+                        32, 32, Qt.AspectRatioMode.KeepAspectRatio
+                    ),
                     16,
                     16,
                 )
             )
-        else:  # 不在绘画
+        else:  # 已经划定区域
             minx = min(self.x0, self.x1)
             maxx = max(self.x0, self.x1)
             miny = min(self.y0, self.y1)
@@ -449,7 +445,7 @@ class MainLayer(QLabel):  # 区域截图功能
                 (maxx - 8 < self.mouse_posx < maxx + 8)
                 and (maxy - 8 < self.mouse_posy < maxy + 8)
             ):
-                self.setCursor(Qt.SizeFDiagCursor)
+                self.setCursor(Qt.CursorShape.SizeFDiagCursor)  # 左上右下移动选定区域边框线的鼠标形状
             elif (
                 (minx - 8 < self.mouse_posx < minx + 8)
                 and (maxy - 8 < self.mouse_posy < maxy + 8)
@@ -457,59 +453,54 @@ class MainLayer(QLabel):  # 区域截图功能
                 (maxx - 8 < self.mouse_posx < maxx + 8)
                 and (miny - 8 < self.mouse_posy < miny + 8)
             ):
-                self.setCursor(Qt.SizeBDiagCursor)
-            elif (self.x0 - 8 < self.mouse_posx < self.x0 + 8) and (
+                self.setCursor(Qt.CursorShape.SizeBDiagCursor)  # 左下右上移动选定区域边框线的鼠标形状
+            elif (
+                self.x0 - 8 < self.mouse_posx < self.x0 + 8
+                or self.x1 - 8 < self.mouse_posx < self.x1 + 8
+            ) and (
                 my - 8 < self.mouse_posy < my + 8
                 or miny - 8 < self.mouse_posy < miny + 8
                 or maxy - 8 < self.mouse_posy < maxy + 8
             ):
-                self.setCursor(Qt.SizeHorCursor)
-            elif (self.x1 - 8 < self.mouse_posx < self.x1 + 8) and (
-                my - 8 < self.mouse_posy < my + 8
-                or miny - 8 < self.mouse_posy < miny + 8
-                or maxy - 8 < self.mouse_posy < maxy + 8
-            ):
-                self.setCursor(Qt.SizeHorCursor)
-            elif (self.y0 - 8 < self.mouse_posy < self.y0 + 8) and (
+                self.setCursor(Qt.CursorShape.SizeHorCursor)  # 左右移动选定区域边框线的鼠标形状
+            elif (
+                self.y0 - 8 < self.mouse_posy < self.y0 + 8
+                or self.y1 - 8 < self.mouse_posy < self.y1 + 8
+            ) and (
                 mx - 8 < self.mouse_posx < mx + 8
                 or minx - 8 < self.mouse_posx < minx + 8
                 or maxx - 8 < self.mouse_posx < maxx + 8
             ):
-                self.setCursor(Qt.SizeVerCursor)
-            elif (self.y1 - 8 < self.mouse_posy < self.y1 + 8) and (
-                mx - 8 < self.mouse_posx < mx + 8
-                or minx - 8 < self.mouse_posx < minx + 8
-                or maxx - 8 < self.mouse_posx < maxx + 8
-            ):
-                self.setCursor(Qt.SizeVerCursor)
+                self.setCursor(Qt.CursorShape.SizeVerCursor)  # 上下移动选定区域边框线的鼠标形状
             elif (minx + 8 < self.mouse_posx < maxx - 8) and (
                 miny + 8 < self.mouse_posy < maxy - 8
             ):
-                self.setCursor(Qt.SizeAllCursor)
+                self.setCursor(Qt.CursorShape.SizeAllCursor)  # 挪动整个选择框的鼠标形状
             elif (
                 self.move_x1 or self.move_x0 or self.move_y1 or self.move_y0
-            ):  # 再次判断防止光标抖动
+            ):  # 拖动选定区域的边框移动时鼠标形状
                 b = (self.x1 - self.x0) * (self.y1 - self.y0) > 0
                 if (self.move_x0 and self.move_y0) or (self.move_x1 and self.move_y1):
                     if b:
-                        self.setCursor(Qt.SizeFDiagCursor)
+                        self.setCursor(Qt.CursorShape.SizeFDiagCursor)  # 左上 右下方向拉动的鼠标形状
                     else:
-                        self.setCursor(Qt.SizeBDiagCursor)
+                        self.setCursor(Qt.CursorShape.SizeBDiagCursor)
                 elif (self.move_x1 and self.move_y0) or (self.move_x0 and self.move_y1):
                     if b:
-                        self.setCursor(Qt.SizeBDiagCursor)
+                        self.setCursor(Qt.CursorShape.SizeBDiagCursor)  # 左下 右上方向拉动的鼠标形状
                     else:
-                        self.setCursor(Qt.SizeFDiagCursor)
+                        self.setCursor(Qt.CursorShape.SizeFDiagCursor)
                 elif self.move_x0 or self.move_x1:
-                    self.setCursor(Qt.SizeHorCursor)
+                    self.setCursor(Qt.CursorShape.SizeHorCursor)  # 左右选定边框横向拉动的鼠标形状
                 elif self.move_y0 or self.move_y1:
-                    self.setCursor(Qt.SizeVerCursor)
+                    self.setCursor(Qt.CursorShape.SizeVerCursor)  # 上下选定边框横向拉动的鼠标形状
                 elif self.move_rect:
-                    self.setCursor(Qt.SizeAllCursor)
+                    self.setCursor(Qt.CursorShape.SizeAllCursor)  # 移动整个选定区域框的鼠标形状
             else:
-                self.setCursor(Qt.ArrowCursor)
+                self.setCursor(Qt.CursorShape.ArrowCursor)  # 选定区域外面的鼠标形状
             # 以上几个ifelse都是判断鼠标移动的位置和选框的关系然后设定光标形状
-            if self.NpainterNmoveFlag:  # 如果没有在绘图也没在移动(调整)选区,在选区,则不断更新选区的数值
+            # 选区,移动鼠标更新选区右下角的坐标值
+            if self.drawing_rect:
                 self.x1 = self.mouse_posx  # 储存当前位置到self.x1下同
                 self.y1 = self.mouse_posy
                 self.x0 = self.rx0  # 鼠标按下时记录的坐标,下同
@@ -522,8 +513,8 @@ class MainLayer(QLabel):  # 区域截图功能
                     self.x1 += 1
                 else:
                     self.x0 += 1
-            else:  # 说明在移动或者绘图,不过绘图没有什么处理的,下面是处理移动/拖动选区
-                if self.move_x0:  # 判断拖动标志位,下同
+            else:  # 下面是处理移动/拖动选区
+                if self.move_x0:
                     self.x0 = self.mouse_posx
                 elif self.move_x1:
                     self.x1 = self.mouse_posx
@@ -552,10 +543,19 @@ class MainLayer(QLabel):  # 区域截图功能
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
             self.setCursor(Qt.CursorShape.ArrowCursor)
-            self.NpainterNmoveFlag = False  # 选区结束标志置零
+            self.drawing_rect = False  # 选区结束标志置零
             self.move_rect = (
                 self.move_y0
             ) = self.move_x0 = self.move_x1 = self.move_y1 = False
             self.choice()
             # self.confirm_botton.show()
+        elif event.button() == Qt.MouseButton.RightButton:  # 右键
+            self.setCursor(Qt.CursorShape.ArrowCursor)
+            if self.choicing:  # 退出选定的选区
+                self.botton_box.hide()
+                self.choicing = False
+                self.finding_rect = True
+                self.x0 = self.y0 = self.x1 = self.y1 = -50
+            else:  # 退出截屏
+                self.clear_and_hide()
             self.update()

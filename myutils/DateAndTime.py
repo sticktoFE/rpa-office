@@ -7,6 +7,20 @@ import time
 from datetime import date, datetime, timedelta
 
 
+def profile(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        from line_profiler import LineProfiler
+
+        prof = LineProfiler()
+        try:
+            return prof(func)(*args, **kwargs)
+        finally:
+            prof.print_stats()
+
+    return wrapper
+
+
 def clock(func):
     @functools.wraps(func)
     def caltime(*args, **kwargs):
@@ -14,7 +28,7 @@ def clock(func):
         res = func(*args, **kwargs)
         end_time = time.time()
         time_cost = end_time - start_time
-        print(f"模块{func.__module__}--方法{func.__name__}，用时{time_cost}")
+        print(f"模块{func.__module__}--方法{func.__name__}，用时{time_cost:.5f}秒")
         return res
 
     return caltime
@@ -91,8 +105,10 @@ def get_date(type="0 days ago", format="%Y-%m-%d"):
         reurn_date = now + timedelta(minutes=delta)
     elif unit in "seconds":
         reurn_date = now + timedelta(seconds=delta)
+    else:
+        return "Can not get date"
     return datetime.strftime(reurn_date, format)
 
 
 if __name__ == "__main__":
-    print(get_date(type="1 hours ago", format="%Y-%m-%d %H:%M:%S"))
+    print(get_date(type="0 hours ago", format="%Y-%m-%d-%H:%M:%S"))

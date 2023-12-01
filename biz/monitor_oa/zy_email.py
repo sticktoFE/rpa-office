@@ -6,7 +6,7 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.common.action_chains import ActionChains
 import time
 from pathlib import Path
-from general_spider.utils import web_driver_manager
+from general_spider.utils.web_driver_manager import WebDriverManager
 from myutils.info_out_manager import load_json_table
 
 
@@ -16,10 +16,8 @@ class SeleMail:
         self.userID = userID
         self.passwd = passwd
         self.upload_path = down_path
-        self.driver = web_driver_manager.get_driver_ChromeDriver(
-            down_file_save_path=down_path
-        )
-        self.driver.implicitly_wait(20)
+        self.wd = WebDriverManager()
+        self.driver = self.wd.get_driver(down_file_save_path=down_path)
 
     # 保存cookies
     def save_cookies(self, driver):
@@ -177,7 +175,7 @@ class SeleMail:
         assert "保存草稿成功" in self.driver.page_source
         self.driver.find_element(by=By.XPATH, value="//a[text()='退出']").click()
         # assert "登录" in self.driver.page_source
-        self.driver.quit()
+        self.wd.quit_driver()
 
     # 针对存在的草稿，下载附件并保存
     def download_through_draft(self):
@@ -217,7 +215,7 @@ class SeleMail:
         logout_link = self.driver.find_element(by=By.XPATH, value="//a[text()='退出']")
         logout_link.click()
         # assert "登录" in self.driver.page_source
-        self.driver.quit()
+        self.wd.quit_driver(self.driver)
 
     # 发送邮件，包括收件人 主题 内容及附件
     def send_mail(self, to_who, mail_title, content, get_file):
@@ -295,6 +293,7 @@ class SeleMail:
             by=By.XPATH,
             value='//div[@class="tab-body"]/span[@class="iconfont icontabclose close" and @title="关闭"]',
         ).click()
+        self.wd.quit_driver()
 
     # 批量发送文件
     def send_mails(self):

@@ -1,7 +1,7 @@
 import random
 import time
 
-from general_spider.utils import web_driver_manager
+from general_spider.utils.web_driver_manager import WebDriverManager
 from myutils.info_out_manager import load_json_table
 from general_spider.utils.tools import waitForXpath
 from selenium.webdriver.common.action_chains import ActionChains
@@ -12,7 +12,8 @@ class ProductMainModify:
     def __init__(self, userID, passwd):
         self.userID = userID
         self.passwd = passwd
-        self.browser = web_driver_manager.get_driver_ChromeDriver()
+        self.wd = WebDriverManager()
+        self.browser = self.wd.get_driver()
         self.timeout = 20
         # self.browser.implicitly_wait(15)
 
@@ -329,6 +330,7 @@ class ProductMainModify:
             for product_name in product_names:
                 pro_item["产品名称"] = product_name
                 self.update_product(pro_item)
+        self.wd.quit_driver()
 
     # # 根据json表中的子产品名称和分类搜索，修改完全匹配到的产品，如果不存在就添加
     # 要求产品名称完整，存在的话理论上只能搜索一条结果，不存在就新增，如果搜到多个，就打印出来做出提醒进行人工干预
@@ -344,6 +346,7 @@ class ProductMainModify:
                 self.add_product(pro_item)
             elif update_result == 2:
                 print(f"{pro_item}--产品已存在多个，请核实什么情况！")
+        self.wd.quit_driver()
 
 
 if __name__ == "__main__":

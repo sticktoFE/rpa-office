@@ -8,7 +8,7 @@
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
 import random
-
+import tempfile
 
 REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
 
@@ -119,5 +119,8 @@ LOG_LEVEL = 'DEBUG' """
 HTTPERROR_ALLOWED_CODES = [404]
 
 KEYWORDS = ["iPhone"]
-SELENIUM_TIMEOUT = 20
+SELENIUM_TIMEOUT = 50
 SQLITE_DB_PATH = "dw/risk.db"
+
+
+DOWNLOAD_PATH = tempfile.gettempdir()

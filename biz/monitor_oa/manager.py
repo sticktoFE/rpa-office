@@ -4,13 +4,12 @@
 from pathlib import Path
 import random
 import time
-from general_spider.scrapy_start import run_spiders
+from general_spider.scrapy_start import go_scrapy
 from myutils.GeneralQThread import Worker
 from myutils.info_out_manager import get_temp_folder
 from biz.monitor_oa.zy_email import SeleMail
 from biz.monitor_oa.tx_doc import TXDocument
 from PySide6.QtCore import QThreadPool
-from multiprocessing import Process, Queue
 from biz.monitor_oa.wc_sendinfo import send_webchat
 
 
@@ -18,69 +17,12 @@ from biz.monitor_oa.wc_sendinfo import send_webchat
 class RPAClient:
     # 1、启动信息获取，获取列表信息和详情信息
     def __init__(
-        self,
-        scrapy_account=None,
-        mail_userID=None,
-        mail_passwd=None,
-        data_start_date=None,
-        data_end_date=None,
+        self, scrapy_info=None, mail_userID=None, mail_passwd=None, out_folder=None
     ):
-        self.scrapy_account = scrapy_account
+        self.scrapy_info = scrapy_info
         self.mail_userID = mail_userID
         self.mail_passwd = mail_passwd
-        self.data_start_date = data_start_date
-        self.data_end_date = data_end_date
-        self.out_folder = get_temp_folder(
-            des_folder_name="spiders_out/data", is_clear_folder=True
-        )
-
-    # import pysnooper
-
-    # @pysnooper.snoop(depth=1)
-    def scrapy_info(self):
-        processes = []
-        result_queue = Queue()
-        # Create and start multiple worker processes
-        for scrapy_userID, scrapy_passwd, which_tab, spider_name in self.scrapy_account:
-            out_file = f"{self.out_folder}/{scrapy_userID}_{which_tab}.txt"
-            process = Process(
-                target=run_spiders,
-                args=(
-                    result_queue,
-                    spider_name,
-                    scrapy_userID,
-                    scrapy_passwd,
-                    which_tab,
-                    self.data_start_date,
-                    self.data_end_date,
-                ),
-                kwargs={
-                    "out_file": out_file,
-                    "down_path": self.out_folder,
-                    "browser_parameter_file_name": f"{scrapy_userID}_{which_tab}",
-                },
-                daemon=True,
-            )
-            processes.append(process)
-            process.start()
-        # Wait for all processes to complete
-        for p in processes:
-            p.join()
-        # Get the results from the queue and check if they are all True
-        results = []
-        while not result_queue.empty():
-            spider_name, reason = result_queue.get()
-            print(f"Spider {spider_name} finished with reason: {reason}")
-            if reason == "finished":
-                results.append(True)
-            else:
-                results.append(False)
-        if len(results) == len(self.scrapy_account) and all(results):
-            print("所有爬虫全部执行完毕")
-            return True
-        else:
-            print("At least one process failed.")
-            return False
+        self.out_folder = out_folder
 
     # 上传附件
     def upload_file_to_mail(self):
@@ -97,24 +39,17 @@ class RPAClient:
         self.sm.send_mails()
 
     def have_done(self):
-        re = self.scrapy_info()
+        re = go_scrapy(self.scrapy_info)
         if re:
-            # self.rpacli = RPAClient(userID_oa, password_oa, userID, password)
-            # self.rpacli.scrapy_info()
-            # # 启动上传功能
-            # self.rpacli.scraper.spider_finished.connect(self.after_scrapy)
-            # worK_server = Worker(self.rpacli.scrapy_info)
             self.upload_file_to_mail()
 
 
 # 服务端接收数据并进行相应处理，如更新文档，统计分析等
 class RPAServer:
-    def __init__(self, mail_userID, mail_passwd):
+    def __init__(self, mail_userID, mail_passwd, out_folder=None):
         self.mail_userID = mail_userID
         self.mail_passwd = mail_passwd
-        self.out_folder = get_temp_folder(
-            des_folder_name="spiders_out/data", is_clear_folder=True
-        )
+        self.out_folder = out_folder
 
     # 已办任务处理
     # server端

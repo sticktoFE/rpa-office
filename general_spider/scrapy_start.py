@@ -1,3 +1,5 @@
+from multiprocessing import Process, Queue
+import time
 import scrapy
 from scrapy.utils.project import get_project_settings
 import os
@@ -14,109 +16,156 @@ from scrapy.crawler import CrawlerProcess
 import scrapy
 import os
 from scrapy import cmdline
-from general_spider.scrapy_spider.spiders.CSRCPenalty import CSRCPenaltySpider
-from myutils.GeneralQThread import Worker
-from PySide6.QtCore import QThreadPool
+
+# from general_spider.scrapy_spider.spiders.CSRCPenalty import CSRCPenaltySpider
+# from myutils.GeneralQThread import Worker
+# from PySide6.QtCore import QThreadPool
 from general_spider.proxy_pool.proxyPool import startProxy
 
 
-def run_spiders(
-    q,
-    spider_name,
-    userID,
-    passwd,
-    which_tab,
-    data_start_date,
-    data_end_date,
-    out_file=None,
-    down_path=None,
-    browser_parameter_file_name=None,
-):
+# Create and start multiple worker processes
+#  [                    (
+#                             {
+#                                 "user_id": item_user,
+#                                 "user_passwd": item_passwd,
+#                                 "which_tab": item_which_tab,
+#                                 "start_date": data_start_date,
+#                                 "end_date": data_end_date,
+#                             },
+#                             {
+#                                 "spider_name": item_scrapy,
+#                                 "out_file": f"{self.out_folder}/{item_user}_{item_which_tab}.txt",
+#                             },
+#                         ),
+#                        ......
+# ]
+# import pysnooper
+# @pysnooper.snoop(depth=1)
+def go_scrapy(spiderargs_controlkwargs):
+    processes = []
+    result_queue = Queue()
+    # args_kwargs:
+    # [((scrapy_userID, scrapy_passwd, which_tab,data_start_date,data_end_date),{"spider_name":"x000","result_queue":result_queue,"out_file":"yyyyy"}),()]
+    for kwargs_ in spiderargs_controlkwargs:
+        kwargs_["result_queue"] = result_queue
+        process = Process(
+            target=spider_worker,
+            args=(kwargs_,),
+            daemon=True,
+        )
+        processes.append(process)
+        process.start()
+        # 由于多次启动爬虫时开多进程打开多个浏览器
+        # 而每个浏览器都需要参数文件夹，两次启动间隔过短会导致同时识别一个文件夹，会导致出错，所以做一下停顿
+        time.sleep(5)
+    # Wait for all processes to complete
+    for p in processes:
+        p.join()
+    # Get the results from the queue and check if they are all True
+    results = []
+    while not result_queue.empty():
+        spider_name, reason = result_queue.get()
+        print(f"Spider {spider_name} finished with reason: {reason}")
+        if reason == "finished":
+            results.append(True)
+        else:
+            results.append(False)
+    if len(results) == len(spiderargs_controlkwargs) and all(results):
+        print("所有爬虫全部执行完毕")
+        return True
+    else:
+        print("At least one process failed.")
+        return False
+
+
+# 通过程序启动爬虫
+def spider_worker(kwargs_):
+    spider_name = kwargs_.get("spider_name")
+    result_queue = kwargs_.get("result_queue")
+    apply_new_spider_modules = kwargs_.get("apply_new_spider_modules")
+    out_file = kwargs_.get("out_file")
     settings_file_path = "general_spider.scrapy_spider.settings"
     os.environ.setdefault("SCRAPY_SETTINGS_MODULE", settings_file_path)
     settings = get_project_settings()
-    settings.set("userID", userID)
-    settings.set("passwd", passwd)
-    settings.set("which_tab", which_tab)
-    settings.set("out_file", out_file)
-    settings.set("down_path", down_path)
-    settings.set("browser_parameter_file_name", browser_parameter_file_name)
-    settings.set("data_start_date", data_start_date)
-    settings.set("data_end_date", data_end_date)
+
+    if apply_new_spider_modules:
+        settings.set("SPIDER_MODULES", [apply_new_spider_modules])
+    if out_file is not None:
+        settings.set("OUT_FILE", out_file)
     try:
         process = CrawlerProcess(settings)
         spider = process.create_crawler(spider_name)
 
         def callback_func(spider, reason):
-            q.put((spider.name, reason))
+            result_queue.put((spider.name, reason))
 
         spider.signals.connect(callback_func, signal=scrapy.signals.spider_closed)
-        process.crawl(spider)  # spider_name)
+        process.crawl(spider, **kwargs_)  # spider_args中的值爬虫可以直接取 如 self.start_date
         process.start()
-        # q.put(True)
+        # result_queue.put(True)
     except Exception as e:
-        # q.put(False)
+        # result_queue.put(False)
         print(e)
 
 
-# 以下代码被上面代码替代，暂时没用处，但是可以参考
-class SpiderManager(QObject):
-    # 定义爬虫结束信号
-    spider_finished = Signal()
+# # 以下代码被上面代码替代，暂时没用处，但是可以参考
+# class SpiderManager(QObject):
+#     # 定义爬虫结束信号
+#     spider_finished = Signal()
 
-    def __init__(
-        self, userID, passwd, out_file=None, down_path=None, start_proxy=False
-    ):
-        super().__init__()
-        if start_proxy:
-            self.start_ip_proxy()
-        configure_logging()
-        settings_file_path = "general_spider.scrapy_spider.settings"
-        os.environ.setdefault("SCRAPY_SETTINGS_MODULE", settings_file_path)
-        self.settings = get_project_settings()
-        self.settings.set("userID", userID)
-        self.settings.set("passwd", passwd)
-        self.settings.set("out_file", out_file)
-        self.settings.set("down_path", down_path)
-        self.runner = CrawlerRunner(self.settings)
+#     def __init__(
+#         self, userID, passwd, out_file=None, down_path=None, start_proxy=False
+#     ):
+#         super().__init__()
+#         if start_proxy:
+#             self.start_ip_proxy()
+#         configure_logging()
+#         settings_file_path = "general_spider.scrapy_spider.settings"
+#         os.environ.setdefault("SCRAPY_SETTINGS_MODULE", settings_file_path)
+#         self.settings = get_project_settings()
+#         self.settings.set("userID", userID)
+#         self.settings.set("passwd", passwd)
+#         self.settings.set("out_file", out_file)
+#         self.settings.set("down_path", down_path)
+#         self.runner = CrawlerRunner(self.settings)
 
-    def schedule_spider(self, spider_name):
-        # run the spider every hour
-        l = task.LoopingCall(self.run_spider, spider_name)
-        l.start(3600)
-        reactor.run()
+#     def schedule_spider(self, spider_name):
+#         # run the spider every hour
+#         l = task.LoopingCall(self.run_spider, spider_name)
+#         l.start(3600)
+#         reactor.run()
 
-    def run_spiders(self, spider_name):
-        # 启动爬虫另一种方式
-        # spider_cls = self.spider_loader.load(spider_name)
-        d = self.runner.crawl(spider_name)
-        d.addBoth(lambda _: self.spider_finished.emit(100))
-        d.addBoth(lambda _: reactor.stop())
-        reactor.run()
+#     def run_spiders(self, spider_name):
+#         # 启动爬虫另一种方式
+#         # spider_cls = self.spider_loader.load(spider_name)
+#         d = self.runner.crawl(spider_name)
+#         d.addBoth(lambda _: self.spider_finished.emit(100))
+#         d.addBoth(lambda _: reactor.stop())
+#         reactor.run()
 
-    def run_spiders1(self, spider_name):
-        process = CrawlerProcess(self.settings)
-        defer = process.crawl(spider_name)
-        defer.addBoth(lambda _: self.spider_finished.emit())
-        # process.crawl(Spider2)
-        process.start(stop_after_crawl=False)  # 这能支持scrapy重复启动？
+#     def run_spiders1(self, spider_name):
+#         process = CrawlerProcess(self.settings)
+#         defer = process.crawl(spider_name)
+#         defer.addBoth(lambda _: self.spider_finished.emit())
+#         # process.crawl(Spider2)
+#         process.start(stop_after_crawl=False)  # 这能支持scrapy重复启动？
 
-    # 这个是
-    def run_spiders3(self, spider_name):
-        dirpath = os.path.dirname(__file__)
-        os.chdir(dirpath)  # 切换到当前目录
-        cmdline.execute(
-            [
-                "scrapy",
-                "crawl",
-                spider_name,
-                # "-s",
-                # f"SETTINGS_MODULE={self.settings}",
-            ],
-            settings=self.settings,
-        )
-        # scrapy_process2 = subprocess.Popen(['scrapy', 'crawl', 'spider2'])
-        # 获取cmdline.execute的返回值
+#     # 这个是
+#     def run_spiders3(self, spider_name):
+#         dirpath = os.path.dirname(__file__)
+#         os.chdir(dirpath)  # 切换到当前目录
+#         cmdline.execute(
+#             [
+#                 "scrapy",
+#                 "crawl",
+#                 spider_name,
+#                 # "-s",
+#                 # f"SETTINGS_MODULE={self.settings}",
+#             ],
+#             settings=self.settings,
+#         )
+#         # scrapy_process2 = subprocess.Popen(['scrapy', 'crawl', 'spider2'])
+#         # 获取cmdline.execute的返回值
 
 
 # if __name__ == "__main__":

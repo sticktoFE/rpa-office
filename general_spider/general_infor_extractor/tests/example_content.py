@@ -6,7 +6,7 @@ import requests
 from general_infor_extractor import GeneralNewsExtractor
 from myutils.info_out_manager import dump_json_table, get_temp_folder
 
-out_folder = get_temp_folder(execute_file_path=__file__, is_clear_folder=True)
+out_folder = get_temp_folder(des_folder_path=__file__, is_clear_folder=True)
 
 
 def test_content_from_html(

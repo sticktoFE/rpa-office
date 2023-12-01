@@ -20,10 +20,10 @@ class ShotScreenManager:
         self.win_height = height
         self.shot_callback = callback
         self.image_path = get_temp_folder(
-            execute_file_path=__file__, is_clear_folder=True
+            des_folder_path=__file__, is_clear_folder=True
         )
         self.temp_path = get_temp_folder(
-            execute_file_path=__file__, des_folder_name="tmp_pic", is_clear_folder=True
+            des_folder_path=f"{__file__}/tmp_pic", is_clear_folder=True
         )
         # 截完图的回调函数
 

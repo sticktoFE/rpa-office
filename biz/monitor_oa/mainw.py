@@ -30,6 +30,8 @@ import schedule
 from keyring.backends import Windows
 import keyring
 
+from myutils.info_out_manager import get_temp_folder
+
 keyring.set_keyring(Windows.WinVaultKeyring())
 
 
@@ -37,7 +39,7 @@ keyring.set_keyring(Windows.WinVaultKeyring())
 class PasswordDelegate(QStyledItemDelegate):
     def createEditor(self, parent, option, index):
         editor = QLineEdit(parent)
-        editor.setEchoMode(QLineEdit.Password)
+        editor.setEchoMode(QLineEdit.EchoMode.Password)
         return editor
 
     def updateEditorGeometry(self, editor, option, index):
@@ -46,7 +48,7 @@ class PasswordDelegate(QStyledItemDelegate):
     def initStyleOption(self, option, index):
         super().initStyleOption(option, index)
         style = option.widget.style() or QApplication.style()
-        hint = style.styleHint(QStyle.SH_LineEdit_PasswordCharacter)
+        hint = style.styleHint(QStyle.StyleHint.SH_LineEdit_PasswordCharacter)
         option.text = chr(hint) * len(option.text)
 
 
@@ -113,6 +115,9 @@ class MainWindow(QMainWindow, Ui_Form):
         self.scheduled_jobs = []
         self.srapy_running = False
         self.set_time.setText("11:30~19:00~22:00")
+        self.out_folder = get_temp_folder(
+            des_folder_path=__file__, is_clear_folder=True
+        )
 
     @Slot()
     def on_start_clicked(self):
@@ -175,7 +180,7 @@ class MainWindow(QMainWindow, Ui_Form):
                 keyring.set_password("myapp", "userID", userID)
                 keyring.set_password("myapp", userID, passwd)
             # 可以增加多个oa登录账号和密码，放到userID_Passwd
-            userID_Passwd = []
+            scrapy_info = []
             config_parameter_row_count = self.taskTableWidget.rowCount()
             # 记录行数，为了启动初始化时，知道增加多少记录
             if self.remember_check.isChecked():
@@ -193,9 +198,6 @@ class MainWindow(QMainWindow, Ui_Form):
                         row, 3
                     ).currentText()
                     item_scrapy = self.taskTableWidget.cellWidget(row, 4).currentText()
-                    userID_Passwd.append(
-                        (item_user, item_passwd, item_which_tab, item_scrapy)
-                    )
                     if self.remember_check.isChecked():
                         keyring.set_password("myapp", f"userID_oa_{row}", item_user)
                         keyring.set_password("myapp", f"passwd_oa_{row}", item_passwd)
@@ -203,6 +205,17 @@ class MainWindow(QMainWindow, Ui_Form):
                             "myapp", f"which_tab_oa_{row}", item_which_tab
                         )
                         keyring.set_password("myapp", f"scrapy_oa_{row}", item_scrapy)
+                    scrapy_info.append(
+                        {
+                            "user_id": item_user,
+                            "user_passwd": item_passwd,
+                            "which_tab": item_which_tab,
+                            "start_date": data_start_date,
+                            "end_date": data_end_date,
+                            "spider_name": item_scrapy,
+                            "out_file": f"{self.out_folder}/{item_user}_{item_which_tab}.txt",
+                        }
+                    )
             if self.rpa_client.isChecked():
                 # 打开代理
                 # start_ip_proxy()
@@ -211,13 +224,14 @@ class MainWindow(QMainWindow, Ui_Form):
                     RPAClient,
                     classMethod="have_done",
                     classMethodArgs={},
-                    scrapy_account=userID_Passwd,
+                    scrapy_info=scrapy_info,
                     mail_userID=userID,
                     mail_passwd=passwd,
-                    data_start_date=data_start_date,
-                    data_end_date=data_end_date,
+                    out_folder=self.out_folder,
                 )
                 QThreadPool.globalInstance().start(worK_server)
+                # 调试用，开子线程无法调试
+                # RPAClient(scrapy_info, userID, passwd, self.out_folder).have_done()
             elif self.rpa_server.isChecked():
                 QThreadPool.globalInstance().start(
                     Worker(
@@ -226,8 +240,11 @@ class MainWindow(QMainWindow, Ui_Form):
                         classMethodArgs={},
                         mail_userID=userID,
                         mail_passwd=passwd,
+                        out_folder=self.out_folder,
                     )
                 )
+                # 调试用，开子线程无法调试
+                # RPAServer(userID, passwd).start()
             # 循环刷新界面，以显示最新日志内容
             loop = QEventLoop()
             QTimer.singleShot(2000, loop.quit)
@@ -237,7 +254,7 @@ class MainWindow(QMainWindow, Ui_Form):
     def onUpdateText(self, text):
         """Write console output to text widget."""
         cursor = self.out_log.textCursor()
-        cursor.movePosition(QTextCursor.End)
+        cursor.movePosition(QTextCursor.MoveOperation.End)
         cursor.insertText(text)
         self.out_log.setTextCursor(cursor)
         self.out_log.ensureCursorVisible()
@@ -252,11 +269,11 @@ class MainWindow(QMainWindow, Ui_Form):
         self.taskTableWidget.setCellWidget(row, 0, comBox_class_method)
         # 用户名
         item_user = QTableWidgetItem(user)
-        item_user.setFlags(item_user.flags() | Qt.ItemIsEditable)
+        item_user.setFlags(item_user.flags() | Qt.ItemFlag.ItemIsEditable)
         self.taskTableWidget.setItem(row, 1, item_user)
         # 密码
         item_passwd = QTableWidgetItem(passwd)
-        item_passwd.setFlags(item_passwd.flags() | Qt.ItemIsEditable)
+        item_passwd.setFlags(item_passwd.flags() | Qt.ItemFlag.ItemIsEditable)
         self.taskTableWidget.setItem(row, 2, item_passwd)
         # 执行哪一个栏目
         comBox_which_tab = QComboBox()

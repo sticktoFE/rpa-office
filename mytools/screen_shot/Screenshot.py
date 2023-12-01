@@ -24,13 +24,18 @@ class Screenshot(QObject):  # 滚动截屏主类
         self.final_html_content = []
 
     # 1、自动滚动模式--采取多线程提高速度，还未完成
-    def auto_roll(self, area):
+    def auto_roll(self, screen, area):
         in_rolling = True
         self.showm_signal.emit("开始截屏-----------")  # 让mainlayer隐藏掉
         x, y, w, h = area
         # 拖动的鼠标落脚点选择很重要，最好选择有文字内容，但对于网页可以选中的区域，这样下面才能判断时滚动鼠标还是拖动
         # 下面使用随机数来随机落到下半区域位置
-        mouse_pos_x, mouse_pos_y = x + w / 2, y + h * random.uniform(0.4, 0.8)
+        (
+            mouse_pos_x,
+            mouse_pos_y,
+        ) = screen.geometry().x() + x + w / 2, screen.geometry().y() + y + h * random.uniform(
+            0.4, 0.8
+        )
         # 控制鼠标点击到滚动区域中心,靠下的位置（3/4）
         # ！！！特别注意，如果鼠标不在可滚动区域，会导致滚动停止，进而截图退出，
         pg.moveTo(
@@ -61,7 +66,6 @@ class Screenshot(QObject):  # 滚动截屏主类
         listener.start()
         isDrag = None
         i = 1
-        screen = QApplication.primaryScreen()
         oldimg = Image.fromqpixmap(screen.grabWindow(0, x, y, w, h))
         worker.add_img(oldimg)
         # 拖动后，清空剪贴板，为了判断是拖动页面还是滑动页面

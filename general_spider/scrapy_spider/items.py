@@ -121,3 +121,14 @@ class ProjectItem(Item):
     org = Field()
     time = Field()
     content = Field()
+
+
+class GNWlyItem(Item):
+    """
+    定义所需字段
+    """
+
+    item_list = Field()
+    # item_title = Field()
+    # item_date = Field()
+    # item_abstract = Field()

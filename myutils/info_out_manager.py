@@ -47,22 +47,12 @@ def print_var(content):
 
 
 # 获取输出临时文件夹
-def get_temp_folder(
-    execute_file_path=None, des_folder_name=None, is_clear_folder=False
-):
+def get_temp_folder(des_folder_path="tmp/", is_clear_folder=False):
     # 使用配置文件中的默认设置
-    des_folder = ReadWriteConfFile.getSectionValue("General", "tmp_path")
-    des_folder = Path(des_folder)
-    if execute_file_path is not None:
-        # path_list = re.split(r"[/\\]", execute_file_path)
-        # last_two = f"{path_list[-2]}_{path_list[-1]}"
-        # des_folder = f"{des_folder}/{last_two}"
-        efp = Path(execute_file_path)
-        des_folder = des_folder / efp.parent.stem / efp.stem
+    des_folder = Path(ReadWriteConfFile.getSectionValue("General", "tmp_path"))
+    efp = Path(des_folder_path)
+    des_folder = des_folder / efp.parent.stem / efp.stem
     # files_path = f'{QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)}/rpa-office/{Path(current_file_path).parent.stem}--{Path(current_file_path).stem}'
-    # 临时文件统一放到系统文档文件夹里
-    if des_folder_name is not None:
-        des_folder = des_folder.joinpath(des_folder_name)
     des_folder.mkdir(parents=True, exist_ok=True)
     if is_clear_folder:  # 清理文件夹内容
         filelist = glob.glob(f"{des_folder.as_posix()}/*")
