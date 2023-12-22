@@ -1,4 +1,5 @@
 import random
+import re
 import time
 
 from general_spider.utils.web_driver_manager import WebDriverManager
@@ -121,9 +122,10 @@ class ProductMainModify:
         )
         product_num = waitForXpath(
             pages_ele,
-            "./span[@class='list_total']/span",
+            "./span[@class='list_total']",
             timeout=self.timeout,
         ).text
+        product_num = re.search(r"\d+", product_num).group()
         page_num = int(product_num) // 10 + 1
         for i in range(page_num):
             # 把查询到内容，包括多页的全部装到product_names
@@ -245,7 +247,7 @@ class ProductMainModify:
         # 保存提交
         waitForXpath(
             self.browser,
-            f'//div[@class="productCard mt16"]//div[@data-v-d965d3ec and @data-v-7d9d3064 and @class="_button mr30" and contains(text(),"确定")]',
+            f'//div[@class="productCard mt16"]//div[@class="_button mr30" and contains(text(),"确定")]',
             timeout=self.timeout,
         ).click()
         return 1

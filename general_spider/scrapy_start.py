@@ -3,42 +3,9 @@ import time
 import scrapy
 from scrapy.utils.project import get_project_settings
 import os
-from scrapy.crawler import CrawlerRunner, CrawlerProcess
-from scrapy.utils.log import configure_logging
-from PySide6.QtCore import QObject, Signal
-from twisted.internet import task, reactor
-from scrapy import cmdline
-from scrapy.utils.log import configure_logging
-from scrapy.crawler import CrawlerRunner
-from twisted.internet import reactor
-from scrapy.utils.project import get_project_settings
 from scrapy.crawler import CrawlerProcess
-import scrapy
-import os
-from scrapy import cmdline
-
-# from general_spider.scrapy_spider.spiders.CSRCPenalty import CSRCPenaltySpider
-# from myutils.GeneralQThread import Worker
-# from PySide6.QtCore import QThreadPool
-from general_spider.proxy_pool.proxyPool import startProxy
 
 
-# Create and start multiple worker processes
-#  [                    (
-#                             {
-#                                 "user_id": item_user,
-#                                 "user_passwd": item_passwd,
-#                                 "which_tab": item_which_tab,
-#                                 "start_date": data_start_date,
-#                                 "end_date": data_end_date,
-#                             },
-#                             {
-#                                 "spider_name": item_scrapy,
-#                                 "out_file": f"{self.out_folder}/{item_user}_{item_which_tab}.txt",
-#                             },
-#                         ),
-#                        ......
-# ]
 # import pysnooper
 # @pysnooper.snoop(depth=1)
 def go_scrapy(spiderargs_controlkwargs):

@@ -9,7 +9,7 @@ from fake_useragent import UserAgent
 
 from myutils.info_out_manager import ReadWriteConfFile
 
-chrome_path = Path(__file__).parent.joinpath("GoogleChromePortable")
+chrome_path = Path(__file__).parent.joinpath("chrome-win64_120")
 
 
 class WebDriverManager:
@@ -22,7 +22,6 @@ class WebDriverManager:
             with cls._lock:
                 if not cls._instance:
                     cls._instance = super().__new__(cls, *args, **kwargs)
-                    cls.folder_index = 0
                     cls.ua = UserAgent()
         return cls._instance
 
@@ -33,12 +32,12 @@ class WebDriverManager:
         parent_profile = Path(chrome_path) / "Data"
         source_profile = parent_profile / "profile"
         temp_profile = parent_profile / get_date(format="%Y_%m_%d_%H_%M_%S_%f")
-        with self._lock:
-            self.folder_index += 1
         # 保留5个常备的参数文件夹，开的浏览器超过三个，增加临时的参数文件夹，用完删除
-        if self.folder_index < 6 and (
-            notused_profile := list(parent_profile.glob(f"{self.folder_index}"))
-        ):
+        if notused_profile := [
+            entry
+            for entry in parent_profile.iterdir()
+            if entry.is_dir() and entry.name.isdigit()
+        ]:
             one_notused_profile = notused_profile[0]
             used_profile = one_notused_profile.rename(
                 str(one_notused_profile) + "_used"
@@ -73,7 +72,7 @@ class WebDriverManager:
     def get_driver(self, down_file_save_path="D:\\downloads", timeout=30):
         options = webdriver.ChromeOptions()
         # 切换成便携版chrome，避免跨平台时，所在平台没有安装chrome或chrome和chromedriver版本不一致
-        options.binary_location = f"{chrome_path}\\App\\Chrome-bin\\chrome.exe"
+        options.binary_location = f"{chrome_path}\\chrome.exe"
         # 设置浏览器运行参数
         # 浏览器地址栏访问chrome://version/查看个人资料路径,去掉最后的/Default
         current_folder = self.get_folder()
@@ -119,7 +118,11 @@ class WebDriverManager:
             options.add_argument("--headless")
         options.add_argument("--disable-gpu")  # 谷歌文档提到需要加上这个属性来规避bug
         # 针对UA请求头的操作，防止因为没有添加请求头导致的访问被栏截了
+        # 特别注意：：：如果不能联网，不要使用ua.random，直接用下面注释的，否则会非常慢，没少折腾才找到这个原因
         options.add_argument(f"User-Agent={self.ua.random}")
+        # options.add_argument(
+        #     "User-Agent=Mozilla/5.0 (Windows NT 6.1; Win64; x64) >AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36 Edg/87.0.664.57"
+        # )
         # 这两行会清理cookie,影响登录默认设置失效，导致每次登录都是全新的，比如短信验证码要重复登录
         # 不要轻易打开
         # options.add_argument("--incognito")  # 无痕隐身模式

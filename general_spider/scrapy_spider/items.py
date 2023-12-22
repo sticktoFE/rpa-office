@@ -40,25 +40,6 @@ class CSRCPenaltyItem(Item):
     detail_url = Field()
 
 
-class CSRCMarketWeeklyItem(Item):
-    """
-    定义所需字段
-    """
-
-    index_no = Field()
-    title = Field()
-    detail_url = Field()
-    pub_date = Field()
-
-    con_type = Field()
-    pub_org = Field()
-    text_num = Field()
-    content = Field()
-    attach_name = Field()
-    attach_link = Field()
-    attach_save_path = Field()
-
-
 class OAProAdmitToDoItem(Item):
     """
     定义所需字段

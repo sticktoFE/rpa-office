@@ -51,7 +51,7 @@ class ProductChildModify:
             timeout=self.timeout,
         )
         system_tool.click()
-        # 切换具体操作页，即主产品产品编辑页
+        # 切换具体操作页，即子产品产品编辑页
         time.sleep(1)
         submit = waitForXpath(
             system_tool,
@@ -141,7 +141,7 @@ class ProductChildModify:
     def update_product(self, product_info: dict):
         # 一、查询子产品是否存在
         # 1、先产品名称搜索
-        product_name = product_info["子产品名称"]
+        product_name = product_info["产品名称"]
         if product_name is None or len(product_name) == 0:
             print("产品名称必须填写")
             return -1
@@ -200,10 +200,10 @@ class ProductChildModify:
             key = key.strip()
             value = value.strip()
             # 0)无需更新项
-            if key in ("产品分类", "产品名称", "子产品名称"):
+            if key in ("产品分类", "产品名称"):
                 continue
             # 1）特殊更新项
-            elif key == "新子产品名称":
+            elif key == "新产品名称":
                 product_name_ele = waitForXpath(
                     self.browser,
                     '//div[contains(@class,"font12 textRight mr8") and @style="white-space: nowrap; width: 130px;" and contains(text(),"产品名称")]/following-sibling::div[1]//input[@type="text" and @autocomplete="off" and @class="el-input__inner"]',
@@ -245,7 +245,7 @@ class ProductChildModify:
         # 保存提交
         waitForXpath(
             self.browser,
-            f'//div[@class="productCard mtb20"]//div[@data-v-d965d3ec and @data-v-194a93ac and @class="_button" and contains(text(),"提交")]',
+            '//div[@class="productCard mtb20"]//div[@class="_button" and contains(text(),"提交")]',
             timeout=self.timeout,
         ).click()
         # 返回产品列表,上面保存时就会返回，但如果没有改变信息而保存会出现下面的提示信息，并保留在当前页面，故使用下面做下判断
@@ -258,7 +258,7 @@ class ProductChildModify:
         if "您没有修改产品信息" in self.browser.page_source:
             waitForXpath(
                 self.browser,
-                f'//div[@class="nav_item"]/img[@class="nav_item-icon pointer" and @title="返回上一页" and @alt="back"]',
+                '//div[@class="nav_item"]/img[@class="nav_item-icon pointer" and @title="返回上一页" and @alt="back"]',
                 timeout=self.timeout,
             ).click()
         return 1
@@ -276,7 +276,7 @@ class ProductChildModify:
         main_product_classes = product_info["产品分类"]
         waitForXpath(
             self.browser,
-            f'//label[@class="el-form-item__label" and contains(text(),"产品分类")]/following-sibling::div[1]//input[@type="text" and @readonly="readonly" and @autocomplete="off" and @placeholder="请选择" and @class="el-input__inner"]',
+            '//label[@class="el-form-item__label" and contains(text(),"产品分类")]/following-sibling::div[1]//input[@type="text" and @readonly="readonly" and @autocomplete="off" and @placeholder="请选择" and @class="el-input__inner"]',
             timeout=self.timeout,
         ).click()
         # 选择下拉菜单里的内容
@@ -358,7 +358,7 @@ class ProductChildModify:
         # 6、保存提交
         waitForXpath(
             self.browser,
-            f'//div[@class="productCard mtb20"]//div[@class="_button" and contains(text(),"提交")]',
+            '//div[@class="productCard mtb20"]//div[@class="_button" and contains(text(),"提交")]',
             timeout=self.timeout,
         ).click()
 
